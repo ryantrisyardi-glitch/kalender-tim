@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Kalender Tim</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font:'Plus Jakarta Sans',sans-serif;
+  --bg:#F6F3EF;--bg-dk:#EDE8E0;--surface:#FFFFFF;
+  --ink:#1C1917;--ink-md:#57534E;--ink-lt:#A8A29E;--rule:#E7E2DA;
+  --libnas-bg:#FEF2F2;--libnas-side:#FCA5A5;--libnas-num:#DC2626;--libnas-name:#B91C1C;
+  --cutib-bg:#FFF7ED;--cutib-side:#FBD38D;--cutib-num:#D97706;--cutib-name:#B45309;
+  --sun-bg:#FFF5F5;--sun-num:#EF4444;
+  --sat-bg:#F0F9FF;--sat-num:#2563EB;
+  --s-achieve-bg:#DCFCE7;--s-achieve-tx:#15803D;
+  --s-not-bg:#FEE2E2;--s-not-tx:#B91C1C;
+  --s-pending-bg:#FEF3C7;--s-pending-tx:#92400E;
+  --r-sm:5px;--r-md:10px;--r-lg:14px;--r-xl:20px;
+  --panel-w:320px;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh}
+
+/* ── PAGE LAYOUT ── */
+.page{max-width:1300px;margin:0 auto;padding:1.75rem 1.5rem 4rem;display:flex;flex-direction:column;gap:0}
+.main-row{display:flex;gap:16px;align-items:flex-start}
+.cal-col{flex:1;min-width:0}
+.panel-col{width:var(--panel-w);flex-shrink:0;position:sticky;top:1.5rem}
+
+/* ── HEADER ── */
+.site-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.6rem;flex-wrap:wrap;gap:12px}
+.brand-title{font-size:1.55rem;font-weight:800;letter-spacing:-.035em;color:var(--ink)}
+.brand-sub{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);margin-top:2px}
+.hdr-right{display:flex;gap:8px;align-items:center}
+
+/* ── BUTTONS ── */
+.btn{font-family:var(--font);font-size:.8rem;font-weight:600;padding:8px 14px;border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-md);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .14s,border-color .14s,transform .1s;white-space:nowrap}
+.btn:hover{background:var(--bg-dk);border-color:var(--ink-lt)}
+.btn:active{transform:scale(.97)}
+.btn-icon{padding:8px 9px}
+.btn-primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn-primary:hover{background:#292524;border-color:#292524}
+.btn-danger{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}
+.btn-danger:hover{background:#FEE2E2;border-color:#B91C1C}
+.btn-sm{padding:5px 10px;font-size:.75rem}
+
+/* ── CONTROL BAR ── */
+.control-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:.9rem}
+.month-nav{display:flex;align-items:center;gap:8px}
+.month-label{font-size:1.2rem;font-weight:800;letter-spacing:-.025em;min-width:200px;text-align:center;color:var(--ink)}
+
+/* ── FILTERS ── */
+.filter-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-sep{font-size:.7rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-lt)}
+.filter-select{font-family:var(--font);font-size:.79rem;font-weight:500;padding:7px 28px 7px 11px;border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A8A29E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color .14s;min-width:144px}
+.filter-select:focus{border-color:var(--ink-md)}
+
+/* ── LEGEND ── */
+.legend-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:9px 16px;background:var(--bg-dk);border-radius:var(--r-lg);margin-bottom:1rem}
+.leg{display:flex;align-items:center;gap:5px;font-size:.7rem;font-weight:600;color:var(--ink-md)}
+.leg-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.leg-sep{width:1px;height:14px;background:var(--rule);margin:0 2px}
+
+/* ── CALENDAR SHELL ── */
+.cal-shell{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.05)}
+.cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg-dk);border-bottom:1.5px solid var(--rule)}
+.dh{text-align:center;padding:11px 4px;font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-lt)}
+.dh.sun{color:var(--sun-num)}.dh.sat{color:var(--sat-num)}
+.cal-body{display:grid;grid-template-columns:repeat(7,1fr)}
+
+/* ── DAY CELLS ── */
+.dc{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);min-height:100px;padding:6px 5px 5px;position:relative;background:var(--surface);overflow:hidden;transition:filter .12s}
+.dc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;opacity:0;transition:opacity .12s}
+.dc:nth-child(7n){border-right:none}
+.dc:hover{filter:brightness(.965)}
+.dc.is-sat{background:var(--sat-bg)}.dc.is-sat .day-num{color:var(--sat-num)}
+.dc.is-sun{background:var(--sun-bg)}.dc.is-sun .day-num{color:var(--sun-num)}
+.dc.is-libnas{background:var(--libnas-bg)}.dc.is-libnas::before{background:var(--libnas-side);opacity:1}.dc.is-libnas .day-num{color:var(--libnas-num);font-weight:800}
+.dc.is-cutib{background:var(--cutib-bg)}.dc.is-cutib::before{background:var(--cutib-side);opacity:1}.dc.is-cutib .day-num{color:var(--cutib-num);font-weight:800}
+.dc.other{opacity:.26;pointer-events:none}
+.dc.today{outline:2px solid #3B82F6;outline-offset:-2px}
+.dc.today .day-num{background:var(--ink);color:#fff!important;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.dc.selected{outline:2px solid var(--ink);outline-offset:-2px;background:var(--bg-dk)!important}
+
+/* day-num is clickable to add event */
+.day-num{font-size:.8rem;font-weight:600;color:var(--ink-md);margin-bottom:3px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .12s,color .12s;flex-shrink:0;z-index:2;position:relative}
+.day-num:hover{background:var(--ink);color:#fff!important}
+.hol-label{font-size:.58rem;font-weight:700;line-height:1.3;margin-bottom:3px;margin-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.is-libnas .hol-label{color:var(--libnas-name)}.is-cutib .hol-label{color:var(--cutib-name)}
+
+/* ── CHIPS ── */
+.chip{display:block;font-size:.63rem;font-weight:700;padding:2px 5px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:#fff;line-height:1.55;transition:opacity .12s}
+.chip:hover{opacity:.8}
+.chip-more{font-size:.6rem;color:var(--ink-lt);padding:1px 4px;display:block;cursor:pointer}
+
+/* ── RIGHT PANEL ── */
+.day-panel{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.06)}
+.panel-head{padding:14px 16px 12px;border-bottom:1.5px solid var(--rule);display:flex;align-items:center;justify-content:space-between}
+.panel-date-label{font-size:.95rem;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.panel-day-name{font-size:.72rem;font-weight:600;color:var(--ink-lt);margin-top:1px;letter-spacing:.02em}
+.panel-hol-badge{font-size:.64rem;font-weight:700;padding:3px 8px;border-radius:100px;margin-top:4px;display:inline-block}
+.panel-body{padding:12px 14px;max-height:calc(100vh - 220px);overflow-y:auto}
+.panel-empty{text-align:center;padding:2.5rem 1rem;color:var(--ink-lt);font-size:.82rem}
+.panel-empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.4}
+.panel-event-item{border:1.5px solid var(--rule);border-radius:var(--r-lg);padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:box-shadow .14s,transform .12s;display:flex;gap:10px;align-items:flex-start}
+.panel-event-item:hover{box-shadow:0 3px 14px rgba(28,25,23,.09);transform:translateY(-1px)}
+.pei-bar{width:3px;border-radius:100px;flex-shrink:0;align-self:stretch;min-height:32px}
+.pei-body{flex:1;min-width:0}
+.pei-type{font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px}
+.pei-title{font-size:.85rem;font-weight:700;color:var(--ink);margin-bottom:4px;line-height:1.3}
+.pei-pics{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
+.pic-badge{font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:100px;background:var(--bg-dk);color:var(--ink-md)}
+.pei-meta{font-size:.7rem;color:var(--ink-lt);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* ── EVENT LIST BELOW ── */
+.list-section{margin-top:1.75rem}
+.list-heading{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.list-heading::after{content:'';flex:1;height:1px;background:var(--rule)}
+.event-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.ecard{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);padding:13px 15px;cursor:pointer;display:flex;gap:11px;align-items:flex-start;transition:box-shadow .14s,transform .12s}
+.ecard:hover{box-shadow:0 4px 20px rgba(28,25,23,.09);transform:translateY(-1px)}
+.ecard-bar{width:3px;border-radius:100px;flex-shrink:0;align-self:stretch;min-height:36px}
+.ecard-body{flex:1;min-width:0}
+.ecard-type{font-size:.64rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px}
+.ecard-title{font-size:.85rem;font-weight:700;color:var(--ink);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ecard-meta{font-size:.72rem;color:var(--ink-lt);display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.spill{display:inline-flex;align-items:center;gap:3px}
+.spill i{font-size:12px}
+.status-pill{display:inline-block;font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px}
+.s-achieve{background:var(--s-achieve-bg);color:var(--s-achieve-tx)}
+.s-not_achieve{background:var(--s-not-bg);color:var(--s-not-tx)}
+.s-pending{background:var(--s-pending-bg);color:var(--s-pending-tx)}
+.pics-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(28,25,23,.48);z-index:300;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--r-xl);padding:1.75rem;width:500px;max-width:100%;max-height:94vh;overflow-y:auto;box-shadow:0 24px 64px rgba(28,25,23,.18);animation:slideUp .2s ease}
+.modal-sm{width:400px}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem}
+.modal-title{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:1.4rem}
+.fg{margin-bottom:.9rem}
+.fl{display:block;font-size:.69rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:5px}
+.fc{width:100%;font-family:var(--font);font-size:.875rem;color:var(--ink);background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:9px 12px;outline:none;transition:border-color .14s,background .14s;appearance:none}
+.fc:focus{border-color:var(--ink-md);background:#fff}
+textarea.fc{resize:vertical;height:70px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── MULTI-PIC INPUT ── */
+.pic-input-wrap{border:1.5px solid var(--rule);border-radius:var(--r-md);background:var(--bg);padding:7px 10px;display:flex;flex-wrap:wrap;gap:6px;cursor:text;transition:border-color .14s}
+.pic-input-wrap:focus-within{border-color:var(--ink-md);background:#fff}
+.pic-tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg-dk);border:1px solid var(--rule);border-radius:100px;padding:3px 4px 3px 9px;font-size:.75rem;font-weight:600;color:var(--ink-md);white-space:nowrap}
+.pic-tag-remove{background:none;border:none;cursor:pointer;color:var(--ink-lt);display:flex;align-items:center;padding:1px;border-radius:50%;transition:background .12s,color .12s}
+.pic-tag-remove:hover{background:var(--rule);color:var(--ink)}
+.pic-input-field{border:none;background:transparent;outline:none;font-family:var(--font);font-size:.83rem;color:var(--ink);min-width:80px;flex:1}
+.pic-hint{font-size:.68rem;color:var(--ink-lt);margin-top:4px}
+
+/* ── DETAIL MODAL ── */
+.det-banner{border-radius:var(--r-md);padding:15px 16px;margin-bottom:1.2rem}
+.det-type{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.75;margin-bottom:4px}
+.det-title{font-size:1.1rem;font-weight:800;line-height:1.3}
+.drow{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:.86rem}
+.drow-ico{color:var(--ink-lt);font-size:15px;margin-top:1px;flex-shrink:0}
+.drow-lbl{color:var(--ink-lt);font-size:.77rem;min-width:90px}
+.drow-val{color:var(--ink);flex:1}
+.det-pics{display:flex;flex-wrap:wrap;gap:5px}
+.det-pic-badge{font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:100px;background:var(--bg-dk);color:var(--ink-md);border:1px solid var(--rule)}
+
+/* ── EVENT TYPE MANAGER ── */
+.type-list{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem}
+.type-row{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-lg)}
+.type-swatch{width:28px;height:28px;border-radius:var(--r-sm);flex-shrink:0;cursor:pointer;border:2px solid transparent;transition:border-color .14s;position:relative}
+.type-swatch:hover{border-color:var(--ink-lt)}
+.type-swatch input[type=color]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.type-row-name{flex:1;font-size:.85rem;font-weight:600;color:var(--ink)}
+.type-row-key{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-lt);background:var(--bg-dk);padding:2px 6px;border-radius:4px}
+.type-edit-btn{background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:16px;padding:4px;border-radius:var(--r-sm);transition:background .12s,color .12s}
+.type-edit-btn:hover{background:var(--bg-dk);color:var(--ink)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.8rem;font-weight:600;padding:9px 18px;border-radius:100px;z-index:999;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* ── CONFIG NOTICE ── */
+.cfg-notice{background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:var(--r-lg);padding:12px 16px;margin-bottom:1.25rem;font-size:.79rem;color:#78350F;display:flex;align-items:flex-start;gap:9px}
+.cfg-notice i{font-size:17px;color:#D97706;flex-shrink:0;margin-top:1px}
+code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;font-size:.76rem;font-family:monospace}
+
+/* ── COLOR PICKER GRID ── */
+.color-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:10px 0}
+.color-swatch-opt{width:32px;height:32px;border-radius:var(--r-sm);cursor:pointer;border:3px solid transparent;transition:border-color .12s,transform .12s}
+.color-swatch-opt:hover{transform:scale(1.1)}
+.color-swatch-opt.selected{border-color:var(--ink)}
+
+/* ── AUTH LOGIN SCREEN ── */
+.login-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
+.login-card{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);padding:2.5rem 2rem;width:380px;max-width:100%;text-align:center;box-shadow:0 8px 40px rgba(28,25,23,.1)}
+.login-icon{font-size:2.5rem;margin-bottom:.75rem;display:block}
+.login-title{font-size:1.4rem;font-weight:800;letter-spacing:-.03em;color:var(--ink);margin-bottom:.4rem}
+.login-sub{font-size:.82rem;color:var(--ink-lt);margin-bottom:2rem;line-height:1.5}
+.btn-google{width:100%;padding:11px 16px;font-size:.88rem;font-weight:700;background:#fff;border:1.5px solid var(--rule);border-radius:var(--r-md);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:var(--font);transition:background .14s,box-shadow .14s;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.btn-google:hover{background:#F8F8F8;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.btn-google svg{flex-shrink:0}
+.login-note{font-size:.72rem;color:var(--ink-lt);margin-top:1.25rem;line-height:1.5}
+
+/* ── AUTH HEADER CHIP ── */
+.auth-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;background:var(--bg-dk);border:1.5px solid var(--rule);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--ink-md)}
+.auth-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;background:var(--rule)}
+.auth-avatar-fallback{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
+
+/* ── READ-ONLY OVERLAY on write buttons ── */
+.write-only{transition:opacity .2s}
+body.read-only .write-only{opacity:.35;pointer-events:none;cursor:not-allowed}
+.readonly-badge{display:none;font-size:.68rem;font-weight:700;padding:3px 9px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:100px;align-items:center;gap:4px}
+body.read-only .readonly-badge{display:inline-flex}
+
+@media(max-width:900px){
+  .main-row{flex-direction:column}
+  .panel-col{width:100%;position:static}
+  .panel-col .day-panel{max-height:300px}
+}
+@media(max-width:600px){
+  .brand-title{font-size:1.2rem}
+  .dc{min-height:70px;padding:4px 3px}
+  .month-label{font-size:.95rem;min-width:160px}
+  .frow{grid-template-columns:1fr}
+  .event-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<!-- ══ LOGIN SCREEN ══ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <span class="login-icon">📅</span>
+    <div class="login-title">Kalender Tim</div>
+    <div class="login-sub">Masuk untuk mengelola event.<br>Atau lanjutkan tanpa login untuk melihat kalender.</div>
+    <button class="btn-google" id="loginGoogleBtn">
+      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Masuk dengan Google
+    </button>
+    <button class="btn" id="viewOnlyBtn" style="width:100%;margin-top:10px;justify-content:center"><i class="ti ti-eye"></i> Lihat saja (tanpa login)</button>
+    <div class="login-note">Hanya akun yang diizinkan yang dapat menambah, mengedit, atau menghapus event.</div>
+  </div>
+</div>
+
+<div class="page" id="mainApp" style="display:none">
+
+<!-- CONFIG NOTICE -->
+<div class="cfg-notice" id="cfgNotice">
+  <i class="ti ti-alert-triangle"></i>
+  <div><strong>Firebase belum dikonfigurasi.</strong> Ganti nilai <code>YOUR_*</code> di bagian <code>firebaseConfig</code>. Sementara data tersimpan di browser (localStorage).</div>
+</div>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div>
+    <div class="brand-title">Kalender Tim</div>
+    <div class="brand-sub">Manajemen Deadline &amp; Event</div>
+  </div>
+  <div class="hdr-right">
+    <!-- Read-only badge -->
+    <span class="readonly-badge"><i class="ti ti-eye" style="font-size:12px"></i> Mode Lihat</span>
+    <!-- Auth chip -->
+    <div id="authChip" style="display:none"></div>
+    <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
+    <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
+    <button class="btn btn-primary write-only" id="addEventBtn"><i class="ti ti-plus"></i> Tambah Event</button>
+  </div>
+</header>
+
+<!-- CONTROL BAR -->
+<div class="control-bar">
+  <div class="month-nav">
+    <button class="btn btn-icon" id="prevBtn"><i class="ti ti-chevron-left"></i></button>
+    <span class="month-label" id="monthLabel">–</span>
+    <button class="btn btn-icon" id="nextBtn"><i class="ti ti-chevron-right"></i></button>
+  </div>
+  <div class="filter-group">
+    <span class="filter-sep">Filter</span>
+    <select class="filter-select" id="filterType"><option value="all">Semua Jenis</option></select>
+    <select class="filter-select" id="filterPIC"><option value="all">Semua PIC</option></select>
+  </div>
+</div>
+
+<!-- LEGEND (dynamic) -->
+<div class="legend-bar" id="legendBar"></div>
+
+<!-- MAIN ROW: CALENDAR + RIGHT PANEL -->
+<div class="main-row">
+  <div class="cal-col">
+    <div class="cal-shell">
+      <div class="cal-hdr" id="calHdr"></div>
+      <div class="cal-body" id="calBody"><div style="grid-column:span 7;text-align:center;padding:3rem;color:var(--ink-lt);font-size:.85rem"><i class="ti ti-loader" style="font-size:22px"></i><br>Memuat...</div></div>
+    </div>
+
+    <!-- EVENT LIST -->
+    <div class="list-section">
+      <div class="list-heading">Event bulan ini</div>
+      <div class="event-grid" id="eventGrid"><div style="color:var(--ink-lt);font-size:.82rem;">Memuat event...</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel-col">
+    <div class="day-panel">
+      <div class="panel-head">
+        <div>
+          <div class="panel-date-label" id="panelDateLabel">Pilih tanggal</div>
+          <div class="panel-day-name" id="panelDayName">Klik tanggal di kalender untuk melihat event</div>
+          <div id="panelHolBadge"></div>
+        </div>
+        <button class="btn btn-icon btn-sm" id="panelAddBtn" style="display:none" title="Tambah event di tanggal ini"><i class="ti ti-plus"></i></button>
+      </div>
+      <div class="panel-body" id="panelBody">
+        <div class="panel-empty"><i class="ti ti-calendar-off"></i>Belum ada tanggal dipilih</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /page -->
+
+</div><!-- /page / mainApp -->
+
+<!-- ══ ADD / EDIT EVENT MODAL ══ -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="addModalTitle">Tambah Event</div>
+      <button class="btn btn-icon" id="closeAdd"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg">
+      <label class="fl">Jenis Event</label>
+      <select class="fc" id="fType"></select>
+    </div>
+    <div class="fg">
+      <label class="fl">Nama / Judul</label>
+      <input type="text" class="fc" id="fTitle" placeholder="Contoh: Closing Akhir Bulan..."/>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Tanggal Mulai</label><input type="date" class="fc" id="fDateStart"/></div>
+      <div class="fg"><label class="fl">Tanggal Selesai</label><input type="date" class="fc" id="fDateEnd"/></div>
+    </div>
+    <div class="fg">
+      <label class="fl">Penanggungjawab (PIC) <span style="color:#EF4444">*</span></label>
+      <div class="pic-input-wrap" id="picInputWrap">
+        <div id="picTags"></div>
+        <input type="text" class="pic-input-field" id="picInput" placeholder="Ketik nama lalu Enter..."/>
+      </div>
+      <div class="pic-hint"><i class="ti ti-info-circle" style="font-size:11px;vertical-align:-1px"></i> Tekan <strong>Enter</strong> atau <strong>koma</strong> untuk menambah PIC. Bisa lebih dari satu.</div>
+    </div>
+    <div class="fg">
+      <label class="fl">Status</label>
+      <select class="fc" id="fStatus">
+        <option value="pending">Pending</option>
+        <option value="achieve">Achieve</option>
+        <option value="not_achieve">Not Achieve</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="fl">Catatan</label>
+      <textarea class="fc" id="fNote" placeholder="Keterangan tambahan..."></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="cancelAdd">Batal</button>
+      <button class="btn btn-primary" id="saveBtn"><i class="ti ti-device-floppy"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DETAIL MODAL ══ -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Detail Event</div>
+      <button class="btn btn-icon" id="closeDetail"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="detailContent"></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger write-only" id="deleteBtn"><i class="ti ti-trash"></i> Hapus</button>
+      <button class="btn btn-primary write-only" id="editBtn"><i class="ti ti-edit"></i> Edit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EVENT TYPE MANAGER MODAL ══ -->
+<div class="overlay" id="typeManagerOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Kelola Jenis Event</div>
+      <button class="btn btn-icon" id="closeTypeManager"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:.82rem;color:var(--ink-lt);margin-bottom:1rem">Klik kotak warna untuk mengubah warna. Klik ikon pensil untuk mengubah nama.</p>
+    <div class="type-list" id="typeList"></div>
+    <div style="border-top:1.5px solid var(--rule);padding-top:1rem;margin-top:.5rem">
+      <div style="font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:.6rem">Tambah Jenis Baru</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="text" class="fc" id="newTypeName" placeholder="Nama jenis event..." style="flex:1;min-width:120px"/>
+        <div style="position:relative;width:36px;height:36px;border-radius:var(--r-sm);border:1.5px solid var(--rule);overflow:hidden;cursor:pointer;flex-shrink:0" id="newTypeColorSwatch">
+          <input type="color" id="newTypeColor" value="#6366F1" style="position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);cursor:pointer;border:none;padding:0"/>
+        </div>
+        <button class="btn btn-primary btn-sm" id="addTypeBtn"><i class="ti ti-plus"></i> Tambah</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" id="closeTypeManagerOk">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EDIT TYPE NAME MODAL ══ -->
+<div class="overlay" id="editTypeOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div class="modal-title">Edit Jenis Event</div>
+      <button class="btn btn-icon" id="closeEditType"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg"><label class="fl">Nama Jenis</label><input type="text" class="fc" id="editTypeName"/></div>
+    <div class="fg">
+      <label class="fl">Warna Chip</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="position:relative;width:36px;height:36px;border-radius:var(--r-sm);border:1.5px solid var(--rule);overflow:hidden;cursor:pointer;flex-shrink:0">
+          <input type="color" id="editTypeColor" style="position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);cursor:pointer;border:none;padding:0"/>
+        </div>
+        <span style="font-size:.78rem;color:var(--ink-lt)">Atau pilih warna preset:</span>
+      </div>
+      <div class="color-grid" id="colorPresetGrid"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="deleteTypeBtn"><i class="ti ti-trash"></i> Hapus Jenis</button>
+      <button class="btn" id="cancelEditType">Batal</button>
+      <button class="btn btn-primary" id="saveEditType"><i class="ti ti-check"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════
+   🔥 FIREBASE CONFIG — GANTI NILAI YOUR_*
+   ════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBq0BwjCTIsjvKNrb_XRqCOPRdUOrUbFsc",
+  authDomain: "kalender-tim-5bc0b.firebaseapp.com",
+  projectId: "kalender-tim-5bc0b",
+  storageBucket: "kalender-tim-5bc0b.firebasestorage.app",
+  messagingSenderId: "765147074602",
+  appId: "1:765147074602:web:927d59d85438947427b353"
+};
+
+/* ════════════════════════════════════════
+   WHITELIST EMAIL — DAFTARKAN EMAIL YANG BOLEH EDIT
+   Tambahkan email Google anggota tim di sini.
+   ════════════════════════════════════════ */
+const ALLOWED_EMAILS = [
+  "ryan.trisyardi@gmail.com",
+  "ryan.trisyardi@yahoo.com",
+  "ryan.trisyardi@megavision.net.id",
+  // tambahkan email lain di sini
+];
+
+/* ── INIT FIREBASE ── */
+let db = null, auth = null, useFirebase = false;
+let currentUser = null;   // null = belum login / view-only
+let canWrite    = false;  // true = login + email diizinkan
+
+try {
+  if (!firebaseConfig.apiKey.includes('YOUR_')) {
+    firebase.initializeApp(firebaseConfig);
+    db   = firebase.firestore();
+    auth = firebase.auth();
+    useFirebase = true;
+    document.getElementById('cfgNotice').style.display = 'none';
+  }
+} catch(e) { console.warn('Firebase init gagal:', e); }
+
+/* ── AUTH STATE HANDLER ── */
+function applyAuthState(user) {
+  currentUser = user;
+  canWrite    = user && ALLOWED_EMAILS.includes(user.email);
+
+  /* Toggle read-only mode on body */
+  document.body.classList.toggle('read-only', !canWrite);
+
+  /* Update auth chip in header */
+  const chip = document.getElementById('authChip');
+  if (user) {
+    const initial = (user.displayName||user.email||'?')[0].toUpperCase();
+    const avatarHtml = user.photoURL
+      ? `<img class="auth-avatar" src="${user.photoURL}" alt="" referrerpolicy="no-referrer"/>`
+      : `<span class="auth-avatar-fallback">${initial}</span>`;
+    const name = user.displayName || user.email;
+    const badge = canWrite
+      ? `<span style="color:#15803D;font-size:.65rem;font-weight:700">✓ Editor</span>`
+      : `<span style="color:#B45309;font-size:.65rem;font-weight:700">Lihat saja</span>`;
+    chip.innerHTML = `<div class="auth-chip">
+      ${avatarHtml}
+      <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(name)}</span>
+      ${badge}
+      <button onclick="signOut()" style="background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:13px;padding:0 2px;display:flex;align-items:center" title="Keluar"><i class="ti ti-logout"></i></button>
+    </div>`;
+    chip.style.display = 'block';
+  } else {
+    chip.innerHTML = `<button class="btn btn-sm" onclick="signInGoogle()"><i class="ti ti-brand-google"></i> Masuk</button>`;
+    chip.style.display = 'block';
+  }
+
+  /* Panel add button also respects write guard */
+  const pab = document.getElementById('panelAddBtn');
+  if (pab) pab.classList.toggle('write-only', true);
+}
+
+function signInGoogle() {
+  if (!auth) return;
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => {
+    if (err.code !== 'auth/popup-closed-by-user') showToast('❌ Login gagal: ' + err.message);
+  });
+}
+function signOut() {
+  if (!auth) return;
+  auth.signOut().then(() => showToast('👋 Berhasil keluar'));
+}
+
+/* ── BOOT: show login screen or app ── */
+function bootApp(skipLogin) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  if (useFirebase && auth) {
+    auth.onAuthStateChanged(user => {
+      applyAuthState(user);
+      /* Load events once on first auth state */
+      if (!window._eventsLoaded) { window._eventsLoaded = true; loadEvents(); renderCalendar(); }
+    });
+  } else {
+    /* No Firebase — localStorage mode, always read-write */
+    canWrite = true;
+    document.body.classList.remove('read-only');
+    loadEvents();
+    renderCalendar();
+  }
+}
+
+document.getElementById('loginGoogleBtn').addEventListener('click', () => {
+  if (!useFirebase) { bootApp(false); return; }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .then(() => bootApp(false))
+    .catch(err => {
+      if (err.code !== 'auth/popup-closed-by-user') showToast('❌ Login gagal: '+err.message);
+    });
+});
+document.getElementById('viewOnlyBtn').addEventListener('click', () => bootApp(true));
+
+/* ════════════════════════════════════════
+   DEFAULT EVENT TYPES
+   Each type: { id, label, chip (hex), lt (light bg hex) }
+   ════════════════════════════════════════ */
+const DEFAULT_TYPES = [
+  { id:'deadline',     label:'Deadline Laporan', chip:'#3B82F6', lt:'#EFF6FF' },
+  { id:'cuti',         label:'Cuti',             chip:'#10B981', lt:'#ECFDF5' },
+  { id:'stock_opname', label:'Stock Opname',      chip:'#F59E0B', lt:'#FFFBEB' },
+  { id:'cash_opname',  label:'Cash Opname',       chip:'#8B5CF6', lt:'#F5F3FF' },
+  { id:'lainnya',      label:'Lainnya',           chip:'#EC4899', lt:'#FDF2F8' },
+];
+
+/* Load custom types from localStorage */
+function loadTypes() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('cal_types') || 'null');
+    return saved || DEFAULT_TYPES.map(t => ({...t}));
+  } catch(e) { return DEFAULT_TYPES.map(t => ({...t})); }
+}
+function saveTypes() {
+  localStorage.setItem('cal_types', JSON.stringify(eventTypes));
+}
+/* Lighten a hex color for background */
+function hexToLight(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  const mix = (c) => Math.round(c * .15 + 255 * .85);
+  return `#${mix(r).toString(16).padStart(2,'0')}${mix(g).toString(16).padStart(2,'0')}${mix(b).toString(16).padStart(2,'0')}`;
+}
+function getTypeById(id) {
+  return eventTypes.find(t => t.id === id) || eventTypes[eventTypes.length-1] || DEFAULT_TYPES[4];
+}
+
+let eventTypes = loadTypes();
+
+/* ════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════ */
+let events       = [];
+let holidays     = {};
+let holidayCache = {};
+let currentDate  = new Date();
+let filterType   = 'all';
+let filterPIC    = 'all';
+let editingId    = null;
+let viewingId    = null;
+let selectedDate = null;   // for right panel
+let currentPICs  = [];     // multi-PIC array in form
+let editingTypeId= null;
+
+const PRESET_COLORS = [
+  '#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E',
+  '#10B981','#14B8A6','#06B6D4','#3B82F6','#6366F1','#8B5CF6',
+  '#A855F7','#EC4899','#F43F5E','#64748B',
+];
+
+/* ════════════════════════════════════════
+   HOLIDAY API
+   ════════════════════════════════════════ */
+async function fetchHolidaysForYear(year) {
+  if (holidayCache[year] !== undefined) return holidayCache[year];
+  holidayCache[year] = {};
+  try {
+    const res = await fetch(`https://libur.deno.dev/api?year=${year}`);
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const map = {};
+    if (Array.isArray(data)) {
+      data.forEach(h => {
+        map[h.date] = { name: h.name, isCutiBersama: /cuti bersama/i.test(h.name) };
+      });
+    }
+    holidayCache[year] = map;
+    return map;
+  } catch(e) { console.warn('Libur API error:', e); return {}; }
+}
+async function ensureHolidays(year, month) {
+  const d = await fetchHolidaysForYear(year);
+  Object.assign(holidays, d);
+  if (month === 0)  fetchHolidaysForYear(year-1).then(x => Object.assign(holidays,x));
+  if (month === 11) fetchHolidaysForYear(year+1).then(x => Object.assign(holidays,x));
+}
+
+/* ════════════════════════════════════════
+   DATA ADAPTER (Firebase / localStorage)
+   ════════════════════════════════════════ */
+function loadEvents() {
+  if (useFirebase) {
+    db.collection('events').orderBy('dateStart')
+      .onSnapshot(snap => {
+        events = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        // Migrate old single-string pic → array
+        events = events.map(e => ({
+          ...e,
+          pics: Array.isArray(e.pics) ? e.pics : (e.pic ? [e.pic] : [])
+        }));
+        rebuildFilters();
+        renderCalendar();
+        if (selectedDate) renderPanel(selectedDate);
+      }, err => showToast('Gagal memuat: '+err.message));
+  } else {
+    try { events = JSON.parse(localStorage.getItem('cal_events') || '[]'); }
+    catch(e) { events = []; }
+    events = events.map(e => ({
+      ...e,
+      pics: Array.isArray(e.pics) ? e.pics : (e.pic ? [e.pic] : [])
+    }));
+    rebuildFilters();
+    renderCalendar();
+  }
+}
+async function saveEvent(data) {
+  if (useFirebase) {
+    if (editingId) await db.collection('events').doc(editingId).update(data);
+    else await db.collection('events').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  } else {
+    if (editingId) events = events.map(e => e.id === editingId ? {...e,...data} : e);
+    else events.push({ id:'loc_'+Date.now(), ...data });
+    localStorage.setItem('cal_events', JSON.stringify(events));
+    rebuildFilters(); renderCalendar();
+    if (selectedDate) renderPanel(selectedDate);
+  }
+}
+async function deleteEvent(id) {
+  if (useFirebase) {
+    await db.collection('events').doc(id).delete();
+  } else {
+    events = events.filter(e => e.id !== id);
+    localStorage.setItem('cal_events', JSON.stringify(events));
+    rebuildFilters(); renderCalendar();
+    if (selectedDate) renderPanel(selectedDate);
+  }
+}
+
+/* ════════════════════════════════════════
+   FILTERS
+   ════════════════════════════════════════ */
+function rebuildFilters() {
+  /* Type dropdown */
+  const tSel = document.getElementById('filterType');
+  const tCur = tSel.value;
+  tSel.innerHTML = '<option value="all">Semua Jenis</option>' +
+    eventTypes.map(t => `<option value="${t.id}">${escHtml(t.label)}</option>`).join('');
+  if (eventTypes.find(t => t.id === tCur)) tSel.value = tCur;
+
+  /* PIC dropdown — collect all unique PICs from events.pics arrays */
+  const pSel = document.getElementById('filterPIC');
+  const pCur = pSel.value;
+  const allPICs = [...new Set(events.flatMap(e => e.pics || []).filter(Boolean))].sort();
+  pSel.innerHTML = '<option value="all">Semua PIC</option>' +
+    allPICs.map(p => `<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
+  if (allPICs.includes(pCur)) pSel.value = pCur;
+
+  renderLegend();
+  rebuildTypeSelect();
+}
+function rebuildTypeSelect() {
+  const sel = document.getElementById('fType');
+  const cur = sel.value;
+  sel.innerHTML = eventTypes.map(t =>
+    `<option value="${t.id}">${escHtml(t.label)}</option>`
+  ).join('');
+  if (eventTypes.find(t => t.id === cur)) sel.value = cur;
+}
+function renderLegend() {
+  const bar = document.getElementById('legendBar');
+  bar.innerHTML = eventTypes.map(t =>
+    `<div class="leg"><div class="leg-dot" style="background:${t.chip}"></div>${escHtml(t.label)}</div>`
+  ).join('') +
+  `<div class="leg-sep"></div>
+   <div class="leg"><div class="leg-dot" style="background:var(--libnas-bg);border:1.5px solid var(--libnas-side)"></div> Libur Nasional</div>
+   <div class="leg"><div class="leg-dot" style="background:var(--cutib-bg);border:1.5px solid var(--cutib-side)"></div> Cuti Bersama</div>
+   <div class="leg-sep"></div>
+   <div class="leg"><div class="leg-dot" style="background:var(--sun-bg);border:1.5px solid #FCA5A5"></div> Minggu</div>
+   <div class="leg"><div class="leg-dot" style="background:var(--sat-bg);border:1.5px solid #93C5FD"></div> Sabtu</div>`;
+}
+
+/* ════════════════════════════════════════
+   HELPERS
+   ════════════════════════════════════════ */
+function toStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDate(s) {
+  if (!s) return '';
+  const [y,m,d] = s.split('-');
+  return `${d}/${m}/${y}`;
+}
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function showToast(msg, dur=2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+function getEventsForDate(ds) {
+  return events.filter(e => {
+    if (filterType !== 'all' && e.type !== filterType) return false;
+    if (filterPIC  !== 'all' && !(e.pics||[]).includes(filterPIC)) return false;
+    if (e.dateEnd && e.dateStart <= ds && e.dateEnd >= ds) return true;
+    return e.dateStart === ds;
+  });
+}
+function picsLabel(ev) {
+  const pics = ev.pics || [];
+  if (!pics.length) return ev.title;
+  if (pics.length === 1) return `${ev.title} · ${pics[0]}`;
+  return `${ev.title} · ${pics[0]} +${pics.length-1}`;
+}
+
+/* ════════════════════════════════════════
+   RENDER CALENDAR
+   ════════════════════════════════════════ */
+async function renderCalendar() {
+  const year  = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const todayStr = toStr(new Date());
+
+  document.getElementById('monthLabel').textContent =
+    new Date(year,month,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+
+  const DAYS = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  document.getElementById('calHdr').innerHTML =
+    DAYS.map((d,i) => `<div class="dh${i===0?' sun':i===6?' sat':''}">${d}</div>`).join('');
+
+  await ensureHolidays(year, month);
+
+  const firstDay = new Date(year,month,1).getDay();
+  const lastDate  = new Date(year,month+1,0).getDate();
+  const prevLast  = new Date(year,month,0).getDate();
+
+  let cells = [];
+  for (let i=firstDay-1;i>=0;i--) cells.push({day:prevLast-i,cur:false,m:month-1,y:year});
+  for (let d=1;d<=lastDate;d++)   cells.push({day:d,cur:true,m:month,y:year});
+  while (cells.length%7!==0)      cells.push({day:cells.length-firstDay-lastDate+1,cur:false,m:month+1,y:year});
+
+  let html = '';
+  cells.forEach(c => {
+    const rm = c.m<0?11:c.m>11?0:c.m;
+    const ry = c.m<0?c.y-1:c.m>11?c.y+1:c.y;
+    const ds = `${ry}-${String(rm+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
+    const dow = new Date(ry,rm,c.day).getDay();
+    const isToday = ds===todayStr && c.cur;
+    const hol = holidays[ds];
+    const isLibnas  = !!(hol && !hol.isCutiBersama);
+    const isCutib   = !!(hol && hol.isCutiBersama);
+    const isSun = dow===0, isSat = dow===6;
+    const isSelected = ds===selectedDate && c.cur;
+
+    let cls = 'dc';
+    if (!c.cur)   cls += ' other';
+    if (isSun)    cls += ' is-sun';
+    if (isSat)    cls += ' is-sat';
+    if (isLibnas) cls += ' is-libnas';
+    if (isCutib)  cls += ' is-cutib';
+    if (isToday)  cls += ' today';
+    if (isSelected) cls += ' selected';
+
+    const holHtml = (hol && c.cur)
+      ? `<div class="hol-label" title="${escHtml(hol.name)}">${escHtml(hol.name)}</div>` : '';
+
+    const evs = c.cur ? getEventsForDate(ds) : [];
+    const MAX = 2;
+    let chipsHtml = evs.slice(0,MAX).map(e => {
+      const t = getTypeById(e.type);
+      return `<span class="chip" style="background:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${escHtml(picsLabel(e))}</span>`;
+    }).join('');
+    if (evs.length > MAX) chipsHtml += `<span class="chip-more">+${evs.length-MAX} lainnya</span>`;
+
+    /* day-num triggers ADD; rest of cell triggers PANEL */
+    html += `<div class="${cls}" data-date="${ds}">
+      <div class="day-num" data-date="${ds}" data-adddate="${ds}">${c.day}</div>
+      ${holHtml}${chipsHtml}
+    </div>`;
+  });
+
+  document.getElementById('calBody').innerHTML = html;
+
+  /* day-num click → ADD EVENT (only if canWrite) */
+  document.querySelectorAll('.day-num[data-adddate]').forEach(el => {
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      if (!canWrite) { selectDate(el.dataset.adddate); return; }
+      openAdd(el.dataset.adddate);
+    });
+  });
+
+  /* chip click → DETAIL */
+  document.querySelectorAll('.chip[data-id]').forEach(el => {
+    el.addEventListener('click', ev => {
+      ev.stopPropagation();
+      openDetail(el.dataset.id);
+    });
+  });
+
+  /* cell click (not on day-num or chip) → PANEL */
+  document.querySelectorAll('.dc:not(.other)').forEach(el => {
+    el.addEventListener('click', ev => {
+      if (ev.target.closest('.day-num') || ev.target.closest('.chip')) return;
+      selectDate(el.dataset.date);
+    });
+  });
+
+  renderEventList(year, month);
+}
+
+/* ════════════════════════════════════════
+   RIGHT PANEL
+   ════════════════════════════════════════ */
+function selectDate(ds) {
+  selectedDate = ds;
+  // Update selected highlight
+  document.querySelectorAll('.dc').forEach(el => {
+    el.classList.toggle('selected', el.dataset.date === ds && !el.classList.contains('other'));
+  });
+  renderPanel(ds);
+}
+
+function renderPanel(ds) {
+  const d = new Date(ds + 'T00:00:00');
+  const dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  document.getElementById('panelDateLabel').textContent =
+    d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('panelDayName').textContent = dayNames[d.getDay()];
+  document.getElementById('panelAddBtn').style.display = canWrite ? 'flex' : 'none';
+  document.getElementById('panelAddBtn').onclick = () => openAdd(ds);
+
+  /* Holiday badge */
+  const hol = holidays[ds];
+  const holBadge = document.getElementById('panelHolBadge');
+  if (hol) {
+    const cls = hol.isCutiBersama ? 'hb-cutib' : 'hb-libnas';
+    const bg  = hol.isCutiBersama ? 'var(--cutib-bg)' : 'var(--libnas-bg)';
+    const col = hol.isCutiBersama ? 'var(--cutib-name)' : 'var(--libnas-name)';
+    holBadge.innerHTML = `<span class="panel-hol-badge" style="background:${bg};color:${col}">${escHtml(hol.name)}</span>`;
+  } else {
+    holBadge.innerHTML = '';
+  }
+
+  const evs = events.filter(e => {
+    if (e.dateEnd && e.dateStart <= ds && e.dateEnd >= ds) return true;
+    return e.dateStart === ds;
+  });
+
+  const body = document.getElementById('panelBody');
+  if (!evs.length) {
+    body.innerHTML = `<div class="panel-empty"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`;
+    return;
+  }
+
+  const statusMap = {achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  body.innerHTML = evs.map(e => {
+    const t = getTypeById(e.type);
+    const pics = e.pics || [];
+    const dl = e.dateEnd && e.dateEnd !== e.dateStart
+      ? `${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}` : fmtDate(e.dateStart);
+    const sp = e.status ? `<span class="status-pill s-${e.status}" style="font-size:.62rem">${statusMap[e.status]}</span>` : '';
+    return `<div class="panel-event-item" data-id="${e.id}">
+      <div class="pei-bar" style="background:${t.chip}"></div>
+      <div class="pei-body">
+        <div class="pei-type" style="color:${t.chip}">${escHtml(t.label)}</div>
+        <div class="pei-title">${escHtml(e.title)}</div>
+        ${pics.length ? `<div class="pei-pics">${pics.map(p=>`<span class="pic-badge">${escHtml(p)}</span>`).join('')}</div>` : ''}
+        <div class="pei-meta">
+          <span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px"></i> ${dl}</span>
+          ${sp}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  body.querySelectorAll('.panel-event-item').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.id))
+  );
+}
+
+/* ════════════════════════════════════════
+   EVENT LIST (below calendar)
+   ════════════════════════════════════════ */
+function renderEventList(year, month) {
+  const mStr = `${year}-${String(month+1).padStart(2,'0')}`;
+  const filtered = events
+    .filter(e => {
+      if (filterType !== 'all' && e.type !== filterType) return false;
+      if (filterPIC  !== 'all' && !(e.pics||[]).includes(filterPIC)) return false;
+      return e.dateStart.startsWith(mStr) || (e.dateEnd && e.dateEnd.startsWith(mStr));
+    })
+    .sort((a,b) => a.dateStart.localeCompare(b.dateStart));
+
+  const grid = document.getElementById('eventGrid');
+  if (!filtered.length) {
+    grid.innerHTML = `<p style="color:var(--ink-lt);font-size:.82rem;grid-column:1/-1">Tidak ada event bulan ini.</p>`;
+    return;
+  }
+
+  const statusMap = {achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  grid.innerHTML = filtered.map(e => {
+    const t  = getTypeById(e.type);
+    const pics = e.pics || [];
+    const dl = e.dateEnd ? `${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}` : fmtDate(e.dateStart);
+    const sp = e.status ? `<span class="status-pill s-${e.status}">${statusMap[e.status]}</span>` : '';
+    const extraPics = pics.length > 1 ? ` <span style="color:var(--ink-lt);font-weight:500">+${pics.length-1}</span>` : '';
+    const titleDisp = pics.length
+      ? `${escHtml(e.title)} · ${escHtml(pics[0])}${extraPics}`
+      : escHtml(e.title);
+    return `<div class="ecard" data-id="${e.id}">
+      <div class="ecard-bar" style="background:${t.chip}"></div>
+      <div class="ecard-body">
+        <div class="ecard-type" style="color:${t.chip}">${escHtml(t.label)}</div>
+        <div class="ecard-title">${titleDisp}</div>
+        <div class="ecard-meta">
+          <span class="spill"><i class="ti ti-calendar"></i>${dl}</span>
+          ${pics.length ? `<span class="spill"><i class="ti ti-users"></i>${pics.length} PIC</span>` : ''}
+          ${sp}
+        </div>
+        ${pics.length > 1 ? `<div class="pics-row">${pics.map(p=>`<span class="pic-badge" style="font-size:.62rem;padding:2px 7px;background:var(--bg-dk);border-radius:100px;border:1px solid var(--rule)">${escHtml(p)}</span>`).join('')}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.querySelectorAll('.ecard').forEach(el =>
+    el.addEventListener('click', () => openDetail(el.dataset.id))
+  );
+}
+
+/* ════════════════════════════════════════
+   MULTI-PIC INPUT
+   ════════════════════════════════════════ */
+function renderPicTags() {
+  const container = document.getElementById('picTags');
+  container.innerHTML = currentPICs.map((p,i) =>
+    `<span class="pic-tag">${escHtml(p)}<button class="pic-tag-remove" data-i="${i}" type="button"><i class="ti ti-x" style="font-size:10px"></i></button></span>`
+  ).join('');
+  container.querySelectorAll('.pic-tag-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentPICs.splice(parseInt(btn.dataset.i), 1);
+      renderPicTags();
+    });
+  });
+}
+function addPICfromInput() {
+  const input = document.getElementById('picInput');
+  const raw = input.value.trim().replace(/,+$/, '');
+  const names = raw.split(',').map(s => s.trim()).filter(Boolean);
+  names.forEach(n => {
+    if (n && !currentPICs.includes(n)) currentPICs.push(n);
+  });
+  input.value = '';
+  renderPicTags();
+}
+
+document.getElementById('picInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === ',') {
+    e.preventDefault();
+    addPICfromInput();
+  }
+  if (e.key === 'Backspace' && !e.target.value && currentPICs.length) {
+    currentPICs.pop();
+    renderPicTags();
+  }
+});
+document.getElementById('picInput').addEventListener('blur', () => {
+  if (document.getElementById('picInput').value.trim()) addPICfromInput();
+});
+document.getElementById('picInputWrap').addEventListener('click', () => {
+  document.getElementById('picInput').focus();
+});
+
+/* ════════════════════════════════════════
+   ADD MODAL
+   ════════════════════════════════════════ */
+function openAdd(dateStr) {
+  editingId = null;
+  currentPICs = [];
+  document.getElementById('addModalTitle').textContent = 'Tambah Event';
+  document.getElementById('fTitle').value      = '';
+  document.getElementById('fDateStart').value  = dateStr || toStr(new Date());
+  document.getElementById('fDateEnd').value    = '';
+  document.getElementById('fStatus').value     = 'pending';
+  document.getElementById('fNote').value       = '';
+  document.getElementById('picInput').value    = '';
+  rebuildTypeSelect();
+  renderPicTags();
+  document.getElementById('addOverlay').classList.add('open');
+}
+
+/* ════════════════════════════════════════
+   DETAIL MODAL
+   ════════════════════════════════════════ */
+function openDetail(id) {
+  const ev = events.find(e => e.id === id);
+  if (!ev) return;
+  viewingId = id;
+  const t   = getTypeById(ev.type);
+  const dl  = ev.dateEnd ? `${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}` : fmtDate(ev.dateStart);
+  const sm  = {achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  const sp  = ev.status ? `<span class="status-pill s-${ev.status}">${sm[ev.status]}</span>` : '';
+  const pics = ev.pics || [];
+  const lt   = t.lt || hexToLight(t.chip);
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="det-banner" style="background:${lt}">
+      <div class="det-type" style="color:${t.chip}">${escHtml(t.label)}</div>
+      <div class="det-title" style="color:${t.chip}">${escHtml(ev.title)}</div>
+    </div>
+    <div class="drow"><i class="ti ti-calendar drow-ico"></i><span class="drow-lbl">Tanggal</span><span class="drow-val">${dl}</span></div>
+    ${pics.length ? `<div class="drow"><i class="ti ti-users drow-ico"></i><span class="drow-lbl">PIC</span><span class="drow-val"><div class="det-pics">${pics.map(p=>`<span class="det-pic-badge">${escHtml(p)}</span>`).join('')}</div></span></div>` : ''}
+    ${ev.status ? `<div class="drow"><i class="ti ti-circle-check drow-ico"></i><span class="drow-lbl">Status</span><span class="drow-val">${sp}</span></div>` : ''}
+    ${ev.note   ? `<div class="drow"><i class="ti ti-notes drow-ico"></i><span class="drow-lbl">Catatan</span><span class="drow-val">${escHtml(ev.note)}</span></div>` : ''}
+  `;
+  document.getElementById('detailOverlay').classList.add('open');
+}
+
+/* ════════════════════════════════════════
+   EVENT TYPE MANAGER
+   ════════════════════════════════════════ */
+function openTypeManager() {
+  renderTypeList();
+  document.getElementById('typeManagerOverlay').classList.add('open');
+}
+function renderTypeList() {
+  const list = document.getElementById('typeList');
+  list.innerHTML = eventTypes.map(t => `
+    <div class="type-row" data-id="${t.id}">
+      <div class="type-swatch" style="background:${t.chip}" title="Klik untuk ubah warna">
+        <input type="color" value="${t.chip}" data-id="${t.id}" class="inline-color-pick"/>
+      </div>
+      <div class="type-row-name">${escHtml(t.label)}</div>
+      <button class="type-edit-btn" data-id="${t.id}" title="Edit nama & warna"><i class="ti ti-pencil"></i></button>
+    </div>
+  `).join('');
+
+  /* Inline color picker */
+  list.querySelectorAll('.inline-color-pick').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const type = eventTypes.find(t => t.id === e.target.dataset.id);
+      if (type) {
+        type.chip = e.target.value;
+        type.lt   = hexToLight(e.target.value);
+        e.target.closest('.type-swatch').style.background = e.target.value;
+        saveTypes(); rebuildFilters(); renderCalendar();
+      }
+    });
+  });
+
+  /* Edit button */
+  list.querySelectorAll('.type-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEditType(btn.dataset.id));
+  });
+}
+
+function openEditType(id) {
+  const type = eventTypes.find(t => t.id === id);
+  if (!type) return;
+  editingTypeId = id;
+  document.getElementById('editTypeName').value  = type.label;
+  document.getElementById('editTypeColor').value = type.chip;
+
+  /* Preset grid */
+  const grid = document.getElementById('colorPresetGrid');
+  grid.innerHTML = PRESET_COLORS.map(c =>
+    `<div class="color-swatch-opt${c.toLowerCase()===type.chip.toLowerCase()?' selected':''}" style="background:${c}" data-color="${c}" title="${c}"></div>`
+  ).join('');
+  grid.querySelectorAll('.color-swatch-opt').forEach(el => {
+    el.addEventListener('click', () => {
+      grid.querySelectorAll('.color-swatch-opt').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      document.getElementById('editTypeColor').value = el.dataset.color;
+    });
+  });
+
+  document.getElementById('editTypeOverlay').classList.add('open');
+}
+
+document.getElementById('saveEditType').addEventListener('click', () => {
+  const name  = document.getElementById('editTypeName').value.trim();
+  const color = document.getElementById('editTypeColor').value;
+  if (!name) { showToast('⚠️ Nama jenis tidak boleh kosong'); return; }
+  const type = eventTypes.find(t => t.id === editingTypeId);
+  if (type) {
+    type.label = name;
+    type.chip  = color;
+    type.lt    = hexToLight(color);
+    saveTypes(); rebuildFilters();
+    renderCalendar(); renderTypeList();
+  }
+  document.getElementById('editTypeOverlay').classList.remove('open');
+  showToast('✅ Jenis event diupdate');
+});
+
+document.getElementById('deleteTypeBtn').addEventListener('click', () => {
+  if (eventTypes.length <= 1) { showToast('⚠️ Minimal harus ada 1 jenis event'); return; }
+  if (!confirm('Hapus jenis event ini? Event yang sudah ada akan tetap tersimpan.')) return;
+  eventTypes = eventTypes.filter(t => t.id !== editingTypeId);
+  saveTypes(); rebuildFilters(); renderCalendar(); renderTypeList();
+  document.getElementById('editTypeOverlay').classList.remove('open');
+  showToast('🗑️ Jenis event dihapus');
+});
+
+document.getElementById('addTypeBtn').addEventListener('click', () => {
+  const name  = document.getElementById('newTypeName').value.trim();
+  const color = document.getElementById('newTypeColor').value;
+  if (!name) { showToast('⚠️ Nama jenis tidak boleh kosong'); return; }
+  const id = 'custom_' + Date.now();
+  eventTypes.push({ id, label: name, chip: color, lt: hexToLight(color) });
+  saveTypes(); rebuildFilters(); renderCalendar(); renderTypeList();
+  document.getElementById('newTypeName').value = '';
+  document.getElementById('newTypeColor').value = '#6366F1';
+  document.getElementById('newTypeColorSwatch').style.background = '#6366F1';
+  showToast('✅ Jenis event ditambahkan');
+});
+
+document.getElementById('newTypeColor').addEventListener('input', e => {
+  document.getElementById('newTypeColorSwatch').style.background = e.target.value;
+});
+
+/* ════════════════════════════════════════
+   GLOBAL EVENT LISTENERS
+   ════════════════════════════════════════ */
+document.getElementById('addEventBtn').addEventListener('click', () => { if (!canWrite) { showToast('⚠️ Silakan masuk untuk menambah event'); return; } openAdd(); });
+document.getElementById('manageTypesBtn').addEventListener('click', () => { if (!canWrite) { showToast('⚠️ Hanya editor yang dapat mengelola jenis event'); return; } openTypeManager(); });
+document.getElementById('todayBtn').addEventListener('click', () => { currentDate = new Date(); renderCalendar(); });
+document.getElementById('prevBtn').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); });
+document.getElementById('nextBtn').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); });
+
+['closeAdd','cancelAdd'].forEach(id =>
+  document.getElementById(id).addEventListener('click', () => document.getElementById('addOverlay').classList.remove('open'))
+);
+document.getElementById('closeDetail').addEventListener('click', () => document.getElementById('detailOverlay').classList.remove('open'));
+document.getElementById('closeTypeManager').addEventListener('click', () => document.getElementById('typeManagerOverlay').classList.remove('open'));
+document.getElementById('closeTypeManagerOk').addEventListener('click', () => document.getElementById('typeManagerOverlay').classList.remove('open'));
+document.getElementById('closeEditType').addEventListener('click', () => document.getElementById('editTypeOverlay').classList.remove('open'));
+document.getElementById('cancelEditType').addEventListener('click', () => document.getElementById('editTypeOverlay').classList.remove('open'));
+
+['addOverlay','detailOverlay','typeManagerOverlay','editTypeOverlay'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+document.getElementById('filterType').addEventListener('change', e => { filterType = e.target.value; renderCalendar(); });
+document.getElementById('filterPIC').addEventListener('change', e => { filterPIC = e.target.value; renderCalendar(); });
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses untuk mengedit'); return; }
+  const title = document.getElementById('fTitle').value.trim();
+  const ds    = document.getElementById('fDateStart').value;
+  // flush any typed-but-not-entered pic
+  if (document.getElementById('picInput').value.trim()) addPICfromInput();
+  if (!title || !ds) { showToast('⚠️ Judul dan tanggal wajib diisi!'); return; }
+  if (!currentPICs.length) { showToast('⚠️ Minimal 1 PIC wajib diisi!'); return; }
+
+  const data = {
+    type:      document.getElementById('fType').value,
+    title,
+    pics:      [...currentPICs],
+    dateStart: ds,
+    dateEnd:   document.getElementById('fDateEnd').value || '',
+    status:    document.getElementById('fStatus').value,
+    note:      document.getElementById('fNote').value.trim(),
+  };
+  document.getElementById('saveBtn').disabled = true;
+  try {
+    await saveEvent(data);
+    document.getElementById('addOverlay').classList.remove('open');
+    showToast(editingId ? '✅ Event diupdate' : '✅ Event berhasil ditambahkan');
+    if (selectedDate) renderPanel(selectedDate);
+  } catch(e) { showToast('❌ '+e.message); }
+  finally { document.getElementById('saveBtn').disabled = false; }
+});
+
+document.getElementById('deleteBtn').addEventListener('click', async () => {
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses untuk menghapus'); return; }
+  if (!confirm('Hapus event ini?')) return;
+  try {
+    await deleteEvent(viewingId);
+    document.getElementById('detailOverlay').classList.remove('open');
+    showToast('🗑️ Event dihapus');
+  } catch(e) { showToast('❌ '+e.message); }
+});
+
+document.getElementById('editBtn').addEventListener('click', () => {
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses untuk mengedit'); return; }
+  const ev = events.find(e => e.id === viewingId);
+  if (!ev) return;
+  editingId = viewingId;
+  currentPICs = [...(ev.pics||[])];
+  document.getElementById('addModalTitle').textContent = 'Edit Event';
+  rebuildTypeSelect();
+  document.getElementById('fType').value      = ev.type;
+  document.getElementById('fTitle').value     = ev.title;
+  document.getElementById('fDateStart').value = ev.dateStart;
+  document.getElementById('fDateEnd').value   = ev.dateEnd||'';
+  document.getElementById('fStatus').value    = ev.status||'pending';
+  document.getElementById('fNote').value      = ev.note||'';
+  document.getElementById('picInput').value   = '';
+  renderPicTags();
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.getElementById('addOverlay').classList.add('open');
+});
+
+/* ── BOOT ── */
+rebuildFilters();
+// App boots via login screen buttons — see bootApp() above
+// If Firebase not configured, show app directly (localStorage mode)
+if (!useFirebase) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  canWrite = true;
+  loadEvents();
+  renderCalendar();
+}
+</script>
+</body>
+</html>
