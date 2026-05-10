@@ -117,10 +117,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .pei-type{font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px}
 .pei-title{font-size:.85rem;font-weight:700;color:var(--ink);margin-bottom:4px;line-height:1.3}
 .pei-pics{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
-.pic-badge{font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:100px;background:var(--bg-dk);color:var(--ink-md)}
+.pic-badge{font-size:.67rem;font-weight:700;padding:3px 9px;border-radius:100px;background:#1C1917;color:#F5F0E8;letter-spacing:.01em}
 .pei-meta{font-size:.7rem;color:var(--ink-lt);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-/* FIX #3: note in panel */
-.pei-note{font-size:.7rem;color:var(--ink-lt);margin-top:4px;line-height:1.4;background:var(--bg);border-radius:var(--r-sm);padding:4px 7px;border-left:2px solid var(--rule)}
+/* FIX #1: note in panel — vivid highlight */
+.pei-note{font-size:.71rem;color:#1C1917;margin-top:6px;line-height:1.5;background:#FEF9C3;border-radius:var(--r-sm);padding:6px 9px;border-left:3px solid #EAB308;font-weight:500}
 
 /* ── EVENT LIST ── */
 .list-section{margin-top:1.75rem}
@@ -140,8 +140,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .s-not_achieve{background:var(--s-not-bg);color:var(--s-not-tx)}
 .s-pending{background:var(--s-pending-bg);color:var(--s-pending-tx)}
 .pics-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
-/* FIX #3: note in ecard */
-.ecard-note{font-size:.7rem;color:var(--ink-lt);margin-top:5px;line-height:1.4;padding:4px 7px;background:var(--bg);border-radius:var(--r-sm);border-left:2px solid var(--rule)}
+/* FIX #1: note in ecard — vivid highlight */
+.ecard-note{font-size:.71rem;color:#1C1917;margin-top:6px;line-height:1.5;padding:6px 9px;background:#FEF9C3;border-radius:var(--r-sm);border-left:3px solid #EAB308;font-weight:500}
 
 /* ── MODAL ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(28,25,23,.48);z-index:300;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)}
@@ -227,6 +227,12 @@ body.read-only .readonly-badge{display:inline-flex}
 
 /* ── FIX #5: Skip login screen, go straight to app ── */
 /* (handled via JS boot logic — no login-screen styles needed) */
+
+/* ── EXCEL RANGE MODAL ── */
+.range-modal-body{display:flex;flex-direction:column;gap:1rem}
+.range-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.range-preview{background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:10px 14px;font-size:.78rem;color:var(--ink-md);min-height:36px;display:flex;align-items:center;gap:6px}
+.range-preview i{color:var(--ink-lt)}
 
 @media(max-width:900px){
   .main-row{flex-direction:column}
@@ -430,6 +436,40 @@ body.read-only .readonly-badge{display:inline-flex}
   </div>
 </div>
 
+<!-- ══ EXCEL RANGE MODAL ══ -->
+<div class="overlay" id="excelRangeOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-table-export" style="color:#15803D"></i> Export Excel</div>
+      <button class="btn btn-icon" id="closeExcelRange"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="range-modal-body">
+      <div>
+        <label class="fl">Mode Export</label>
+        <select class="fc" id="excelMode">
+          <option value="month">Bulan Ini (tampilan kalender saat ini)</option>
+          <option value="range">Rentang Tanggal Bebas</option>
+          <option value="all">Semua Event (seluruh data)</option>
+        </select>
+      </div>
+      <div id="excelRangeFields" style="display:none">
+        <div class="range-row">
+          <div class="fg"><label class="fl">Dari Tanggal</label><input type="date" class="fc" id="excelFrom"/></div>
+          <div class="fg"><label class="fl">Sampai Tanggal</label><input type="date" class="fc" id="excelTo"/></div>
+        </div>
+      </div>
+      <div class="range-preview" id="excelPreview">
+        <i class="ti ti-info-circle"></i>
+        <span id="excelPreviewText">Akan mengexport event bulan ini.</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="cancelExcelRange">Batal</button>
+      <button class="btn btn-green" id="doExportBtn"><i class="ti ti-download"></i> Download Excel</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -446,17 +486,17 @@ const firebaseConfig = {
 };
 
 /* ════════════════════════════════════════
-   FIX #7 — WORKSPACE (multi-dataset per URL path)
-   URL: /kalender-tim/Ryan  → workspace = "Ryan"
-   URL: /kalender-tim/Joko  → workspace = "Joko"
-   Firestore collection: "events_Ryan", "events_Joko"
+   FIX #3 — WORKSPACE via query string (no 404!)
+   URL: ?workspace=Ryan  → collection "events_Ryan"
+   URL: ?workspace=Joko  → collection "events_Joko"
+   URL: (none)           → collection "events"
+   Share link example: https://user.github.io/kalender-tim/?workspace=Ryan
    ════════════════════════════════════════ */
 function getWorkspace() {
-  const parts = window.location.pathname.replace(/\/+$/,'').split('/');
-  const last  = parts[parts.length - 1];
-  // Ignore known base paths; treat any non-empty trailing segment as workspace
-  if (last && last !== 'kalender-tim' && last !== 'index.html') return last;
-  return 'default';
+  const params = new URLSearchParams(window.location.search);
+  const ws = (params.get('workspace') || '').trim();
+  // Accept only safe alphanumeric workspace names
+  return /^[a-zA-Z0-9_-]{1,40}$/.test(ws) ? ws : 'default';
 }
 const WORKSPACE     = getWorkspace();
 const EVENTS_COLL   = WORKSPACE === 'default' ? 'events' : `events_${WORKSPACE}`;
@@ -1025,144 +1065,159 @@ function openEditType(id){
 }
 
 /* ════════════════════════════════════════
-   FIX #4 — EXCEL GANTT CHART EXPORT
+   FIX #2 — EXCEL EXPORT: colorful + range picker
    ════════════════════════════════════════ */
+
+/* Open range picker modal */
 function exportExcel() {
-  const year=currentDate.getFullYear(), month=currentDate.getMonth();
-  const mStr=`${year}-${String(month+1).padStart(2,'0')}`;
-  const monthEvents=events
-    .filter(e=>e.dateStart.startsWith(mStr)||(e.dateEnd&&e.dateEnd.startsWith(mStr)))
-    .sort((a,b)=>a.dateStart.localeCompare(b.dateStart));
+  const y=currentDate.getFullYear(), m=currentDate.getMonth();
+  document.getElementById('excelFrom').value=`${y}-${String(m+1).padStart(2,'0')}-01`;
+  const lastDay=new Date(y,m+1,0).getDate();
+  document.getElementById('excelTo').value=`${y}-${String(m+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+  document.getElementById('excelMode').value='month';
+  document.getElementById('excelRangeFields').style.display='none';
+  updateExcelPreview();
+  document.getElementById('excelRangeOverlay').classList.add('open');
+}
 
-  if(!monthEvents.length){showToast('⚠️ Tidak ada event di bulan ini');return;}
+function updateExcelPreview() {
+  const mode=document.getElementById('excelMode').value;
+  const preview=document.getElementById('excelPreviewText');
+  const fields=document.getElementById('excelRangeFields');
+  if (mode==='month') {
+    fields.style.display='none';
+    const mn=new Date(currentDate.getFullYear(),currentDate.getMonth(),1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+    preview.textContent=`Export event bulan ${mn}.`;
+  } else if (mode==='range') {
+    fields.style.display='block';
+    const from=document.getElementById('excelFrom').value;
+    const to=document.getElementById('excelTo').value;
+    preview.textContent=from&&to?`Export event dari ${fmtDate(from)} sampai ${fmtDate(to)}.`:'Pilih rentang tanggal.';
+  } else {
+    fields.style.display='none';
+    preview.textContent=`Export semua event (${events.length} total).`;
+  }
+}
 
-  const daysInMonth=new Date(year,month+1,0).getDate();
+function doExport() {
+  const mode=document.getElementById('excelMode').value;
+  let eventsToExport=[], rangeLabel='';
+  const y=currentDate.getFullYear(), m=currentDate.getMonth();
+  const mStr=`${y}-${String(m+1).padStart(2,'0')}`;
+  const monthName=new Date(y,m,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+  if (mode==='month') {
+    eventsToExport=events.filter(e=>e.dateStart.startsWith(mStr)||(e.dateEnd&&e.dateEnd.startsWith(mStr)));
+    rangeLabel=monthName;
+  } else if (mode==='range') {
+    const from=document.getElementById('excelFrom').value;
+    const to=document.getElementById('excelTo').value;
+    if (!from||!to){showToast('⚠️ Pilih rentang tanggal terlebih dahulu');return;}
+    if (from>to){showToast('⚠️ Tanggal mulai harus sebelum tanggal selesai');return;}
+    eventsToExport=events.filter(e=>{const s=e.dateStart,en=e.dateEnd||e.dateStart;return s<=to&&en>=from;});
+    rangeLabel=`${fmtDate(from)} – ${fmtDate(to)}`;
+  } else {
+    eventsToExport=[...events];
+    rangeLabel='Semua Event';
+  }
+  eventsToExport=eventsToExport.sort((a,b)=>a.dateStart.localeCompare(b.dateStart));
+  if (!eventsToExport.length){showToast('⚠️ Tidak ada event pada rentang yang dipilih');return;}
+  buildExcelAndDownload(eventsToExport, rangeLabel, mode);
+  document.getElementById('excelRangeOverlay').classList.remove('open');
+}
+
+function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
   const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
-  const monthName=new Date(year,month,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+  const sFill={achieve:'D1FAE5',not_achieve:'FEE2E2',pending:'FEF9C3'};
+  const sTx  ={achieve:'166534',not_achieve:'991B1B',pending:'92400E'};
 
-  /* Header row: label cols + day numbers */
-  const LABEL_COLS=['No','Jenis','Event / Judul','PIC','Status','Catatan','Mulai','Selesai'];
-  const headerRow=[...LABEL_COLS,...Array.from({length:daysInMonth},(_,i)=>i+1)];
+  let ganttStart, ganttEnd;
+  if (mode==='month') {
+    const y=currentDate.getFullYear(), m=currentDate.getMonth();
+    ganttStart=new Date(y,m,1); ganttEnd=new Date(y,m+1,0);
+  } else if (eventsToExport.length) {
+    let minDate=eventsToExport[0].dateStart, maxDate=eventsToExport[0].dateEnd||eventsToExport[0].dateStart;
+    eventsToExport.forEach(e=>{if(e.dateStart<minDate)minDate=e.dateStart;const ed=e.dateEnd||e.dateStart;if(ed>maxDate)maxDate=ed;});
+    ganttStart=new Date(minDate+'T00:00:00'); ganttEnd=new Date(maxDate+'T00:00:00');
+    const diffDays=Math.round((ganttEnd-ganttStart)/(1000*60*60*24));
+    if(diffDays>62) ganttEnd=new Date(ganttStart.getTime()+62*24*60*60*1000);
+  } else { ganttStart=ganttEnd=new Date(); }
 
-  /* Data rows */
-  const dataRows=monthEvents.map((e,idx)=>{
-    const t=getTypeById(e.type);
-    const pics=(e.pics||[]).join(', ');
-    const status=SM[e.status]||e.status||'';
-    const startDay=parseInt((e.dateStart||'').split('-')[2])||0;
-    const endDay=e.dateEnd?parseInt(e.dateEnd.split('-')[2]):startDay;
-    /* Clamp to month */
-    const s=Math.max(1,startDay), en=Math.min(daysInMonth,endDay);
+  const ganttDates=[];
+  for(let d=new Date(ganttStart);d<=ganttEnd;d.setDate(d.getDate()+1)) ganttDates.push(toStr(new Date(d)));
 
-    const labelPart=[idx+1, t.label, e.title, pics, status, e.note||'', fmtDate(e.dateStart), fmtDate(e.dateEnd||e.dateStart)];
-    const dayPart=Array.from({length:daysInMonth},(_,d)=>{
-      const day=d+1;
-      return (day>=s&&day<=en)?'●':'';
-    });
-    return [...labelPart,...dayPart];
+  const LABEL_COLS=['No','Jenis Event','Judul / Nama Event','PIC','Status','Catatan','Tgl Mulai','Tgl Selesai'];
+  const nLC=LABEL_COLS.length;
+
+  const monthGroups=[];
+  ganttDates.forEach((ds,i)=>{
+    const mo=ds.slice(0,7);
+    if(!monthGroups.length||monthGroups[monthGroups.length-1].key!==mo) monthGroups.push({key:mo,label:new Date(ds+'T00:00:00').toLocaleDateString('id-ID',{month:'short',year:'numeric'}),start:i,count:1});
+    else monthGroups[monthGroups.length-1].count++;
   });
 
-  /* Build worksheet data */
-  const wsData=[
-    [`Gantt Chart — ${monthName}${WORKSPACE!=='default'?' ('+WORKSPACE+')':''}`,
-      ...Array(LABEL_COLS.length+daysInMonth-1).fill('')],
-    headerRow,
-    ...dataRows
-  ];
+  const titleRow=[`Gantt Chart — ${rangeLabel}${WORKSPACE!=='default'?' ['+WORKSPACE+']':''}`,...Array(nLC+ganttDates.length-1).fill('')];
+  const moRow=[...Array(nLC).fill(''),...ganttDates.map((ds,i)=>{const g=monthGroups.find(mg=>mg.start===i);return g?g.label:'';})];
+  const dayRow=[...LABEL_COLS,...ganttDates.map(ds=>new Date(ds+'T00:00:00').getDate())];
+  const dataRows=eventsToExport.map((e,idx)=>{
+    const t=getTypeById(e.type);
+    const label=[idx+1,t.label,e.title,(e.pics||[]).join(', '),SM[e.status]||'',e.note||'',fmtDate(e.dateStart),fmtDate(e.dateEnd||e.dateStart)];
+    const es=e.dateStart, ee=e.dateEnd||e.dateStart;
+    return [...label,...ganttDates.map(ds=>ds>=es&&ds<=ee?'█':'')];
+  });
 
   const wb=XLSX.utils.book_new();
-  const ws=XLSX.utils.aoa_to_sheet(wsData);
+  const ws=XLSX.utils.aoa_to_sheet([titleRow,moRow,dayRow,...dataRows]);
+  ws['!cols']=[{wch:4},{wch:18},{wch:32},{wch:22},{wch:12},{wch:26},{wch:11},{wch:11},...ganttDates.map(()=>({wch:2.8}))];
+  ws['!rows']=[{hpt:26},{hpt:16},{hpt:20},...dataRows.map(()=>({hpt:18}))];
 
-  /* Column widths */
-  ws['!cols']=[
-    {wch:4},{wch:16},{wch:30},{wch:20},{wch:12},{wch:24},{wch:10},{wch:10},
-    ...Array(daysInMonth).fill({wch:3})
-  ];
+  const merges=[{s:{r:0,c:0},e:{r:0,c:nLC+ganttDates.length-1}},{s:{r:1,c:0},e:{r:1,c:nLC-1}}];
+  let mcol=nLC; monthGroups.forEach(mg=>{if(mg.count>1)merges.push({s:{r:1,c:mcol},e:{r:1,c:mcol+mg.count-1}});mcol+=mg.count;});
+  ws['!merges']=merges;
 
-  /* Row height */
-  ws['!rows']=[{hpt:22},{hpt:20},...Array(dataRows.length).fill({hpt:18})];
+  // Title row
+  for(let c=0;c<nLC+ganttDates.length;c++){const addr=XLSX.utils.encode_cell({r:0,c});if(!ws[addr])ws[addr]={v:'',t:'s'};ws[addr].s={font:{bold:true,sz:c===0?15:11,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}};}
 
-  /* Merge title row */
-  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:LABEL_COLS.length+daysInMonth-1}}];
+  // Month sub-header
+  moRow.forEach((v,c)=>{const addr=XLSX.utils.encode_cell({r:1,c});if(!ws[addr])ws[addr]={v,t:'s'};const isLbl=c<nLC;ws[addr].s={font:{bold:true,sz:9,color:{rgb:isLbl?'F5F0E8':'1E3A5F'}},fill:{fgColor:{rgb:isLbl?'292524':'DBEAFE'}},alignment:{horizontal:'center',vertical:'center'},border:{bottom:{style:'thin',color:{rgb:'93C5FD'}}}};});
 
-  /* Apply styles using cell objects — color the gantt bars by event type */
-  const colorMap={};
-  eventTypes.forEach(t=>{ colorMap[t.id]=t.chip.replace('#',''); });
-  const statusFill={achieve:'D1FAE5',not_achieve:'FEE2E2',pending:'FEF3C7'};
+  // Day header
+  dayRow.forEach((v,c)=>{const addr=XLSX.utils.encode_cell({r:2,c});if(!ws[addr])ws[addr]={v,t:typeof v==='number'?'n':'s'};const isLbl=c<nLC;let fillRgb='1C1917',fontRgb='FFFFFF';if(!isLbl){const dow=new Date(ganttDates[c-nLC]+'T00:00:00').getDay();if(dow===0){fillRgb='FEE2E2';fontRgb='DC2626';}else if(dow===6){fillRgb='DBEAFE';fontRgb='1D4ED8';}else{fillRgb='334155';fontRgb='F8FAFC';}}ws[addr].s={font:{bold:true,sz:isLbl?10:8,color:{rgb:fontRgb}},fill:{fgColor:{rgb:fillRgb}},alignment:{horizontal:'center',vertical:'center'},border:{bottom:{style:'medium',color:{rgb:'64748B'}}}};});
 
-  /* Title cell */
-  if(ws['A1']){
-    ws['A1'].s={font:{bold:true,sz:14,color:{rgb:'1C1917'}},fill:{fgColor:{rgb:'EDE8E0'}},alignment:{horizontal:'center',vertical:'center'}};
-  }
-
-  /* Header cells */
-  headerRow.forEach((_,ci)=>{
-    const addr=XLSX.utils.encode_cell({r:1,c:ci});
-    if(!ws[addr]) ws[addr]={v:headerRow[ci],t:'s'};
-    const isDay=ci>=LABEL_COLS.length;
-    ws[addr].s={
-      font:{bold:true,sz:isDay?8:10,color:{rgb:isDay?'64748B':'1C1917'}},
-      fill:{fgColor:{rgb:isDay?'F1F5F9':'1C1917'},...(isDay?{}:{})},
-      alignment:{horizontal:'center',vertical:'center',wrapText:false},
-      border:{bottom:{style:'medium',color:{rgb:'CBD5E1'}}}
-    };
-    if(!isDay) ws[addr].s.fill={fgColor:{rgb:'1C1917'}};
-    if(!isDay) ws[addr].s.font.color={rgb:'FFFFFF'};
-  });
-
-  /* Data cells */
-  monthEvents.forEach((e,ri)=>{
-    const t=getTypeById(e.type);
-    const chipHex=(t.chip||'#888888').replace('#','');
-    const ltHex=(t.lt||hexToLight(t.chip)).replace('#','');
-    const startDay=parseInt((e.dateStart||'').split('-')[2])||0;
-    const endDay=e.dateEnd?parseInt(e.dateEnd.split('-')[2]):startDay;
-    const s=Math.max(1,startDay), en=Math.min(daysInMonth,endDay);
-    const rowIdx=ri+2;
-    const sFill=statusFill[e.status]||'FFFFFF';
-
+  // Data rows
+  eventsToExport.forEach((e,ri)=>{
+    const t=getTypeById(e.type); const chipHex=t.chip.replace('#',''); const ltHex=(t.lt||hexToLight(t.chip)).replace('#','');
+    const es=e.dateStart, ee=e.dateEnd||e.dateStart; const isEven=ri%2===0;
     dataRows[ri].forEach((val,ci)=>{
-      const addr=XLSX.utils.encode_cell({r:rowIdx,c:ci});
-      if(!ws[addr]) ws[addr]={v:val,t:'s'};
-      const isDay=ci>=LABEL_COLS.length;
-      const day=isDay?ci-LABEL_COLS.length+1:0;
-      const inRange=isDay&&day>=s&&day<=en;
-
-      ws[addr].s={
-        alignment:{horizontal:isDay?'center':'left',vertical:'center',wrapText:false},
-        border:{
-          top:{style:'thin',color:{rgb:'E2E8F0'}},
-          bottom:{style:'thin',color:{rgb:'E2E8F0'}},
-          left:{style:'thin',color:{rgb:'E2E8F0'}},
-          right:{style:'thin',color:{rgb:'E2E8F0'}}
-        },
-        font:{sz:isDay?9:9,color:{rgb:inRange?'FFFFFF':'374151'}},
-        fill:{fgColor:{rgb:inRange?chipHex:ri%2===0?'FFFFFF':'F9FAFB'}}
-      };
-      /* Status column highlight */
-      if(ci===4&&sFill!=='FFFFFF') ws[addr].s.fill={fgColor:{rgb:sFill}};
+      const addr=XLSX.utils.encode_cell({r:ri+3,c:ci});
+      if(!ws[addr])ws[addr]={v:val??'',t:typeof val==='number'?'n':'s'};
+      const isDay=ci>=nLC; const ds=isDay?ganttDates[ci-nLC]:null; const inRange=ds&&ds>=es&&ds<=ee;
+      let colFill=isEven?'FFFFFF':'F8FAFC';
+      if(isDay){const dow=new Date(ds+'T00:00:00').getDay();colFill=inRange?chipHex:dow===0?'FEF2F2':dow===6?'EFF6FF':isEven?'FFFFFF':'F8FAFC';}
+      ws[addr].s={font:{sz:isDay?10:9,bold:isDay&&inRange,color:{rgb:isDay?(inRange?'FFFFFF':'D1D5DB'):'374151'}},fill:{fgColor:{rgb:colFill}},alignment:{horizontal:isDay?'center':(ci===0?'center':'left'),vertical:'center'},border:{top:{style:'thin',color:{rgb:'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:isDay?'F1F5F9':'E5E7EB'}},right:{style:'thin',color:{rgb:isDay?'F1F5F9':'E5E7EB'}}}};
+      if(ci===1){ws[addr].s.font={sz:9,bold:true,color:{rgb:chipHex}};ws[addr].s.fill={fgColor:{rgb:ltHex}};}
+      if(ci===4&&e.status&&sFill[e.status]){ws[addr].s.fill={fgColor:{rgb:sFill[e.status]}};ws[addr].s.font={sz:9,bold:true,color:{rgb:sTx[e.status]||'374151'}};}
     });
   });
-
   XLSX.utils.book_append_sheet(wb,ws,'Gantt Chart');
 
-  /* Also create a detail sheet */
-  const detailData=[
-    ['No','Jenis','Event / Judul','PIC','Status','Catatan','Tanggal Mulai','Tanggal Selesai'],
-    ...monthEvents.map((e,i)=>[
-      i+1, getTypeById(e.type).label, e.title,
-      (e.pics||[]).join(', '), SM[e.status]||e.status||'',
-      e.note||'', fmtDate(e.dateStart), fmtDate(e.dateEnd||e.dateStart)
-    ])
-  ];
-  const ws2=XLSX.utils.aoa_to_sheet(detailData);
-  ws2['!cols']=[{wch:4},{wch:16},{wch:30},{wch:24},{wch:12},{wch:30},{wch:14},{wch:14}];
+  // Detail sheet
+  const detHdr=['No','Jenis Event','Judul / Nama Event','PIC','Status','Catatan','Tgl Mulai','Tgl Selesai'];
+  const ws2=XLSX.utils.aoa_to_sheet([detHdr,...eventsToExport.map((e,i)=>[i+1,getTypeById(e.type).label,e.title,(e.pics||[]).join(', '),SM[e.status]||'',e.note||'',fmtDate(e.dateStart),fmtDate(e.dateEnd||e.dateStart)])]);
+  ws2['!cols']=[{wch:4},{wch:18},{wch:34},{wch:26},{wch:12},{wch:32},{wch:13},{wch:13}];
+  ws2['!rows']=[{hpt:22},...eventsToExport.map(()=>({hpt:18}))];
+  detHdr.forEach((_,ci)=>{const addr=XLSX.utils.encode_cell({r:0,c:ci});if(!ws2[addr])ws2[addr]={v:detHdr[ci],t:'s'};ws2[addr].s={font:{bold:true,sz:10,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}};});
+  eventsToExport.forEach((e,ri)=>{
+    const t=getTypeById(e.type); const chipHex=t.chip.replace('#',''); const ltHex=(t.lt||hexToLight(t.chip)).replace('#',''); const isEven=ri%2===0;
+    for(let ci=0;ci<detHdr.length;ci++){const addr=XLSX.utils.encode_cell({r:ri+1,c:ci});if(!ws2[addr])ws2[addr]={v:''+(([0,i+1,t.label,e.title,(e.pics||[]).join(', '),SM[e.status]||'',e.note||'',fmtDate(e.dateStart),fmtDate(e.dateEnd||e.dateStart)])[ci+1]??''),t:'s'};ws2[addr].s={font:{sz:9,color:{rgb:'374151'}},fill:{fgColor:{rgb:isEven?'FFFFFF':'F8FAFC'}},alignment:{horizontal:ci===0?'center':'left',vertical:'center'},border:{top:{style:'thin',color:{rgb:'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:'E5E7EB'}},right:{style:'thin',color:{rgb:'E5E7EB'}}}};if(ci===1){ws2[addr].s.font={sz:9,bold:true,color:{rgb:chipHex}};ws2[addr].s.fill={fgColor:{rgb:ltHex}};}if(ci===4&&e.status&&sFill[e.status]){ws2[addr].s.fill={fgColor:{rgb:sFill[e.status]}};ws2[addr].s.font={sz:9,bold:true,color:{rgb:sTx[e.status]||'374151'}};}}
+  });
   XLSX.utils.book_append_sheet(wb,ws2,'Detail Event');
 
-  const fname=`Kalender${WORKSPACE!=='default'?'_'+WORKSPACE:''}_${year}_${String(month+1).padStart(2,'0')}.xlsx`;
+  const safeName=rangeLabel.replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_');
+  const fname=`Kalender${WORKSPACE!=='default'?'_'+WORKSPACE:''}_${safeName}.xlsx`;
   XLSX.writeFile(wb,fname);
   showToast('✅ Excel berhasil didownload!');
 }
+
 
 /* ════════════════════════════════════════
    GLOBAL LISTENERS
@@ -1170,6 +1225,14 @@ function exportExcel() {
 document.getElementById('addEventBtn').addEventListener('click',()=>{if(!canWrite){showToast('⚠️ Silakan masuk untuk menambah event');return;}openAdd();});
 document.getElementById('manageTypesBtn').addEventListener('click',()=>{if(!canWrite){showToast('⚠️ Hanya editor yang dapat mengelola jenis event');return;}openTypeManager();});
 document.getElementById('exportExcelBtn').addEventListener('click',exportExcel);
+// Excel range modal
+document.getElementById('excelMode').addEventListener('change',updateExcelPreview);
+document.getElementById('excelFrom').addEventListener('change',updateExcelPreview);
+document.getElementById('excelTo').addEventListener('change',updateExcelPreview);
+document.getElementById('doExportBtn').addEventListener('click',doExport);
+document.getElementById('cancelExcelRange').addEventListener('click',()=>document.getElementById('excelRangeOverlay').classList.remove('open'));
+document.getElementById('closeExcelRange').addEventListener('click',()=>document.getElementById('excelRangeOverlay').classList.remove('open'));
+document.getElementById('excelRangeOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('excelRangeOverlay'))document.getElementById('excelRangeOverlay').classList.remove('open');});
 document.getElementById('todayBtn').addEventListener('click',()=>{currentDate=new Date();renderCalendar();});
 document.getElementById('prevBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();});
 document.getElementById('nextBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();});
