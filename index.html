@@ -7,6 +7,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<!-- SheetJS for Excel export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
@@ -18,8 +20,8 @@
   --ink:#1C1917;--ink-md:#57534E;--ink-lt:#A8A29E;--rule:#E7E2DA;
   --libnas-bg:#FEF2F2;--libnas-side:#FCA5A5;--libnas-num:#DC2626;--libnas-name:#B91C1C;
   --cutib-bg:#FFF7ED;--cutib-side:#FBD38D;--cutib-num:#D97706;--cutib-name:#B45309;
-  --sun-bg:#FFF5F5;--sun-num:#EF4444;
-  --sat-bg:#F0F9FF;--sat-num:#2563EB;
+  --sun-bg:#FFF5F5;--sun-num:#DC2626;
+  --sat-bg:#EFF6FF;--sat-num:#1D4ED8;
   --s-achieve-bg:#DCFCE7;--s-achieve-tx:#15803D;
   --s-not-bg:#FEE2E2;--s-not-tx:#B91C1C;
   --s-pending-bg:#FEF3C7;--s-pending-tx:#92400E;
@@ -29,7 +31,7 @@
 body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh}
 
 /* ── PAGE LAYOUT ── */
-.page{max-width:1300px;margin:0 auto;padding:1.75rem 1.5rem 4rem;display:flex;flex-direction:column;gap:0}
+.page{max-width:1300px;margin:0 auto;padding:1.75rem 1.5rem 4rem;display:flex;flex-direction:column}
 .main-row{display:flex;gap:16px;align-items:flex-start}
 .cal-col{flex:1;min-width:0}
 .panel-col{width:var(--panel-w);flex-shrink:0;position:sticky;top:1.5rem}
@@ -38,18 +40,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .site-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.6rem;flex-wrap:wrap;gap:12px}
 .brand-title{font-size:1.55rem;font-weight:800;letter-spacing:-.035em;color:var(--ink)}
 .brand-sub{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);margin-top:2px}
-.hdr-right{display:flex;gap:8px;align-items:center}
+.hdr-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 
 /* ── BUTTONS ── */
 .btn{font-family:var(--font);font-size:.8rem;font-weight:600;padding:8px 14px;border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-md);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .14s,border-color .14s,transform .1s;white-space:nowrap}
-.btn:hover{background:var(--bg-dk);border-color:var(--ink-lt)}
-.btn:active{transform:scale(.97)}
+.btn:hover{background:var(--bg-dk);border-color:var(--ink-lt)}.btn:active{transform:scale(.97)}
 .btn-icon{padding:8px 9px}
-.btn-primary{background:var(--ink);color:#fff;border-color:var(--ink)}
-.btn-primary:hover{background:#292524;border-color:#292524}
-.btn-danger{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}
-.btn-danger:hover{background:#FEE2E2;border-color:#B91C1C}
+.btn-primary{background:var(--ink);color:#fff;border-color:var(--ink)}.btn-primary:hover{background:#292524;border-color:#292524}
+.btn-danger{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}.btn-danger:hover{border-color:#B91C1C}
 .btn-sm{padding:5px 10px;font-size:.75rem}
+.btn-green{background:#DCFCE7;color:#15803D;border-color:#86EFAC}.btn-green:hover{border-color:#15803D}
 
 /* ── CONTROL BAR ── */
 .control-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:.9rem}
@@ -71,43 +71,44 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 /* ── CALENDAR SHELL ── */
 .cal-shell{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.05)}
 .cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg-dk);border-bottom:1.5px solid var(--rule)}
-.dh{text-align:center;padding:11px 4px;font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-lt)}
-.dh.sun{color:var(--sun-num)}.dh.sat{color:var(--sat-num)}
+/* FIX #6: Day headers more visible */
+.dh{text-align:center;padding:11px 4px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#78716C}
+.dh.sun{color:#DC2626;font-weight:800}
+.dh.sat{color:#1D4ED8;font-weight:800}
 .cal-body{display:grid;grid-template-columns:repeat(7,1fr)}
 
-/* ── DAY CELLS ── */
-.dc{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);min-height:100px;padding:6px 5px 5px;position:relative;background:var(--surface);overflow:hidden;transition:filter .12s}
-.dc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;opacity:0;transition:opacity .12s}
+/* ── DAY CELLS ── FIX #1: up to 5 events, auto height, tidy */
+.dc{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);min-height:90px;padding:6px 5px 5px;position:relative;background:var(--surface);overflow:hidden;transition:background .12s}
+.dc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;opacity:0}
 .dc:nth-child(7n){border-right:none}
-.dc:hover{filter:brightness(.965)}
-.dc.is-sat{background:var(--sat-bg)}.dc.is-sat .day-num{color:var(--sat-num)}
-.dc.is-sun{background:var(--sun-bg)}.dc.is-sun .day-num{color:var(--sun-num)}
-.dc.is-libnas{background:var(--libnas-bg)}.dc.is-libnas::before{background:var(--libnas-side);opacity:1}.dc.is-libnas .day-num{color:var(--libnas-num);font-weight:800}
-.dc.is-cutib{background:var(--cutib-bg)}.dc.is-cutib::before{background:var(--cutib-side);opacity:1}.dc.is-cutib .day-num{color:var(--cutib-num);font-weight:800}
-.dc.other{opacity:.26;pointer-events:none}
+.dc:hover{background:#FAF8F5}
+.dc.is-sat{background:var(--sat-bg)}.dc.is-sat .day-num{color:var(--sat-num)!important}
+.dc.is-sun{background:var(--sun-bg)}.dc.is-sun .day-num{color:var(--sun-num)!important}
+.dc.is-libnas{background:var(--libnas-bg)}.dc.is-libnas::before{background:var(--libnas-side);opacity:1}.dc.is-libnas .day-num{color:var(--libnas-num)!important;font-weight:800}
+.dc.is-cutib{background:var(--cutib-bg)}.dc.is-cutib::before{background:var(--cutib-side);opacity:1}.dc.is-cutib .day-num{color:var(--cutib-num)!important;font-weight:800}
+.dc.other{opacity:.25;pointer-events:none}
 .dc.today{outline:2px solid #3B82F6;outline-offset:-2px}
-.dc.today .day-num{background:var(--ink);color:#fff!important;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:700}
-.dc.selected{outline:2px solid var(--ink);outline-offset:-2px;background:var(--bg-dk)!important}
+.dc.today .day-num{background:var(--ink)!important;color:#fff!important;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.dc.selected{outline:2px solid var(--ink);outline-offset:-2px}
 
-/* day-num is clickable to add event */
-.day-num{font-size:.8rem;font-weight:600;color:var(--ink-md);margin-bottom:3px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .12s,color .12s;flex-shrink:0;z-index:2;position:relative}
+.day-num{font-size:.8rem;font-weight:700;color:#57534E;margin-bottom:3px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .12s,color .12s;flex-shrink:0;z-index:2;position:relative}
 .day-num:hover{background:var(--ink);color:#fff!important}
-.hol-label{font-size:.58rem;font-weight:700;line-height:1.3;margin-bottom:3px;margin-left:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hol-label{font-size:.57rem;font-weight:700;line-height:1.3;margin-bottom:2px;margin-left:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .is-libnas .hol-label{color:var(--libnas-name)}.is-cutib .hol-label{color:var(--cutib-name)}
 
-/* ── CHIPS ── */
-.chip{display:block;font-size:.63rem;font-weight:700;padding:2px 5px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:#fff;line-height:1.55;transition:opacity .12s}
+/* ── CHIPS: compact, max 5 ── */
+.chip{display:block;font-size:.59rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:#fff;line-height:1.55;transition:opacity .12s}
 .chip:hover{opacity:.8}
-.chip-more{font-size:.6rem;color:var(--ink-lt);padding:1px 4px;display:block;cursor:pointer}
+.chip-more{font-size:.58rem;color:var(--ink-lt);padding:0 4px;display:block;cursor:pointer;line-height:1.6}
 
 /* ── RIGHT PANEL ── */
 .day-panel{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.06)}
-.panel-head{padding:14px 16px 12px;border-bottom:1.5px solid var(--rule);display:flex;align-items:center;justify-content:space-between}
+.panel-head{padding:14px 16px 12px;border-bottom:1.5px solid var(--rule);display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .panel-date-label{font-size:.95rem;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
 .panel-day-name{font-size:.72rem;font-weight:600;color:var(--ink-lt);margin-top:1px;letter-spacing:.02em}
 .panel-hol-badge{font-size:.64rem;font-weight:700;padding:3px 8px;border-radius:100px;margin-top:4px;display:inline-block}
-.panel-body{padding:12px 14px;max-height:calc(100vh - 220px);overflow-y:auto}
-.panel-empty{text-align:center;padding:2.5rem 1rem;color:var(--ink-lt);font-size:.82rem}
+.panel-body{padding:12px 14px;max-height:calc(100vh - 200px);overflow-y:auto}
+.panel-empty{text-align:center;padding:2rem 1rem;color:var(--ink-lt);font-size:.82rem}
 .panel-empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.4}
 .panel-event-item{border:1.5px solid var(--rule);border-radius:var(--r-lg);padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:box-shadow .14s,transform .12s;display:flex;gap:10px;align-items:flex-start}
 .panel-event-item:hover{box-shadow:0 3px 14px rgba(28,25,23,.09);transform:translateY(-1px)}
@@ -118,8 +119,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .pei-pics{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:4px}
 .pic-badge{font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:100px;background:var(--bg-dk);color:var(--ink-md)}
 .pei-meta{font-size:.7rem;color:var(--ink-lt);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+/* FIX #3: note in panel */
+.pei-note{font-size:.7rem;color:var(--ink-lt);margin-top:4px;line-height:1.4;background:var(--bg);border-radius:var(--r-sm);padding:4px 7px;border-left:2px solid var(--rule)}
 
-/* ── EVENT LIST BELOW ── */
+/* ── EVENT LIST ── */
 .list-section{margin-top:1.75rem}
 .list-heading{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:10px;display:flex;align-items:center;gap:10px}
 .list-heading::after{content:'';flex:1;height:1px;background:var(--rule)}
@@ -131,13 +134,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .ecard-type{font-size:.64rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px}
 .ecard-title{font-size:.85rem;font-weight:700;color:var(--ink);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ecard-meta{font-size:.72rem;color:var(--ink-lt);display:flex;gap:7px;flex-wrap:wrap;align-items:center}
-.spill{display:inline-flex;align-items:center;gap:3px}
-.spill i{font-size:12px}
+.spill{display:inline-flex;align-items:center;gap:3px}.spill i{font-size:12px}
 .status-pill{display:inline-block;font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px}
 .s-achieve{background:var(--s-achieve-bg);color:var(--s-achieve-tx)}
 .s-not_achieve{background:var(--s-not-bg);color:var(--s-not-tx)}
 .s-pending{background:var(--s-pending-bg);color:var(--s-pending-tx)}
 .pics-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+/* FIX #3: note in ecard */
+.ecard-note{font-size:.7rem;color:var(--ink-lt);margin-top:5px;line-height:1.4;padding:4px 7px;background:var(--bg);border-radius:var(--r-sm);border-left:2px solid var(--rule)}
 
 /* ── MODAL ── */
 .overlay{display:none;position:fixed;inset:0;background:rgba(28,25,23,.48);z-index:300;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)}
@@ -148,12 +152,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem}
 .modal-title{font-size:1.1rem;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
 .modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:1.4rem}
-.fg{margin-bottom:.9rem}
+.fg{margin-bottom:.9rem;position:relative}
 .fl{display:block;font-size:.69rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:5px}
 .fc{width:100%;font-family:var(--font);font-size:.875rem;color:var(--ink);background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:9px 12px;outline:none;transition:border-color .14s,background .14s;appearance:none}
 .fc:focus{border-color:var(--ink-md);background:#fff}
 textarea.fc{resize:vertical;height:70px}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── AUTOCOMPLETE DROPDOWN FIX #2 ── */
+.ac-wrap{position:relative}
+.ac-list{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1.5px solid var(--ink-md);border-top:none;border-radius:0 0 var(--r-md) var(--r-md);z-index:400;max-height:180px;overflow-y:auto;box-shadow:0 8px 20px rgba(28,25,23,.12)}
+.ac-item{padding:8px 12px;font-size:.85rem;cursor:pointer;color:var(--ink);transition:background .1s}
+.ac-item:hover,.ac-item.ac-active{background:var(--bg-dk)}
+.ac-item strong{color:var(--c,var(--ink));font-weight:700}
 
 /* ── MULTI-PIC INPUT ── */
 .pic-input-wrap{border:1.5px solid var(--rule);border-radius:var(--r-md);background:var(--bg);padding:7px 10px;display:flex;flex-wrap:wrap;gap:6px;cursor:text;transition:border-color .14s}
@@ -163,6 +174,11 @@ textarea.fc{resize:vertical;height:70px}
 .pic-tag-remove:hover{background:var(--rule);color:var(--ink)}
 .pic-input-field{border:none;background:transparent;outline:none;font-family:var(--font);font-size:.83rem;color:var(--ink);min-width:80px;flex:1}
 .pic-hint{font-size:.68rem;color:var(--ink-lt);margin-top:4px}
+/* PIC autocomplete dropdown sits outside the tag-wrap */
+.pic-ac-list{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1.5px solid var(--ink-md);border-top:none;border-radius:0 0 var(--r-md) var(--r-md);z-index:400;max-height:160px;overflow-y:auto;box-shadow:0 8px 20px rgba(28,25,23,.12);margin-top:-1px}
+.pic-ac-item{padding:7px 12px;font-size:.82rem;cursor:pointer;color:var(--ink);transition:background .1s;display:flex;align-items:center;gap:6px}
+.pic-ac-item:hover,.pic-ac-item.ac-active{background:var(--bg-dk)}
+.pic-ac-item i{font-size:13px;color:var(--ink-lt)}
 
 /* ── DETAIL MODAL ── */
 .det-banner{border-radius:var(--r-md);padding:15px 16px;margin-bottom:1.2rem}
@@ -171,7 +187,7 @@ textarea.fc{resize:vertical;height:70px}
 .drow{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;font-size:.86rem}
 .drow-ico{color:var(--ink-lt);font-size:15px;margin-top:1px;flex-shrink:0}
 .drow-lbl{color:var(--ink-lt);font-size:.77rem;min-width:90px}
-.drow-val{color:var(--ink);flex:1}
+.drow-val{color:var(--ink);flex:1;line-height:1.5}
 .det-pics{display:flex;flex-wrap:wrap;gap:5px}
 .det-pic-badge{font-size:.7rem;font-weight:600;padding:3px 10px;border-radius:100px;background:var(--bg-dk);color:var(--ink-md);border:1px solid var(--rule)}
 
@@ -182,7 +198,6 @@ textarea.fc{resize:vertical;height:70px}
 .type-swatch:hover{border-color:var(--ink-lt)}
 .type-swatch input[type=color]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
 .type-row-name{flex:1;font-size:.85rem;font-weight:600;color:var(--ink)}
-.type-row-key{font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-lt);background:var(--bg-dk);padding:2px 6px;border-radius:4px}
 .type-edit-btn{background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:16px;padding:4px;border-radius:var(--r-sm);transition:background .12s,color .12s}
 .type-edit-btn:hover{background:var(--bg-dk);color:var(--ink)}
 
@@ -195,38 +210,28 @@ textarea.fc{resize:vertical;height:70px}
 .cfg-notice i{font-size:17px;color:#D97706;flex-shrink:0;margin-top:1px}
 code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;font-size:.76rem;font-family:monospace}
 
-/* ── COLOR PICKER GRID ── */
+/* ── COLOR PICKER ── */
 .color-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:10px 0}
 .color-swatch-opt{width:32px;height:32px;border-radius:var(--r-sm);cursor:pointer;border:3px solid transparent;transition:border-color .12s,transform .12s}
 .color-swatch-opt:hover{transform:scale(1.1)}
 .color-swatch-opt.selected{border-color:var(--ink)}
 
-/* ── AUTH LOGIN SCREEN ── */
-.login-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem}
-.login-card{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);padding:2.5rem 2rem;width:380px;max-width:100%;text-align:center;box-shadow:0 8px 40px rgba(28,25,23,.1)}
-.login-icon{font-size:2.5rem;margin-bottom:.75rem;display:block}
-.login-title{font-size:1.4rem;font-weight:800;letter-spacing:-.03em;color:var(--ink);margin-bottom:.4rem}
-.login-sub{font-size:.82rem;color:var(--ink-lt);margin-bottom:2rem;line-height:1.5}
-.btn-google{width:100%;padding:11px 16px;font-size:.88rem;font-weight:700;background:#fff;border:1.5px solid var(--rule);border-radius:var(--r-md);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:10px;font-family:var(--font);transition:background .14s,box-shadow .14s;box-shadow:0 1px 4px rgba(0,0,0,.07)}
-.btn-google:hover{background:#F8F8F8;box-shadow:0 2px 10px rgba(0,0,0,.12)}
-.btn-google svg{flex-shrink:0}
-.login-note{font-size:.72rem;color:var(--ink-lt);margin-top:1.25rem;line-height:1.5}
-
-/* ── AUTH HEADER CHIP ── */
-.auth-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;background:var(--bg-dk);border:1.5px solid var(--rule);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--ink-md)}
-.auth-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;background:var(--rule)}
-.auth-avatar-fallback{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
-
-/* ── READ-ONLY OVERLAY on write buttons ── */
+/* ── AUTH ── */
 .write-only{transition:opacity .2s}
 body.read-only .write-only{opacity:.35;pointer-events:none;cursor:not-allowed}
 .readonly-badge{display:none;font-size:.68rem;font-weight:700;padding:3px 9px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:100px;align-items:center;gap:4px}
 body.read-only .readonly-badge{display:inline-flex}
+.auth-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;background:var(--bg-dk);border:1.5px solid var(--rule);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--ink-md)}
+.auth-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover}
+.auth-avatar-fallback{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
+
+/* ── FIX #5: Skip login screen, go straight to app ── */
+/* (handled via JS boot logic — no login-screen styles needed) */
 
 @media(max-width:900px){
   .main-row{flex-direction:column}
   .panel-col{width:100%;position:static}
-  .panel-col .day-panel{max-height:300px}
+  .panel-col .day-panel{max-height:280px}
 }
 @media(max-width:600px){
   .brand-title{font-size:1.2rem}
@@ -238,41 +243,26 @@ body.read-only .readonly-badge{display:inline-flex}
 </style>
 </head>
 <body>
-<!-- ══ LOGIN SCREEN ══ -->
-<div class="login-screen" id="loginScreen">
-  <div class="login-card">
-    <span class="login-icon">📅</span>
-    <div class="login-title">Kalender Tim</div>
-    <div class="login-sub">Masuk untuk mengelola event.<br>Atau lanjutkan tanpa login untuk melihat kalender.</div>
-    <button class="btn-google" id="loginGoogleBtn">
-      <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-      Masuk dengan Google
-    </button>
-    <button class="btn" id="viewOnlyBtn" style="width:100%;margin-top:10px;justify-content:center"><i class="ti ti-eye"></i> Lihat saja (tanpa login)</button>
-    <div class="login-note">Hanya akun yang diizinkan yang dapat menambah, mengedit, atau menghapus event.</div>
-  </div>
-</div>
 
-<div class="page" id="mainApp" style="display:none">
+<div class="page" id="mainApp">
 
 <!-- CONFIG NOTICE -->
 <div class="cfg-notice" id="cfgNotice">
   <i class="ti ti-alert-triangle"></i>
-  <div><strong>Firebase belum dikonfigurasi.</strong> Ganti nilai <code>YOUR_*</code> di bagian <code>firebaseConfig</code>. Sementara data tersimpan di browser (localStorage).</div>
+  <div><strong>Firebase belum dikonfigurasi.</strong> Ganti nilai <code>YOUR_*</code> di <code>firebaseConfig</code>.</div>
 </div>
 
 <!-- HEADER -->
 <header class="site-header">
   <div>
-    <div class="brand-title">Kalender Tim</div>
+    <div class="brand-title" id="brandTitle">Kalender Tim</div>
     <div class="brand-sub">Manajemen Deadline &amp; Event</div>
   </div>
   <div class="hdr-right">
-    <!-- Read-only badge -->
     <span class="readonly-badge"><i class="ti ti-eye" style="font-size:12px"></i> Mode Lihat</span>
-    <!-- Auth chip -->
-    <div id="authChip" style="display:none"></div>
+    <div id="authChip"></div>
     <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
+    <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
     <button class="btn btn-primary write-only" id="addEventBtn"><i class="ti ti-plus"></i> Tambah Event</button>
   </div>
@@ -292,21 +282,17 @@ body.read-only .readonly-badge{display:inline-flex}
   </div>
 </div>
 
-<!-- LEGEND (dynamic) -->
 <div class="legend-bar" id="legendBar"></div>
 
-<!-- MAIN ROW: CALENDAR + RIGHT PANEL -->
 <div class="main-row">
   <div class="cal-col">
     <div class="cal-shell">
       <div class="cal-hdr" id="calHdr"></div>
-      <div class="cal-body" id="calBody"><div style="grid-column:span 7;text-align:center;padding:3rem;color:var(--ink-lt);font-size:.85rem"><i class="ti ti-loader" style="font-size:22px"></i><br>Memuat...</div></div>
+      <div class="cal-body" id="calBody"></div>
     </div>
-
-    <!-- EVENT LIST -->
     <div class="list-section">
       <div class="list-heading">Event bulan ini</div>
-      <div class="event-grid" id="eventGrid"><div style="color:var(--ink-lt);font-size:.82rem;">Memuat event...</div></div>
+      <div class="event-grid" id="eventGrid"></div>
     </div>
   </div>
 
@@ -314,12 +300,12 @@ body.read-only .readonly-badge{display:inline-flex}
   <div class="panel-col">
     <div class="day-panel">
       <div class="panel-head">
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="panel-date-label" id="panelDateLabel">Pilih tanggal</div>
-          <div class="panel-day-name" id="panelDayName">Klik tanggal di kalender untuk melihat event</div>
+          <div class="panel-day-name" id="panelDayName">Klik sel kalender untuk melihat event hari itu</div>
           <div id="panelHolBadge"></div>
         </div>
-        <button class="btn btn-icon btn-sm" id="panelAddBtn" style="display:none" title="Tambah event di tanggal ini"><i class="ti ti-plus"></i></button>
+        <button class="btn btn-icon btn-sm write-only" id="panelAddBtn" style="display:none"><i class="ti ti-plus"></i></button>
       </div>
       <div class="panel-body" id="panelBody">
         <div class="panel-empty"><i class="ti ti-calendar-off"></i>Belum ada tanggal dipilih</div>
@@ -328,36 +314,38 @@ body.read-only .readonly-badge{display:inline-flex}
   </div>
 </div>
 
-</div><!-- /page -->
+</div><!-- /mainApp -->
 
-</div><!-- /page / mainApp -->
-
-<!-- ══ ADD / EDIT EVENT MODAL ══ -->
+<!-- ══ ADD / EDIT MODAL ══ -->
 <div class="overlay" id="addOverlay">
   <div class="modal">
     <div class="modal-head">
       <div class="modal-title" id="addModalTitle">Tambah Event</div>
       <button class="btn btn-icon" id="closeAdd"><i class="ti ti-x"></i></button>
     </div>
-    <div class="fg">
+    <!-- Judul with autocomplete FIX #2 -->
+    <div class="fg ac-wrap">
       <label class="fl">Jenis Event</label>
       <select class="fc" id="fType"></select>
     </div>
-    <div class="fg">
+    <div class="fg ac-wrap">
       <label class="fl">Nama / Judul</label>
-      <input type="text" class="fc" id="fTitle" placeholder="Contoh: Closing Akhir Bulan..."/>
+      <input type="text" class="fc" id="fTitle" placeholder="Contoh: Closing Akhir Bulan..." autocomplete="off"/>
+      <div class="ac-list" id="titleAcList" style="display:none"></div>
     </div>
     <div class="frow">
       <div class="fg"><label class="fl">Tanggal Mulai</label><input type="date" class="fc" id="fDateStart"/></div>
       <div class="fg"><label class="fl">Tanggal Selesai</label><input type="date" class="fc" id="fDateEnd"/></div>
     </div>
-    <div class="fg">
+    <!-- PIC with autocomplete FIX #2 -->
+    <div class="fg" style="position:relative">
       <label class="fl">Penanggungjawab (PIC) <span style="color:#EF4444">*</span></label>
       <div class="pic-input-wrap" id="picInputWrap">
         <div id="picTags"></div>
-        <input type="text" class="pic-input-field" id="picInput" placeholder="Ketik nama lalu Enter..."/>
+        <input type="text" class="pic-input-field" id="picInput" placeholder="Ketik nama lalu Enter..." autocomplete="off"/>
       </div>
-      <div class="pic-hint"><i class="ti ti-info-circle" style="font-size:11px;vertical-align:-1px"></i> Tekan <strong>Enter</strong> atau <strong>koma</strong> untuk menambah PIC. Bisa lebih dari satu.</div>
+      <div class="pic-ac-list" id="picAcList" style="display:none"></div>
+      <div class="pic-hint"><i class="ti ti-info-circle" style="font-size:11px;vertical-align:-1px"></i> Tekan <strong>Enter</strong> atau <strong>koma</strong> untuk tambah PIC. Bisa lebih dari satu.</div>
     </div>
     <div class="fg">
       <label class="fl">Status</label>
@@ -393,14 +381,14 @@ body.read-only .readonly-badge{display:inline-flex}
   </div>
 </div>
 
-<!-- ══ EVENT TYPE MANAGER MODAL ══ -->
+<!-- ══ EVENT TYPE MANAGER ══ -->
 <div class="overlay" id="typeManagerOverlay">
   <div class="modal">
     <div class="modal-head">
       <div class="modal-title">Kelola Jenis Event</div>
       <button class="btn btn-icon" id="closeTypeManager"><i class="ti ti-x"></i></button>
     </div>
-    <p style="font-size:.82rem;color:var(--ink-lt);margin-bottom:1rem">Klik kotak warna untuk mengubah warna. Klik ikon pensil untuk mengubah nama.</p>
+    <p style="font-size:.82rem;color:var(--ink-lt);margin-bottom:1rem">Klik kotak warna untuk ubah warna inline. Klik pensil untuk edit nama.</p>
     <div class="type-list" id="typeList"></div>
     <div style="border-top:1.5px solid var(--rule);padding-top:1rem;margin-top:.5rem">
       <div style="font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:.6rem">Tambah Jenis Baru</div>
@@ -412,13 +400,11 @@ body.read-only .readonly-badge{display:inline-flex}
         <button class="btn btn-primary btn-sm" id="addTypeBtn"><i class="ti ti-plus"></i> Tambah</button>
       </div>
     </div>
-    <div class="modal-foot">
-      <button class="btn btn-primary" id="closeTypeManagerOk">Selesai</button>
-    </div>
+    <div class="modal-foot"><button class="btn btn-primary" id="closeTypeManagerOk">Selesai</button></div>
   </div>
 </div>
 
-<!-- ══ EDIT TYPE NAME MODAL ══ -->
+<!-- ══ EDIT TYPE MODAL ══ -->
 <div class="overlay" id="editTypeOverlay">
   <div class="modal modal-sm">
     <div class="modal-head">
@@ -432,12 +418,12 @@ body.read-only .readonly-badge{display:inline-flex}
         <div style="position:relative;width:36px;height:36px;border-radius:var(--r-sm);border:1.5px solid var(--rule);overflow:hidden;cursor:pointer;flex-shrink:0">
           <input type="color" id="editTypeColor" style="position:absolute;inset:-4px;width:calc(100%+8px);height:calc(100%+8px);cursor:pointer;border:none;padding:0"/>
         </div>
-        <span style="font-size:.78rem;color:var(--ink-lt)">Atau pilih warna preset:</span>
+        <span style="font-size:.78rem;color:var(--ink-lt)">Atau pilih preset:</span>
       </div>
       <div class="color-grid" id="colorPresetGrid"></div>
     </div>
     <div class="modal-foot">
-      <button class="btn btn-danger btn-sm" id="deleteTypeBtn"><i class="ti ti-trash"></i> Hapus Jenis</button>
+      <button class="btn btn-danger btn-sm" id="deleteTypeBtn"><i class="ti ti-trash"></i> Hapus</button>
       <button class="btn" id="cancelEditType">Batal</button>
       <button class="btn btn-primary" id="saveEditType"><i class="ti ti-check"></i> Simpan</button>
     </div>
@@ -448,7 +434,7 @@ body.read-only .readonly-badge{display:inline-flex}
 
 <script>
 /* ════════════════════════════════════════
-   🔥 FIREBASE CONFIG — GANTI NILAI YOUR_*
+   🔥 FIREBASE CONFIG
    ════════════════════════════════════════ */
 const firebaseConfig = {
   apiKey: "AIzaSyBq0BwjCTIsjvKNrb_XRqCOPRdUOrUbFsc",
@@ -460,20 +446,36 @@ const firebaseConfig = {
 };
 
 /* ════════════════════════════════════════
-   WHITELIST EMAIL — DAFTARKAN EMAIL YANG BOLEH EDIT
-   Tambahkan email Google anggota tim di sini.
+   FIX #7 — WORKSPACE (multi-dataset per URL path)
+   URL: /kalender-tim/Ryan  → workspace = "Ryan"
+   URL: /kalender-tim/Joko  → workspace = "Joko"
+   Firestore collection: "events_Ryan", "events_Joko"
+   ════════════════════════════════════════ */
+function getWorkspace() {
+  const parts = window.location.pathname.replace(/\/+$/,'').split('/');
+  const last  = parts[parts.length - 1];
+  // Ignore known base paths; treat any non-empty trailing segment as workspace
+  if (last && last !== 'kalender-tim' && last !== 'index.html') return last;
+  return 'default';
+}
+const WORKSPACE     = getWorkspace();
+const EVENTS_COLL   = WORKSPACE === 'default' ? 'events' : `events_${WORKSPACE}`;
+const TYPES_KEY     = `cal_types_${WORKSPACE}`;
+const LS_EVENTS_KEY = `cal_events_${WORKSPACE}`;
+
+/* ════════════════════════════════════════
+   WHITELIST EMAILS
    ════════════════════════════════════════ */
 const ALLOWED_EMAILS = [
   "ryan.trisyardi@gmail.com",
   "ryan.trisyardi@yahoo.com",
   "ryan.trisyardi@megavision.net.id",
-  // tambahkan email lain di sini
 ];
 
 /* ── INIT FIREBASE ── */
 let db = null, auth = null, useFirebase = false;
-let currentUser = null;   // null = belum login / view-only
-let canWrite    = false;  // true = login + email diizinkan
+let currentUser = null;
+let canWrite    = false;
 
 try {
   if (!firebaseConfig.apiKey.includes('YOUR_')) {
@@ -483,257 +485,168 @@ try {
     useFirebase = true;
     document.getElementById('cfgNotice').style.display = 'none';
   }
-} catch(e) { console.warn('Firebase init gagal:', e); }
+} catch(e) { console.warn('Firebase init:', e); }
 
-/* ── AUTH STATE HANDLER ── */
+/* ── AUTH STATE ── */
 function applyAuthState(user) {
   currentUser = user;
-  canWrite    = user && ALLOWED_EMAILS.includes(user.email);
-
-  /* Toggle read-only mode on body */
+  canWrite    = !!(user && ALLOWED_EMAILS.includes(user.email));
   document.body.classList.toggle('read-only', !canWrite);
 
-  /* Update auth chip in header */
   const chip = document.getElementById('authChip');
   if (user) {
     const initial = (user.displayName||user.email||'?')[0].toUpperCase();
-    const avatarHtml = user.photoURL
-      ? `<img class="auth-avatar" src="${user.photoURL}" alt="" referrerpolicy="no-referrer"/>`
+    const av = user.photoURL
+      ? `<img class="auth-avatar" src="${user.photoURL}" referrerpolicy="no-referrer"/>`
       : `<span class="auth-avatar-fallback">${initial}</span>`;
-    const name = user.displayName || user.email;
     const badge = canWrite
       ? `<span style="color:#15803D;font-size:.65rem;font-weight:700">✓ Editor</span>`
       : `<span style="color:#B45309;font-size:.65rem;font-weight:700">Lihat saja</span>`;
-    chip.innerHTML = `<div class="auth-chip">
-      ${avatarHtml}
-      <span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(name)}</span>
-      ${badge}
-      <button onclick="signOut()" style="background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:13px;padding:0 2px;display:flex;align-items:center" title="Keluar"><i class="ti ti-logout"></i></button>
-    </div>`;
-    chip.style.display = 'block';
+    chip.innerHTML = `<div class="auth-chip">${av}<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.displayName||user.email)}</span>${badge}<button onclick="signOut()" style="background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:13px;padding:0 2px;display:flex;align-items:center" title="Keluar"><i class="ti ti-logout"></i></button></div>`;
   } else {
-    chip.innerHTML = `<button class="btn btn-sm" onclick="signInGoogle()"><i class="ti ti-brand-google"></i> Masuk</button>`;
-    chip.style.display = 'block';
+    /* FIX #5: show "Masuk" button with info text */
+    chip.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:.72rem;color:var(--ink-lt)">Bagi user tertentu,</span>
+      <button class="btn btn-sm btn-primary" onclick="signInGoogle()"><i class="ti ti-brand-google"></i> Masuk</button>
+      <span style="font-size:.72rem;color:var(--ink-lt)">untuk tambah &amp; edit event</span>
+    </div>`;
   }
-
-  /* Panel add button also respects write guard */
+  /* Panel add btn visibility */
   const pab = document.getElementById('panelAddBtn');
-  if (pab) pab.classList.toggle('write-only', true);
+  if (pab) pab.style.display = canWrite ? 'flex' : 'none';
 }
 
 function signInGoogle() {
   if (!auth) return;
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(err => {
-    if (err.code !== 'auth/popup-closed-by-user') showToast('❌ Login gagal: ' + err.message);
-  });
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .catch(err => { if (err.code !== 'auth/popup-closed-by-user') showToast('❌ ' + err.message); });
 }
 function signOut() {
-  if (!auth) return;
-  auth.signOut().then(() => showToast('👋 Berhasil keluar'));
+  if (auth) auth.signOut().then(() => showToast('👋 Berhasil keluar'));
 }
 
-/* ── BOOT: show login screen or app ── */
-function bootApp(skipLogin) {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
-  if (useFirebase && auth) {
-    auth.onAuthStateChanged(user => {
-      applyAuthState(user);
-      /* Load events once on first auth state */
-      if (!window._eventsLoaded) { window._eventsLoaded = true; loadEvents(); renderCalendar(); }
-    });
-  } else {
-    /* No Firebase — localStorage mode, always read-write */
-    canWrite = true;
-    document.body.classList.remove('read-only');
-    loadEvents();
-    renderCalendar();
-  }
+/* ── BRAND TITLE shows workspace ── */
+if (WORKSPACE !== 'default') {
+  document.getElementById('brandTitle').textContent = `Kalender ${WORKSPACE}`;
+  document.title = `Kalender ${WORKSPACE}`;
 }
-
-document.getElementById('loginGoogleBtn').addEventListener('click', () => {
-  if (!useFirebase) { bootApp(false); return; }
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider)
-    .then(() => bootApp(false))
-    .catch(err => {
-      if (err.code !== 'auth/popup-closed-by-user') showToast('❌ Login gagal: '+err.message);
-    });
-});
-document.getElementById('viewOnlyBtn').addEventListener('click', () => bootApp(true));
 
 /* ════════════════════════════════════════
-   DEFAULT EVENT TYPES
-   Each type: { id, label, chip (hex), lt (light bg hex) }
+   EVENT TYPES
    ════════════════════════════════════════ */
 const DEFAULT_TYPES = [
-  { id:'deadline',     label:'Deadline Laporan', chip:'#3B82F6', lt:'#EFF6FF' },
-  { id:'cuti',         label:'Cuti',             chip:'#10B981', lt:'#ECFDF5' },
-  { id:'stock_opname', label:'Stock Opname',      chip:'#F59E0B', lt:'#FFFBEB' },
-  { id:'cash_opname',  label:'Cash Opname',       chip:'#8B5CF6', lt:'#F5F3FF' },
-  { id:'lainnya',      label:'Lainnya',           chip:'#EC4899', lt:'#FDF2F8' },
+  {id:'deadline',     label:'Deadline Laporan', chip:'#3B82F6', lt:'#EFF6FF'},
+  {id:'cuti',         label:'Cuti',             chip:'#10B981', lt:'#ECFDF5'},
+  {id:'stock_opname', label:'Stock Opname',      chip:'#F59E0B', lt:'#FFFBEB'},
+  {id:'cash_opname',  label:'Cash Opname',       chip:'#8B5CF6', lt:'#F5F3FF'},
+  {id:'lainnya',      label:'Lainnya',           chip:'#EC4899', lt:'#FDF2F8'},
 ];
-
-/* Load custom types from localStorage */
 function loadTypes() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('cal_types') || 'null');
-    return saved || DEFAULT_TYPES.map(t => ({...t}));
-  } catch(e) { return DEFAULT_TYPES.map(t => ({...t})); }
+  try { return JSON.parse(localStorage.getItem(TYPES_KEY)||'null') || DEFAULT_TYPES.map(t=>({...t})); }
+  catch(e) { return DEFAULT_TYPES.map(t=>({...t})); }
 }
-function saveTypes() {
-  localStorage.setItem('cal_types', JSON.stringify(eventTypes));
-}
-/* Lighten a hex color for background */
+function saveTypes() { localStorage.setItem(TYPES_KEY, JSON.stringify(eventTypes)); }
 function hexToLight(hex) {
-  const r = parseInt(hex.slice(1,3),16);
-  const g = parseInt(hex.slice(3,5),16);
-  const b = parseInt(hex.slice(5,7),16);
-  const mix = (c) => Math.round(c * .15 + 255 * .85);
-  return `#${mix(r).toString(16).padStart(2,'0')}${mix(g).toString(16).padStart(2,'0')}${mix(b).toString(16).padStart(2,'0')}`;
+  const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+  const m=c=>Math.round(c*.15+255*.85).toString(16).padStart(2,'0');
+  return `#${m(r)}${m(g)}${m(b)}`;
 }
-function getTypeById(id) {
-  return eventTypes.find(t => t.id === id) || eventTypes[eventTypes.length-1] || DEFAULT_TYPES[4];
-}
-
+function getTypeById(id) { return eventTypes.find(t=>t.id===id)||eventTypes[eventTypes.length-1]||DEFAULT_TYPES[4]; }
 let eventTypes = loadTypes();
 
 /* ════════════════════════════════════════
    STATE
    ════════════════════════════════════════ */
-let events       = [];
-let holidays     = {};
-let holidayCache = {};
-let currentDate  = new Date();
-let filterType   = 'all';
-let filterPIC    = 'all';
-let editingId    = null;
-let viewingId    = null;
-let selectedDate = null;   // for right panel
-let currentPICs  = [];     // multi-PIC array in form
-let editingTypeId= null;
-
-const PRESET_COLORS = [
-  '#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E',
-  '#10B981','#14B8A6','#06B6D4','#3B82F6','#6366F1','#8B5CF6',
-  '#A855F7','#EC4899','#F43F5E','#64748B',
-];
+let events=[], holidays={}, holidayCache={};
+let currentDate=new Date(), filterType='all', filterPIC='all';
+let editingId=null, viewingId=null, selectedDate=null;
+let currentPICs=[], editingTypeId=null;
+const PRESET_COLORS=['#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E','#10B981','#14B8A6','#06B6D4','#3B82F6','#6366F1','#8B5CF6','#A855F7','#EC4899','#F43F5E','#64748B'];
 
 /* ════════════════════════════════════════
    HOLIDAY API
    ════════════════════════════════════════ */
 async function fetchHolidaysForYear(year) {
-  if (holidayCache[year] !== undefined) return holidayCache[year];
-  holidayCache[year] = {};
+  if (holidayCache[year]!==undefined) return holidayCache[year];
+  holidayCache[year]={};
   try {
-    const res = await fetch(`https://libur.deno.dev/api?year=${year}`);
+    const res=await fetch(`https://libur.deno.dev/api?year=${year}`);
     if (!res.ok) throw new Error('HTTP '+res.status);
-    const data = await res.json();
-    const map = {};
-    if (Array.isArray(data)) {
-      data.forEach(h => {
-        map[h.date] = { name: h.name, isCutiBersama: /cuti bersama/i.test(h.name) };
-      });
-    }
-    holidayCache[year] = map;
-    return map;
-  } catch(e) { console.warn('Libur API error:', e); return {}; }
+    const data=await res.json();
+    const map={};
+    if (Array.isArray(data)) data.forEach(h=>{ map[h.date]={name:h.name,isCutiBersama:/cuti bersama/i.test(h.name)}; });
+    holidayCache[year]=map; return map;
+  } catch(e){ return {}; }
 }
-async function ensureHolidays(year, month) {
-  const d = await fetchHolidaysForYear(year);
-  Object.assign(holidays, d);
-  if (month === 0)  fetchHolidaysForYear(year-1).then(x => Object.assign(holidays,x));
-  if (month === 11) fetchHolidaysForYear(year+1).then(x => Object.assign(holidays,x));
+async function ensureHolidays(year,month) {
+  const d=await fetchHolidaysForYear(year); Object.assign(holidays,d);
+  if (month===0)  fetchHolidaysForYear(year-1).then(x=>Object.assign(holidays,x));
+  if (month===11) fetchHolidaysForYear(year+1).then(x=>Object.assign(holidays,x));
 }
 
 /* ════════════════════════════════════════
-   DATA ADAPTER (Firebase / localStorage)
+   DATA ADAPTER
    ════════════════════════════════════════ */
 function loadEvents() {
   if (useFirebase) {
-    db.collection('events').orderBy('dateStart')
-      .onSnapshot(snap => {
-        events = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        // Migrate old single-string pic → array
-        events = events.map(e => ({
-          ...e,
-          pics: Array.isArray(e.pics) ? e.pics : (e.pic ? [e.pic] : [])
-        }));
-        rebuildFilters();
-        renderCalendar();
-        if (selectedDate) renderPanel(selectedDate);
-      }, err => showToast('Gagal memuat: '+err.message));
+    db.collection(EVENTS_COLL).orderBy('dateStart').onSnapshot(snap=>{
+      events=snap.docs.map(d=>({id:d.id,...d.data()}));
+      events=events.map(e=>({...e,pics:Array.isArray(e.pics)?e.pics:(e.pic?[e.pic]:[])}));
+      rebuildFilters(); renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    }, err=>showToast('Gagal memuat: '+err.message));
   } else {
-    try { events = JSON.parse(localStorage.getItem('cal_events') || '[]'); }
-    catch(e) { events = []; }
-    events = events.map(e => ({
-      ...e,
-      pics: Array.isArray(e.pics) ? e.pics : (e.pic ? [e.pic] : [])
-    }));
-    rebuildFilters();
-    renderCalendar();
+    try { events=JSON.parse(localStorage.getItem(LS_EVENTS_KEY)||'[]'); }catch(e){events=[];}
+    events=events.map(e=>({...e,pics:Array.isArray(e.pics)?e.pics:(e.pic?[e.pic]:[])}));
+    rebuildFilters(); renderCalendar();
   }
 }
 async function saveEvent(data) {
   if (useFirebase) {
-    if (editingId) await db.collection('events').doc(editingId).update(data);
-    else await db.collection('events').add({ ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    if (editingId) await db.collection(EVENTS_COLL).doc(editingId).update(data);
+    else await db.collection(EVENTS_COLL).add({...data,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
   } else {
-    if (editingId) events = events.map(e => e.id === editingId ? {...e,...data} : e);
-    else events.push({ id:'loc_'+Date.now(), ...data });
-    localStorage.setItem('cal_events', JSON.stringify(events));
+    if (editingId) events=events.map(e=>e.id===editingId?{...e,...data}:e);
+    else events.push({id:'loc_'+Date.now(),...data});
+    localStorage.setItem(LS_EVENTS_KEY,JSON.stringify(events));
     rebuildFilters(); renderCalendar();
     if (selectedDate) renderPanel(selectedDate);
   }
 }
 async function deleteEvent(id) {
-  if (useFirebase) {
-    await db.collection('events').doc(id).delete();
-  } else {
-    events = events.filter(e => e.id !== id);
-    localStorage.setItem('cal_events', JSON.stringify(events));
+  if (useFirebase) await db.collection(EVENTS_COLL).doc(id).delete();
+  else {
+    events=events.filter(e=>e.id!==id);
+    localStorage.setItem(LS_EVENTS_KEY,JSON.stringify(events));
     rebuildFilters(); renderCalendar();
     if (selectedDate) renderPanel(selectedDate);
   }
 }
 
 /* ════════════════════════════════════════
-   FILTERS
+   FILTERS / LEGEND
    ════════════════════════════════════════ */
 function rebuildFilters() {
-  /* Type dropdown */
-  const tSel = document.getElementById('filterType');
-  const tCur = tSel.value;
-  tSel.innerHTML = '<option value="all">Semua Jenis</option>' +
-    eventTypes.map(t => `<option value="${t.id}">${escHtml(t.label)}</option>`).join('');
-  if (eventTypes.find(t => t.id === tCur)) tSel.value = tCur;
+  const tSel=document.getElementById('filterType'), tCur=tSel.value;
+  tSel.innerHTML='<option value="all">Semua Jenis</option>'+eventTypes.map(t=>`<option value="${t.id}">${escHtml(t.label)}</option>`).join('');
+  if (eventTypes.find(t=>t.id===tCur)) tSel.value=tCur;
 
-  /* PIC dropdown — collect all unique PICs from events.pics arrays */
-  const pSel = document.getElementById('filterPIC');
-  const pCur = pSel.value;
-  const allPICs = [...new Set(events.flatMap(e => e.pics || []).filter(Boolean))].sort();
-  pSel.innerHTML = '<option value="all">Semua PIC</option>' +
-    allPICs.map(p => `<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
-  if (allPICs.includes(pCur)) pSel.value = pCur;
+  const pSel=document.getElementById('filterPIC'), pCur=pSel.value;
+  const allPICs=[...new Set(events.flatMap(e=>e.pics||[]).filter(Boolean))].sort();
+  pSel.innerHTML='<option value="all">Semua PIC</option>'+allPICs.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
+  if (allPICs.includes(pCur)) pSel.value=pCur;
 
-  renderLegend();
-  rebuildTypeSelect();
+  renderLegend(); rebuildTypeSelect();
 }
 function rebuildTypeSelect() {
-  const sel = document.getElementById('fType');
-  const cur = sel.value;
-  sel.innerHTML = eventTypes.map(t =>
-    `<option value="${t.id}">${escHtml(t.label)}</option>`
-  ).join('');
-  if (eventTypes.find(t => t.id === cur)) sel.value = cur;
+  const sel=document.getElementById('fType'), cur=sel.value;
+  sel.innerHTML=eventTypes.map(t=>`<option value="${t.id}">${escHtml(t.label)}</option>`).join('');
+  if (eventTypes.find(t=>t.id===cur)) sel.value=cur;
 }
 function renderLegend() {
-  const bar = document.getElementById('legendBar');
-  bar.innerHTML = eventTypes.map(t =>
+  document.getElementById('legendBar').innerHTML=eventTypes.map(t=>
     `<div class="leg"><div class="leg-dot" style="background:${t.chip}"></div>${escHtml(t.label)}</div>`
-  ).join('') +
-  `<div class="leg-sep"></div>
+  ).join('')+`<div class="leg-sep"></div>
    <div class="leg"><div class="leg-dot" style="background:var(--libnas-bg);border:1.5px solid var(--libnas-side)"></div> Libur Nasional</div>
    <div class="leg"><div class="leg-dot" style="background:var(--cutib-bg);border:1.5px solid var(--cutib-side)"></div> Cuti Bersama</div>
    <div class="leg-sep"></div>
@@ -744,232 +657,182 @@ function renderLegend() {
 /* ════════════════════════════════════════
    HELPERS
    ════════════════════════════════════════ */
-function toStr(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-}
-function fmtDate(s) {
-  if (!s) return '';
-  const [y,m,d] = s.split('-');
-  return `${d}/${m}/${y}`;
-}
-function escHtml(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function showToast(msg, dur=2800) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), dur);
-}
-function getEventsForDate(ds) {
-  return events.filter(e => {
-    if (filterType !== 'all' && e.type !== filterType) return false;
-    if (filterPIC  !== 'all' && !(e.pics||[]).includes(filterPIC)) return false;
-    if (e.dateEnd && e.dateStart <= ds && e.dateEnd >= ds) return true;
-    return e.dateStart === ds;
+function toStr(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function fmtDate(s){if(!s)return'';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;}
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function getEventsForDate(ds){
+  return events.filter(e=>{
+    if (filterType!=='all'&&e.type!==filterType) return false;
+    if (filterPIC!=='all'&&!(e.pics||[]).includes(filterPIC)) return false;
+    if (e.dateEnd&&e.dateStart<=ds&&e.dateEnd>=ds) return true;
+    return e.dateStart===ds;
   });
 }
-function picsLabel(ev) {
-  const pics = ev.pics || [];
-  if (!pics.length) return ev.title;
-  if (pics.length === 1) return `${ev.title} · ${pics[0]}`;
-  return `${ev.title} · ${pics[0]} +${pics.length-1}`;
+function picsLabel(ev){
+  const p=ev.pics||[];
+  if (!p.length) return ev.title;
+  if (p.length===1) return `${ev.title} · ${p[0]}`;
+  return `${ev.title} · ${p[0]} +${p.length-1}`;
 }
 
 /* ════════════════════════════════════════
-   RENDER CALENDAR
+   RENDER CALENDAR — FIX #1: up to 5 chips, auto height
    ════════════════════════════════════════ */
 async function renderCalendar() {
-  const year  = currentDate.getFullYear();
-  const month = currentDate.getMonth();
-  const todayStr = toStr(new Date());
+  const year=currentDate.getFullYear(), month=currentDate.getMonth();
+  const todayStr=toStr(new Date());
+  document.getElementById('monthLabel').textContent=new Date(year,month,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
 
-  document.getElementById('monthLabel').textContent =
-    new Date(year,month,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+  const DAYS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  document.getElementById('calHdr').innerHTML=DAYS.map((d,i)=>`<div class="dh${i===0?' sun':i===6?' sat':''}">${d}</div>`).join('');
 
-  const DAYS = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
-  document.getElementById('calHdr').innerHTML =
-    DAYS.map((d,i) => `<div class="dh${i===0?' sun':i===6?' sat':''}">${d}</div>`).join('');
+  await ensureHolidays(year,month);
 
-  await ensureHolidays(year, month);
+  const firstDay=new Date(year,month,1).getDay();
+  const lastDate=new Date(year,month+1,0).getDate();
+  const prevLast=new Date(year,month,0).getDate();
 
-  const firstDay = new Date(year,month,1).getDay();
-  const lastDate  = new Date(year,month+1,0).getDate();
-  const prevLast  = new Date(year,month,0).getDate();
+  let cells=[];
+  for(let i=firstDay-1;i>=0;i--) cells.push({day:prevLast-i,cur:false,m:month-1,y:year});
+  for(let d=1;d<=lastDate;d++)   cells.push({day:d,cur:true,m:month,y:year});
+  while(cells.length%7!==0)      cells.push({day:cells.length-firstDay-lastDate+1,cur:false,m:month+1,y:year});
 
-  let cells = [];
-  for (let i=firstDay-1;i>=0;i--) cells.push({day:prevLast-i,cur:false,m:month-1,y:year});
-  for (let d=1;d<=lastDate;d++)   cells.push({day:d,cur:true,m:month,y:year});
-  while (cells.length%7!==0)      cells.push({day:cells.length-firstDay-lastDate+1,cur:false,m:month+1,y:year});
+  let html='';
+  cells.forEach(c=>{
+    const rm=c.m<0?11:c.m>11?0:c.m, ry=c.m<0?c.y-1:c.m>11?c.y+1:c.y;
+    const ds=`${ry}-${String(rm+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
+    const dow=new Date(ry,rm,c.day).getDay();
+    const hol=holidays[ds];
+    const isLibnas=!!(hol&&!hol.isCutiBersama), isCutib=!!(hol&&hol.isCutiBersama);
+    const isSun=dow===0, isSat=dow===6;
+    let cls='dc';
+    if(!c.cur) cls+=' other';
+    if(isSun)  cls+=' is-sun';
+    if(isSat)  cls+=' is-sat';
+    if(isLibnas) cls+=' is-libnas';
+    if(isCutib)  cls+=' is-cutib';
+    if(ds===todayStr&&c.cur) cls+=' today';
+    if(ds===selectedDate&&c.cur) cls+=' selected';
 
-  let html = '';
-  cells.forEach(c => {
-    const rm = c.m<0?11:c.m>11?0:c.m;
-    const ry = c.m<0?c.y-1:c.m>11?c.y+1:c.y;
-    const ds = `${ry}-${String(rm+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
-    const dow = new Date(ry,rm,c.day).getDay();
-    const isToday = ds===todayStr && c.cur;
-    const hol = holidays[ds];
-    const isLibnas  = !!(hol && !hol.isCutiBersama);
-    const isCutib   = !!(hol && hol.isCutiBersama);
-    const isSun = dow===0, isSat = dow===6;
-    const isSelected = ds===selectedDate && c.cur;
-
-    let cls = 'dc';
-    if (!c.cur)   cls += ' other';
-    if (isSun)    cls += ' is-sun';
-    if (isSat)    cls += ' is-sat';
-    if (isLibnas) cls += ' is-libnas';
-    if (isCutib)  cls += ' is-cutib';
-    if (isToday)  cls += ' today';
-    if (isSelected) cls += ' selected';
-
-    const holHtml = (hol && c.cur)
-      ? `<div class="hol-label" title="${escHtml(hol.name)}">${escHtml(hol.name)}</div>` : '';
-
-    const evs = c.cur ? getEventsForDate(ds) : [];
-    const MAX = 2;
-    let chipsHtml = evs.slice(0,MAX).map(e => {
-      const t = getTypeById(e.type);
+    const holHtml=(hol&&c.cur)?`<div class="hol-label" title="${escHtml(hol.name)}">${escHtml(hol.name)}</div>`:'';
+    const evs=c.cur?getEventsForDate(ds):[];
+    const MAX=5; /* FIX #1 */
+    let chipsHtml=evs.slice(0,MAX).map(e=>{
+      const t=getTypeById(e.type);
       return `<span class="chip" style="background:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${escHtml(picsLabel(e))}</span>`;
     }).join('');
-    if (evs.length > MAX) chipsHtml += `<span class="chip-more">+${evs.length-MAX} lainnya</span>`;
+    if(evs.length>MAX) chipsHtml+=`<span class="chip-more">+${evs.length-MAX} lainnya</span>`;
 
-    /* day-num triggers ADD; rest of cell triggers PANEL */
-    html += `<div class="${cls}" data-date="${ds}">
-      <div class="day-num" data-date="${ds}" data-adddate="${ds}">${c.day}</div>
+    html+=`<div class="${cls}" data-date="${ds}">
+      <div class="day-num" data-adddate="${ds}">${c.day}</div>
       ${holHtml}${chipsHtml}
     </div>`;
   });
 
-  document.getElementById('calBody').innerHTML = html;
+  document.getElementById('calBody').innerHTML=html;
 
-  /* day-num click → ADD EVENT (only if canWrite) */
-  document.querySelectorAll('.day-num[data-adddate]').forEach(el => {
-    el.addEventListener('click', ev => {
+  document.querySelectorAll('.day-num[data-adddate]').forEach(el=>{
+    el.addEventListener('click',ev=>{
       ev.stopPropagation();
-      if (!canWrite) { selectDate(el.dataset.adddate); return; }
+      if(!canWrite){selectDate(el.dataset.adddate);return;}
       openAdd(el.dataset.adddate);
     });
   });
-
-  /* chip click → DETAIL */
-  document.querySelectorAll('.chip[data-id]').forEach(el => {
-    el.addEventListener('click', ev => {
-      ev.stopPropagation();
-      openDetail(el.dataset.id);
-    });
+  document.querySelectorAll('.chip[data-id]').forEach(el=>{
+    el.addEventListener('click',ev=>{ev.stopPropagation();openDetail(el.dataset.id);});
   });
-
-  /* cell click (not on day-num or chip) → PANEL */
-  document.querySelectorAll('.dc:not(.other)').forEach(el => {
-    el.addEventListener('click', ev => {
-      if (ev.target.closest('.day-num') || ev.target.closest('.chip')) return;
+  document.querySelectorAll('.dc:not(.other)').forEach(el=>{
+    el.addEventListener('click',ev=>{
+      if(ev.target.closest('.day-num')||ev.target.closest('.chip')) return;
       selectDate(el.dataset.date);
     });
   });
 
-  renderEventList(year, month);
+  renderEventList(year,month);
 }
 
 /* ════════════════════════════════════════
-   RIGHT PANEL
+   RIGHT PANEL — FIX #3: show note
    ════════════════════════════════════════ */
 function selectDate(ds) {
-  selectedDate = ds;
-  // Update selected highlight
-  document.querySelectorAll('.dc').forEach(el => {
-    el.classList.toggle('selected', el.dataset.date === ds && !el.classList.contains('other'));
-  });
+  selectedDate=ds;
+  document.querySelectorAll('.dc').forEach(el=>el.classList.toggle('selected',el.dataset.date===ds&&!el.classList.contains('other')));
   renderPanel(ds);
 }
 
 function renderPanel(ds) {
-  const d = new Date(ds + 'T00:00:00');
-  const dayNames = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-  document.getElementById('panelDateLabel').textContent =
-    d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('panelDayName').textContent = dayNames[d.getDay()];
-  document.getElementById('panelAddBtn').style.display = canWrite ? 'flex' : 'none';
-  document.getElementById('panelAddBtn').onclick = () => openAdd(ds);
+  const d=new Date(ds+'T00:00:00');
+  const DNAMES=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  document.getElementById('panelDateLabel').textContent=d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('panelDayName').textContent=DNAMES[d.getDay()];
+  document.getElementById('panelAddBtn').style.display=canWrite?'flex':'none';
+  document.getElementById('panelAddBtn').onclick=()=>openAdd(ds);
 
-  /* Holiday badge */
-  const hol = holidays[ds];
-  const holBadge = document.getElementById('panelHolBadge');
-  if (hol) {
-    const cls = hol.isCutiBersama ? 'hb-cutib' : 'hb-libnas';
-    const bg  = hol.isCutiBersama ? 'var(--cutib-bg)' : 'var(--libnas-bg)';
-    const col = hol.isCutiBersama ? 'var(--cutib-name)' : 'var(--libnas-name)';
-    holBadge.innerHTML = `<span class="panel-hol-badge" style="background:${bg};color:${col}">${escHtml(hol.name)}</span>`;
-  } else {
-    holBadge.innerHTML = '';
-  }
+  const hol=holidays[ds];
+  const holBadge=document.getElementById('panelHolBadge');
+  if(hol){
+    const bg=hol.isCutiBersama?'var(--cutib-bg)':'var(--libnas-bg)';
+    const col=hol.isCutiBersama?'var(--cutib-name)':'var(--libnas-name)';
+    holBadge.innerHTML=`<span class="panel-hol-badge" style="background:${bg};color:${col}">${escHtml(hol.name)}</span>`;
+  } else { holBadge.innerHTML=''; }
 
-  const evs = events.filter(e => {
-    if (e.dateEnd && e.dateStart <= ds && e.dateEnd >= ds) return true;
-    return e.dateStart === ds;
+  const evs=events.filter(e=>{
+    if(e.dateEnd&&e.dateStart<=ds&&e.dateEnd>=ds) return true;
+    return e.dateStart===ds;
   });
 
-  const body = document.getElementById('panelBody');
-  if (!evs.length) {
-    body.innerHTML = `<div class="panel-empty"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`;
-    return;
-  }
+  const body=document.getElementById('panelBody');
+  if(!evs.length){body.innerHTML=`<div class="panel-empty"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`;return;}
 
-  const statusMap = {achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
-  body.innerHTML = evs.map(e => {
-    const t = getTypeById(e.type);
-    const pics = e.pics || [];
-    const dl = e.dateEnd && e.dateEnd !== e.dateStart
-      ? `${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}` : fmtDate(e.dateStart);
-    const sp = e.status ? `<span class="status-pill s-${e.status}" style="font-size:.62rem">${statusMap[e.status]}</span>` : '';
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  body.innerHTML=evs.map(e=>{
+    const t=getTypeById(e.type);
+    const pics=e.pics||[];
+    const dl=e.dateEnd&&e.dateEnd!==e.dateStart?`${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}`:fmtDate(e.dateStart);
+    const sp=e.status?`<span class="status-pill s-${e.status}" style="font-size:.62rem">${SM[e.status]}</span>`:'';
+    /* FIX #3: catatan */
+    const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:11px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
     return `<div class="panel-event-item" data-id="${e.id}">
       <div class="pei-bar" style="background:${t.chip}"></div>
       <div class="pei-body">
         <div class="pei-type" style="color:${t.chip}">${escHtml(t.label)}</div>
         <div class="pei-title">${escHtml(e.title)}</div>
-        ${pics.length ? `<div class="pei-pics">${pics.map(p=>`<span class="pic-badge">${escHtml(p)}</span>`).join('')}</div>` : ''}
-        <div class="pei-meta">
-          <span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px"></i> ${dl}</span>
-          ${sp}
-        </div>
+        ${pics.length?`<div class="pei-pics">${pics.map(p=>`<span class="pic-badge">${escHtml(p)}</span>`).join('')}</div>`:''}
+        <div class="pei-meta"><span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px"></i> ${dl}</span>${sp}</div>
+        ${noteHtml}
       </div>
     </div>`;
   }).join('');
 
-  body.querySelectorAll('.panel-event-item').forEach(el =>
-    el.addEventListener('click', () => openDetail(el.dataset.id))
-  );
+  body.querySelectorAll('.panel-event-item').forEach(el=>el.addEventListener('click',()=>openDetail(el.dataset.id)));
 }
 
 /* ════════════════════════════════════════
-   EVENT LIST (below calendar)
+   EVENT LIST — FIX #3: show note in cards
    ════════════════════════════════════════ */
-function renderEventList(year, month) {
-  const mStr = `${year}-${String(month+1).padStart(2,'0')}`;
-  const filtered = events
-    .filter(e => {
-      if (filterType !== 'all' && e.type !== filterType) return false;
-      if (filterPIC  !== 'all' && !(e.pics||[]).includes(filterPIC)) return false;
-      return e.dateStart.startsWith(mStr) || (e.dateEnd && e.dateEnd.startsWith(mStr));
+function renderEventList(year,month) {
+  const mStr=`${year}-${String(month+1).padStart(2,'0')}`;
+  const filtered=events
+    .filter(e=>{
+      if(filterType!=='all'&&e.type!==filterType) return false;
+      if(filterPIC!=='all'&&!(e.pics||[]).includes(filterPIC)) return false;
+      return e.dateStart.startsWith(mStr)||(e.dateEnd&&e.dateEnd.startsWith(mStr));
     })
-    .sort((a,b) => a.dateStart.localeCompare(b.dateStart));
+    .sort((a,b)=>a.dateStart.localeCompare(b.dateStart));
 
-  const grid = document.getElementById('eventGrid');
-  if (!filtered.length) {
-    grid.innerHTML = `<p style="color:var(--ink-lt);font-size:.82rem;grid-column:1/-1">Tidak ada event bulan ini.</p>`;
-    return;
-  }
+  const grid=document.getElementById('eventGrid');
+  if(!filtered.length){grid.innerHTML=`<p style="color:var(--ink-lt);font-size:.82rem;grid-column:1/-1">Tidak ada event bulan ini.</p>`;return;}
 
-  const statusMap = {achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
-  grid.innerHTML = filtered.map(e => {
-    const t  = getTypeById(e.type);
-    const pics = e.pics || [];
-    const dl = e.dateEnd ? `${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}` : fmtDate(e.dateStart);
-    const sp = e.status ? `<span class="status-pill s-${e.status}">${statusMap[e.status]}</span>` : '';
-    const extraPics = pics.length > 1 ? ` <span style="color:var(--ink-lt);font-weight:500">+${pics.length-1}</span>` : '';
-    const titleDisp = pics.length
-      ? `${escHtml(e.title)} · ${escHtml(pics[0])}${extraPics}`
-      : escHtml(e.title);
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  grid.innerHTML=filtered.map(e=>{
+    const t=getTypeById(e.type), pics=e.pics||[];
+    const dl=e.dateEnd?`${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}`:fmtDate(e.dateStart);
+    const sp=e.status?`<span class="status-pill s-${e.status}">${SM[e.status]}</span>`:'';
+    const extra=pics.length>1?` <span style="color:var(--ink-lt);font-weight:500">+${pics.length-1}</span>`:'';
+    const titleDisp=pics.length?`${escHtml(e.title)} · ${escHtml(pics[0])}${extra}`:escHtml(e.title);
+    /* FIX #3 */
+    const noteHtml=e.note?`<div class="ecard-note"><i class="ti ti-notes" style="font-size:11px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
     return `<div class="ecard" data-id="${e.id}">
       <div class="ecard-bar" style="background:${t.chip}"></div>
       <div class="ecard-body">
@@ -977,103 +840,149 @@ function renderEventList(year, month) {
         <div class="ecard-title">${titleDisp}</div>
         <div class="ecard-meta">
           <span class="spill"><i class="ti ti-calendar"></i>${dl}</span>
-          ${pics.length ? `<span class="spill"><i class="ti ti-users"></i>${pics.length} PIC</span>` : ''}
+          ${pics.length?`<span class="spill"><i class="ti ti-users"></i>${pics.length} PIC</span>`:''}
           ${sp}
         </div>
-        ${pics.length > 1 ? `<div class="pics-row">${pics.map(p=>`<span class="pic-badge" style="font-size:.62rem;padding:2px 7px;background:var(--bg-dk);border-radius:100px;border:1px solid var(--rule)">${escHtml(p)}</span>`).join('')}</div>` : ''}
+        ${pics.length>1?`<div class="pics-row">${pics.map(p=>`<span class="pic-badge" style="font-size:.62rem">${escHtml(p)}</span>`).join('')}</div>`:''}
+        ${noteHtml}
       </div>
     </div>`;
   }).join('');
 
-  grid.querySelectorAll('.ecard').forEach(el =>
-    el.addEventListener('click', () => openDetail(el.dataset.id))
-  );
+  grid.querySelectorAll('.ecard').forEach(el=>el.addEventListener('click',()=>openDetail(el.dataset.id)));
+}
+
+/* ════════════════════════════════════════
+   FIX #2 — AUTOCOMPLETE for Title & PIC
+   ════════════════════════════════════════ */
+function getAllTitles() { return [...new Set(events.map(e=>e.title).filter(Boolean))].sort(); }
+function getAllPICs()   { return [...new Set(events.flatMap(e=>e.pics||[]).filter(Boolean))].sort(); }
+
+function setupTitleAutocomplete() {
+  const input=document.getElementById('fTitle');
+  const list=document.getElementById('titleAcList');
+  let acIdx=-1;
+
+  function showAc(val) {
+    const q=val.trim().toLowerCase();
+    const matches=q?getAllTitles().filter(t=>t.toLowerCase().includes(q)&&t.toLowerCase()!==q):[];
+    if(!matches.length){list.style.display='none';return;}
+    list.innerHTML=matches.slice(0,8).map((m,i)=>{
+      const hi=m.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<strong>$1</strong>');
+      return `<div class="ac-item" data-val="${escHtml(m)}" data-i="${i}">${hi}</div>`;
+    }).join('');
+    list.style.display='block'; acIdx=-1;
+    list.querySelectorAll('.ac-item').forEach(el=>el.addEventListener('mousedown',ev=>{ev.preventDefault();input.value=el.dataset.val;list.style.display='none';}));
+  }
+
+  input.addEventListener('input',()=>showAc(input.value));
+  input.addEventListener('keydown',e=>{
+    const items=list.querySelectorAll('.ac-item');
+    if(e.key==='ArrowDown'){e.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('ac-active',i===acIdx));}
+    else if(e.key==='ArrowUp'){e.preventDefault();acIdx=Math.max(acIdx-1,0);items.forEach((el,i)=>el.classList.toggle('ac-active',i===acIdx));}
+    else if(e.key==='Enter'&&acIdx>=0){e.preventDefault();input.value=items[acIdx].dataset.val;list.style.display='none';}
+    else if(e.key==='Escape'){list.style.display='none';}
+  });
+  input.addEventListener('blur',()=>setTimeout(()=>list.style.display='none',150));
+}
+
+function setupPicAutocomplete() {
+  const input=document.getElementById('picInput');
+  const list=document.getElementById('picAcList');
+  let acIdx=-1;
+
+  function showPicAc(val) {
+    const q=val.trim().toLowerCase();
+    const used=new Set(currentPICs.map(p=>p.toLowerCase()));
+    const matches=getAllPICs().filter(p=>!used.has(p.toLowerCase())&&(q?p.toLowerCase().includes(q):true));
+    if(!matches.length||!val.trim()){list.style.display='none';return;}
+    list.innerHTML=matches.slice(0,8).map((m,i)=>{
+      const hi=q?m.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<strong>$1</strong>'):escHtml(m);
+      return `<div class="pic-ac-item" data-val="${escHtml(m)}" data-i="${i}"><i class="ti ti-user"></i>${hi}</div>`;
+    }).join('');
+    list.style.display='block'; acIdx=-1;
+    list.querySelectorAll('.pic-ac-item').forEach(el=>el.addEventListener('mousedown',ev=>{
+      ev.preventDefault();
+      const name=el.dataset.val;
+      if(!currentPICs.includes(name)){currentPICs.push(name);renderPicTags();}
+      input.value=''; list.style.display='none';
+    }));
+  }
+
+  input.addEventListener('input',()=>showPicAc(input.value));
+  input.addEventListener('keydown',e=>{
+    const items=list.querySelectorAll('.pic-ac-item');
+    if(e.key==='ArrowDown'){e.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('ac-active',i===acIdx));}
+    else if(e.key==='ArrowUp'){e.preventDefault();acIdx=Math.max(acIdx-1,0);items.forEach((el,i)=>el.classList.toggle('ac-active',i===acIdx));}
+    else if((e.key==='Enter'||e.key===',')&&acIdx>=0){e.preventDefault();const name=items[acIdx].dataset.val;if(!currentPICs.includes(name)){currentPICs.push(name);renderPicTags();}input.value='';list.style.display='none';acIdx=-1;}
+    else if(e.key==='Escape'){list.style.display='none';}
+  });
+  input.addEventListener('blur',()=>setTimeout(()=>list.style.display='none',150));
 }
 
 /* ════════════════════════════════════════
    MULTI-PIC INPUT
    ════════════════════════════════════════ */
 function renderPicTags() {
-  const container = document.getElementById('picTags');
-  container.innerHTML = currentPICs.map((p,i) =>
-    `<span class="pic-tag">${escHtml(p)}<button class="pic-tag-remove" data-i="${i}" type="button"><i class="ti ti-x" style="font-size:10px"></i></button></span>`
-  ).join('');
-  container.querySelectorAll('.pic-tag-remove').forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentPICs.splice(parseInt(btn.dataset.i), 1);
-      renderPicTags();
-    });
-  });
+  const c=document.getElementById('picTags');
+  c.innerHTML=currentPICs.map((p,i)=>`<span class="pic-tag">${escHtml(p)}<button class="pic-tag-remove" data-i="${i}" type="button"><i class="ti ti-x" style="font-size:10px"></i></button></span>`).join('');
+  c.querySelectorAll('.pic-tag-remove').forEach(btn=>btn.addEventListener('click',()=>{currentPICs.splice(parseInt(btn.dataset.i),1);renderPicTags();}));
 }
 function addPICfromInput() {
-  const input = document.getElementById('picInput');
-  const raw = input.value.trim().replace(/,+$/, '');
-  const names = raw.split(',').map(s => s.trim()).filter(Boolean);
-  names.forEach(n => {
-    if (n && !currentPICs.includes(n)) currentPICs.push(n);
-  });
-  input.value = '';
-  renderPicTags();
+  const input=document.getElementById('picInput');
+  const names=input.value.trim().replace(/,+$/,'').split(',').map(s=>s.trim()).filter(Boolean);
+  names.forEach(n=>{if(n&&!currentPICs.includes(n))currentPICs.push(n);});
+  input.value=''; renderPicTags();
 }
-
-document.getElementById('picInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter' || e.key === ',') {
-    e.preventDefault();
-    addPICfromInput();
-  }
-  if (e.key === 'Backspace' && !e.target.value && currentPICs.length) {
-    currentPICs.pop();
-    renderPicTags();
-  }
+document.getElementById('picInput').addEventListener('keydown',e=>{
+  if((e.key==='Enter'||e.key===',')&&document.getElementById('picAcList').style.display==='none'){e.preventDefault();addPICfromInput();}
+  if(e.key==='Backspace'&&!e.target.value&&currentPICs.length){currentPICs.pop();renderPicTags();}
 });
-document.getElementById('picInput').addEventListener('blur', () => {
-  if (document.getElementById('picInput').value.trim()) addPICfromInput();
+document.getElementById('picInput').addEventListener('blur',()=>{
+  setTimeout(()=>{if(document.getElementById('picInput').value.trim())addPICfromInput();},200);
 });
-document.getElementById('picInputWrap').addEventListener('click', () => {
-  document.getElementById('picInput').focus();
-});
+document.getElementById('picInputWrap').addEventListener('click',()=>document.getElementById('picInput').focus());
 
 /* ════════════════════════════════════════
    ADD MODAL
    ════════════════════════════════════════ */
 function openAdd(dateStr) {
-  editingId = null;
-  currentPICs = [];
-  document.getElementById('addModalTitle').textContent = 'Tambah Event';
-  document.getElementById('fTitle').value      = '';
-  document.getElementById('fDateStart').value  = dateStr || toStr(new Date());
-  document.getElementById('fDateEnd').value    = '';
-  document.getElementById('fStatus').value     = 'pending';
-  document.getElementById('fNote').value       = '';
-  document.getElementById('picInput').value    = '';
-  rebuildTypeSelect();
-  renderPicTags();
+  editingId=null; currentPICs=[];
+  document.getElementById('addModalTitle').textContent='Tambah Event';
+  document.getElementById('fTitle').value='';
+  document.getElementById('fDateStart').value=dateStr||toStr(new Date());
+  document.getElementById('fDateEnd').value='';
+  document.getElementById('fStatus').value='pending';
+  document.getElementById('fNote').value='';
+  document.getElementById('picInput').value='';
+  document.getElementById('titleAcList').style.display='none';
+  document.getElementById('picAcList').style.display='none';
+  rebuildTypeSelect(); renderPicTags();
   document.getElementById('addOverlay').classList.add('open');
 }
 
 /* ════════════════════════════════════════
-   DETAIL MODAL
+   DETAIL MODAL — FIX #3: show note
    ════════════════════════════════════════ */
 function openDetail(id) {
-  const ev = events.find(e => e.id === id);
-  if (!ev) return;
-  viewingId = id;
-  const t   = getTypeById(ev.type);
-  const dl  = ev.dateEnd ? `${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}` : fmtDate(ev.dateStart);
-  const sm  = {achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
-  const sp  = ev.status ? `<span class="status-pill s-${ev.status}">${sm[ev.status]}</span>` : '';
-  const pics = ev.pics || [];
-  const lt   = t.lt || hexToLight(t.chip);
+  const ev=events.find(e=>e.id===id); if(!ev) return;
+  viewingId=id;
+  const t=getTypeById(ev.type);
+  const dl=ev.dateEnd?`${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`:fmtDate(ev.dateStart);
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  const sp=ev.status?`<span class="status-pill s-${ev.status}">${SM[ev.status]}</span>`:'';
+  const pics=ev.pics||[];
+  const lt=t.lt||hexToLight(t.chip);
 
-  document.getElementById('detailContent').innerHTML = `
+  document.getElementById('detailContent').innerHTML=`
     <div class="det-banner" style="background:${lt}">
       <div class="det-type" style="color:${t.chip}">${escHtml(t.label)}</div>
       <div class="det-title" style="color:${t.chip}">${escHtml(ev.title)}</div>
     </div>
     <div class="drow"><i class="ti ti-calendar drow-ico"></i><span class="drow-lbl">Tanggal</span><span class="drow-val">${dl}</span></div>
-    ${pics.length ? `<div class="drow"><i class="ti ti-users drow-ico"></i><span class="drow-lbl">PIC</span><span class="drow-val"><div class="det-pics">${pics.map(p=>`<span class="det-pic-badge">${escHtml(p)}</span>`).join('')}</div></span></div>` : ''}
-    ${ev.status ? `<div class="drow"><i class="ti ti-circle-check drow-ico"></i><span class="drow-lbl">Status</span><span class="drow-val">${sp}</span></div>` : ''}
-    ${ev.note   ? `<div class="drow"><i class="ti ti-notes drow-ico"></i><span class="drow-lbl">Catatan</span><span class="drow-val">${escHtml(ev.note)}</span></div>` : ''}
+    ${pics.length?`<div class="drow"><i class="ti ti-users drow-ico"></i><span class="drow-lbl">PIC</span><span class="drow-val"><div class="det-pics">${pics.map(p=>`<span class="det-pic-badge">${escHtml(p)}</span>`).join('')}</div></span></div>`:''}
+    ${ev.status?`<div class="drow"><i class="ti ti-circle-check drow-ico"></i><span class="drow-lbl">Status</span><span class="drow-val">${sp}</span></div>`:''}
+    ${ev.note?`<div class="drow"><i class="ti ti-notes drow-ico"></i><span class="drow-lbl">Catatan</span><span class="drow-val">${escHtml(ev.note)}</span></div>`:''}
   `;
   document.getElementById('detailOverlay').classList.add('open');
 }
@@ -1081,201 +990,314 @@ function openDetail(id) {
 /* ════════════════════════════════════════
    EVENT TYPE MANAGER
    ════════════════════════════════════════ */
-function openTypeManager() {
-  renderTypeList();
-  document.getElementById('typeManagerOverlay').classList.add('open');
-}
-function renderTypeList() {
-  const list = document.getElementById('typeList');
-  list.innerHTML = eventTypes.map(t => `
+function openTypeManager(){renderTypeList();document.getElementById('typeManagerOverlay').classList.add('open');}
+function renderTypeList(){
+  const list=document.getElementById('typeList');
+  list.innerHTML=eventTypes.map(t=>`
     <div class="type-row" data-id="${t.id}">
-      <div class="type-swatch" style="background:${t.chip}" title="Klik untuk ubah warna">
+      <div class="type-swatch" style="background:${t.chip}">
         <input type="color" value="${t.chip}" data-id="${t.id}" class="inline-color-pick"/>
       </div>
       <div class="type-row-name">${escHtml(t.label)}</div>
-      <button class="type-edit-btn" data-id="${t.id}" title="Edit nama & warna"><i class="ti ti-pencil"></i></button>
-    </div>
-  `).join('');
+      <button class="type-edit-btn" data-id="${t.id}"><i class="ti ti-pencil"></i></button>
+    </div>`).join('');
 
-  /* Inline color picker */
-  list.querySelectorAll('.inline-color-pick').forEach(inp => {
-    inp.addEventListener('input', e => {
-      const type = eventTypes.find(t => t.id === e.target.dataset.id);
-      if (type) {
-        type.chip = e.target.value;
-        type.lt   = hexToLight(e.target.value);
-        e.target.closest('.type-swatch').style.background = e.target.value;
-        saveTypes(); rebuildFilters(); renderCalendar();
-      }
+  list.querySelectorAll('.inline-color-pick').forEach(inp=>{
+    inp.addEventListener('input',e=>{
+      const type=eventTypes.find(t=>t.id===e.target.dataset.id);
+      if(type){type.chip=e.target.value;type.lt=hexToLight(e.target.value);e.target.closest('.type-swatch').style.background=e.target.value;saveTypes();rebuildFilters();renderCalendar();}
     });
   });
-
-  /* Edit button */
-  list.querySelectorAll('.type-edit-btn').forEach(btn => {
-    btn.addEventListener('click', () => openEditType(btn.dataset.id));
-  });
+  list.querySelectorAll('.type-edit-btn').forEach(btn=>btn.addEventListener('click',()=>openEditType(btn.dataset.id)));
 }
-
-function openEditType(id) {
-  const type = eventTypes.find(t => t.id === id);
-  if (!type) return;
-  editingTypeId = id;
-  document.getElementById('editTypeName').value  = type.label;
-  document.getElementById('editTypeColor').value = type.chip;
-
-  /* Preset grid */
-  const grid = document.getElementById('colorPresetGrid');
-  grid.innerHTML = PRESET_COLORS.map(c =>
-    `<div class="color-swatch-opt${c.toLowerCase()===type.chip.toLowerCase()?' selected':''}" style="background:${c}" data-color="${c}" title="${c}"></div>`
-  ).join('');
-  grid.querySelectorAll('.color-swatch-opt').forEach(el => {
-    el.addEventListener('click', () => {
-      grid.querySelectorAll('.color-swatch-opt').forEach(x => x.classList.remove('selected'));
-      el.classList.add('selected');
-      document.getElementById('editTypeColor').value = el.dataset.color;
-    });
-  });
-
+function openEditType(id){
+  const type=eventTypes.find(t=>t.id===id);if(!type)return;
+  editingTypeId=id;
+  document.getElementById('editTypeName').value=type.label;
+  document.getElementById('editTypeColor').value=type.chip;
+  const grid=document.getElementById('colorPresetGrid');
+  grid.innerHTML=PRESET_COLORS.map(c=>`<div class="color-swatch-opt${c.toLowerCase()===type.chip.toLowerCase()?' selected':''}" style="background:${c}" data-color="${c}"></div>`).join('');
+  grid.querySelectorAll('.color-swatch-opt').forEach(el=>el.addEventListener('click',()=>{
+    grid.querySelectorAll('.color-swatch-opt').forEach(x=>x.classList.remove('selected'));
+    el.classList.add('selected');document.getElementById('editTypeColor').value=el.dataset.color;
+  }));
   document.getElementById('editTypeOverlay').classList.add('open');
 }
 
-document.getElementById('saveEditType').addEventListener('click', () => {
-  const name  = document.getElementById('editTypeName').value.trim();
-  const color = document.getElementById('editTypeColor').value;
-  if (!name) { showToast('⚠️ Nama jenis tidak boleh kosong'); return; }
-  const type = eventTypes.find(t => t.id === editingTypeId);
-  if (type) {
-    type.label = name;
-    type.chip  = color;
-    type.lt    = hexToLight(color);
-    saveTypes(); rebuildFilters();
-    renderCalendar(); renderTypeList();
+/* ════════════════════════════════════════
+   FIX #4 — EXCEL GANTT CHART EXPORT
+   ════════════════════════════════════════ */
+function exportExcel() {
+  const year=currentDate.getFullYear(), month=currentDate.getMonth();
+  const mStr=`${year}-${String(month+1).padStart(2,'0')}`;
+  const monthEvents=events
+    .filter(e=>e.dateStart.startsWith(mStr)||(e.dateEnd&&e.dateEnd.startsWith(mStr)))
+    .sort((a,b)=>a.dateStart.localeCompare(b.dateStart));
+
+  if(!monthEvents.length){showToast('⚠️ Tidak ada event di bulan ini');return;}
+
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  const monthName=new Date(year,month,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+
+  /* Header row: label cols + day numbers */
+  const LABEL_COLS=['No','Jenis','Event / Judul','PIC','Status','Catatan','Mulai','Selesai'];
+  const headerRow=[...LABEL_COLS,...Array.from({length:daysInMonth},(_,i)=>i+1)];
+
+  /* Data rows */
+  const dataRows=monthEvents.map((e,idx)=>{
+    const t=getTypeById(e.type);
+    const pics=(e.pics||[]).join(', ');
+    const status=SM[e.status]||e.status||'';
+    const startDay=parseInt((e.dateStart||'').split('-')[2])||0;
+    const endDay=e.dateEnd?parseInt(e.dateEnd.split('-')[2]):startDay;
+    /* Clamp to month */
+    const s=Math.max(1,startDay), en=Math.min(daysInMonth,endDay);
+
+    const labelPart=[idx+1, t.label, e.title, pics, status, e.note||'', fmtDate(e.dateStart), fmtDate(e.dateEnd||e.dateStart)];
+    const dayPart=Array.from({length:daysInMonth},(_,d)=>{
+      const day=d+1;
+      return (day>=s&&day<=en)?'●':'';
+    });
+    return [...labelPart,...dayPart];
+  });
+
+  /* Build worksheet data */
+  const wsData=[
+    [`Gantt Chart — ${monthName}${WORKSPACE!=='default'?' ('+WORKSPACE+')':''}`,
+      ...Array(LABEL_COLS.length+daysInMonth-1).fill('')],
+    headerRow,
+    ...dataRows
+  ];
+
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(wsData);
+
+  /* Column widths */
+  ws['!cols']=[
+    {wch:4},{wch:16},{wch:30},{wch:20},{wch:12},{wch:24},{wch:10},{wch:10},
+    ...Array(daysInMonth).fill({wch:3})
+  ];
+
+  /* Row height */
+  ws['!rows']=[{hpt:22},{hpt:20},...Array(dataRows.length).fill({hpt:18})];
+
+  /* Merge title row */
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:LABEL_COLS.length+daysInMonth-1}}];
+
+  /* Apply styles using cell objects — color the gantt bars by event type */
+  const colorMap={};
+  eventTypes.forEach(t=>{ colorMap[t.id]=t.chip.replace('#',''); });
+  const statusFill={achieve:'D1FAE5',not_achieve:'FEE2E2',pending:'FEF3C7'};
+
+  /* Title cell */
+  if(ws['A1']){
+    ws['A1'].s={font:{bold:true,sz:14,color:{rgb:'1C1917'}},fill:{fgColor:{rgb:'EDE8E0'}},alignment:{horizontal:'center',vertical:'center'}};
   }
-  document.getElementById('editTypeOverlay').classList.remove('open');
-  showToast('✅ Jenis event diupdate');
-});
 
-document.getElementById('deleteTypeBtn').addEventListener('click', () => {
-  if (eventTypes.length <= 1) { showToast('⚠️ Minimal harus ada 1 jenis event'); return; }
-  if (!confirm('Hapus jenis event ini? Event yang sudah ada akan tetap tersimpan.')) return;
-  eventTypes = eventTypes.filter(t => t.id !== editingTypeId);
-  saveTypes(); rebuildFilters(); renderCalendar(); renderTypeList();
-  document.getElementById('editTypeOverlay').classList.remove('open');
-  showToast('🗑️ Jenis event dihapus');
-});
+  /* Header cells */
+  headerRow.forEach((_,ci)=>{
+    const addr=XLSX.utils.encode_cell({r:1,c:ci});
+    if(!ws[addr]) ws[addr]={v:headerRow[ci],t:'s'};
+    const isDay=ci>=LABEL_COLS.length;
+    ws[addr].s={
+      font:{bold:true,sz:isDay?8:10,color:{rgb:isDay?'64748B':'1C1917'}},
+      fill:{fgColor:{rgb:isDay?'F1F5F9':'1C1917'},...(isDay?{}:{})},
+      alignment:{horizontal:'center',vertical:'center',wrapText:false},
+      border:{bottom:{style:'medium',color:{rgb:'CBD5E1'}}}
+    };
+    if(!isDay) ws[addr].s.fill={fgColor:{rgb:'1C1917'}};
+    if(!isDay) ws[addr].s.font.color={rgb:'FFFFFF'};
+  });
 
-document.getElementById('addTypeBtn').addEventListener('click', () => {
-  const name  = document.getElementById('newTypeName').value.trim();
-  const color = document.getElementById('newTypeColor').value;
-  if (!name) { showToast('⚠️ Nama jenis tidak boleh kosong'); return; }
-  const id = 'custom_' + Date.now();
-  eventTypes.push({ id, label: name, chip: color, lt: hexToLight(color) });
-  saveTypes(); rebuildFilters(); renderCalendar(); renderTypeList();
-  document.getElementById('newTypeName').value = '';
-  document.getElementById('newTypeColor').value = '#6366F1';
-  document.getElementById('newTypeColorSwatch').style.background = '#6366F1';
-  showToast('✅ Jenis event ditambahkan');
-});
+  /* Data cells */
+  monthEvents.forEach((e,ri)=>{
+    const t=getTypeById(e.type);
+    const chipHex=(t.chip||'#888888').replace('#','');
+    const ltHex=(t.lt||hexToLight(t.chip)).replace('#','');
+    const startDay=parseInt((e.dateStart||'').split('-')[2])||0;
+    const endDay=e.dateEnd?parseInt(e.dateEnd.split('-')[2]):startDay;
+    const s=Math.max(1,startDay), en=Math.min(daysInMonth,endDay);
+    const rowIdx=ri+2;
+    const sFill=statusFill[e.status]||'FFFFFF';
 
-document.getElementById('newTypeColor').addEventListener('input', e => {
-  document.getElementById('newTypeColorSwatch').style.background = e.target.value;
-});
+    dataRows[ri].forEach((val,ci)=>{
+      const addr=XLSX.utils.encode_cell({r:rowIdx,c:ci});
+      if(!ws[addr]) ws[addr]={v:val,t:'s'};
+      const isDay=ci>=LABEL_COLS.length;
+      const day=isDay?ci-LABEL_COLS.length+1:0;
+      const inRange=isDay&&day>=s&&day<=en;
+
+      ws[addr].s={
+        alignment:{horizontal:isDay?'center':'left',vertical:'center',wrapText:false},
+        border:{
+          top:{style:'thin',color:{rgb:'E2E8F0'}},
+          bottom:{style:'thin',color:{rgb:'E2E8F0'}},
+          left:{style:'thin',color:{rgb:'E2E8F0'}},
+          right:{style:'thin',color:{rgb:'E2E8F0'}}
+        },
+        font:{sz:isDay?9:9,color:{rgb:inRange?'FFFFFF':'374151'}},
+        fill:{fgColor:{rgb:inRange?chipHex:ri%2===0?'FFFFFF':'F9FAFB'}}
+      };
+      /* Status column highlight */
+      if(ci===4&&sFill!=='FFFFFF') ws[addr].s.fill={fgColor:{rgb:sFill}};
+    });
+  });
+
+  XLSX.utils.book_append_sheet(wb,ws,'Gantt Chart');
+
+  /* Also create a detail sheet */
+  const detailData=[
+    ['No','Jenis','Event / Judul','PIC','Status','Catatan','Tanggal Mulai','Tanggal Selesai'],
+    ...monthEvents.map((e,i)=>[
+      i+1, getTypeById(e.type).label, e.title,
+      (e.pics||[]).join(', '), SM[e.status]||e.status||'',
+      e.note||'', fmtDate(e.dateStart), fmtDate(e.dateEnd||e.dateStart)
+    ])
+  ];
+  const ws2=XLSX.utils.aoa_to_sheet(detailData);
+  ws2['!cols']=[{wch:4},{wch:16},{wch:30},{wch:24},{wch:12},{wch:30},{wch:14},{wch:14}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Detail Event');
+
+  const fname=`Kalender${WORKSPACE!=='default'?'_'+WORKSPACE:''}_${year}_${String(month+1).padStart(2,'0')}.xlsx`;
+  XLSX.writeFile(wb,fname);
+  showToast('✅ Excel berhasil didownload!');
+}
 
 /* ════════════════════════════════════════
-   GLOBAL EVENT LISTENERS
+   GLOBAL LISTENERS
    ════════════════════════════════════════ */
-document.getElementById('addEventBtn').addEventListener('click', () => { if (!canWrite) { showToast('⚠️ Silakan masuk untuk menambah event'); return; } openAdd(); });
-document.getElementById('manageTypesBtn').addEventListener('click', () => { if (!canWrite) { showToast('⚠️ Hanya editor yang dapat mengelola jenis event'); return; } openTypeManager(); });
-document.getElementById('todayBtn').addEventListener('click', () => { currentDate = new Date(); renderCalendar(); });
-document.getElementById('prevBtn').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); });
-document.getElementById('nextBtn').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); });
+document.getElementById('addEventBtn').addEventListener('click',()=>{if(!canWrite){showToast('⚠️ Silakan masuk untuk menambah event');return;}openAdd();});
+document.getElementById('manageTypesBtn').addEventListener('click',()=>{if(!canWrite){showToast('⚠️ Hanya editor yang dapat mengelola jenis event');return;}openTypeManager();});
+document.getElementById('exportExcelBtn').addEventListener('click',exportExcel);
+document.getElementById('todayBtn').addEventListener('click',()=>{currentDate=new Date();renderCalendar();});
+document.getElementById('prevBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();});
+document.getElementById('nextBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();});
 
-['closeAdd','cancelAdd'].forEach(id =>
-  document.getElementById(id).addEventListener('click', () => document.getElementById('addOverlay').classList.remove('open'))
-);
-document.getElementById('closeDetail').addEventListener('click', () => document.getElementById('detailOverlay').classList.remove('open'));
-document.getElementById('closeTypeManager').addEventListener('click', () => document.getElementById('typeManagerOverlay').classList.remove('open'));
-document.getElementById('closeTypeManagerOk').addEventListener('click', () => document.getElementById('typeManagerOverlay').classList.remove('open'));
-document.getElementById('closeEditType').addEventListener('click', () => document.getElementById('editTypeOverlay').classList.remove('open'));
-document.getElementById('cancelEditType').addEventListener('click', () => document.getElementById('editTypeOverlay').classList.remove('open'));
+['closeAdd','cancelAdd'].forEach(id=>document.getElementById(id).addEventListener('click',()=>document.getElementById('addOverlay').classList.remove('open')));
+document.getElementById('closeDetail').addEventListener('click',()=>document.getElementById('detailOverlay').classList.remove('open'));
+document.getElementById('closeTypeManager').addEventListener('click',()=>document.getElementById('typeManagerOverlay').classList.remove('open'));
+document.getElementById('closeTypeManagerOk').addEventListener('click',()=>document.getElementById('typeManagerOverlay').classList.remove('open'));
+document.getElementById('closeEditType').addEventListener('click',()=>document.getElementById('editTypeOverlay').classList.remove('open'));
+document.getElementById('cancelEditType').addEventListener('click',()=>document.getElementById('editTypeOverlay').classList.remove('open'));
 
-['addOverlay','detailOverlay','typeManagerOverlay','editTypeOverlay'].forEach(id => {
-  const el = document.getElementById(id);
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+['addOverlay','detailOverlay','typeManagerOverlay','editTypeOverlay'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
 });
 
-document.getElementById('filterType').addEventListener('change', e => { filterType = e.target.value; renderCalendar(); });
-document.getElementById('filterPIC').addEventListener('change', e => { filterPIC = e.target.value; renderCalendar(); });
+document.getElementById('filterType').addEventListener('change',e=>{filterType=e.target.value;renderCalendar();});
+document.getElementById('filterPIC').addEventListener('change',e=>{filterPIC=e.target.value;renderCalendar();});
 
-document.getElementById('saveBtn').addEventListener('click', async () => {
-  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses untuk mengedit'); return; }
-  const title = document.getElementById('fTitle').value.trim();
-  const ds    = document.getElementById('fDateStart').value;
-  // flush any typed-but-not-entered pic
-  if (document.getElementById('picInput').value.trim()) addPICfromInput();
-  if (!title || !ds) { showToast('⚠️ Judul dan tanggal wajib diisi!'); return; }
-  if (!currentPICs.length) { showToast('⚠️ Minimal 1 PIC wajib diisi!'); return; }
-
-  const data = {
-    type:      document.getElementById('fType').value,
-    title,
-    pics:      [...currentPICs],
-    dateStart: ds,
-    dateEnd:   document.getElementById('fDateEnd').value || '',
-    status:    document.getElementById('fStatus').value,
-    note:      document.getElementById('fNote').value.trim(),
+document.getElementById('saveBtn').addEventListener('click',async()=>{
+  if(!canWrite){showToast('⚠️ Anda tidak memiliki akses untuk mengedit');return;}
+  const title=document.getElementById('fTitle').value.trim();
+  const ds=document.getElementById('fDateStart').value;
+  if(document.getElementById('picInput').value.trim()) addPICfromInput();
+  if(!title||!ds){showToast('⚠️ Judul dan tanggal wajib diisi!');return;}
+  if(!currentPICs.length){showToast('⚠️ Minimal 1 PIC wajib diisi!');return;}
+  const data={
+    type:document.getElementById('fType').value,title,
+    pics:[...currentPICs],dateStart:ds,
+    dateEnd:document.getElementById('fDateEnd').value||'',
+    status:document.getElementById('fStatus').value,
+    note:document.getElementById('fNote').value.trim()
   };
-  document.getElementById('saveBtn').disabled = true;
-  try {
+  document.getElementById('saveBtn').disabled=true;
+  try{
     await saveEvent(data);
     document.getElementById('addOverlay').classList.remove('open');
-    showToast(editingId ? '✅ Event diupdate' : '✅ Event berhasil ditambahkan');
-    if (selectedDate) renderPanel(selectedDate);
-  } catch(e) { showToast('❌ '+e.message); }
-  finally { document.getElementById('saveBtn').disabled = false; }
+    showToast(editingId?'✅ Event diupdate':'✅ Event berhasil ditambahkan');
+    if(selectedDate) renderPanel(selectedDate);
+  }catch(e){showToast('❌ '+e.message);}
+  finally{document.getElementById('saveBtn').disabled=false;}
 });
 
-document.getElementById('deleteBtn').addEventListener('click', async () => {
-  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses untuk menghapus'); return; }
-  if (!confirm('Hapus event ini?')) return;
-  try {
-    await deleteEvent(viewingId);
-    document.getElementById('detailOverlay').classList.remove('open');
-    showToast('🗑️ Event dihapus');
-  } catch(e) { showToast('❌ '+e.message); }
+document.getElementById('deleteBtn').addEventListener('click',async()=>{
+  if(!canWrite){showToast('⚠️ Anda tidak memiliki akses');return;}
+  if(!confirm('Hapus event ini?')) return;
+  try{await deleteEvent(viewingId);document.getElementById('detailOverlay').classList.remove('open');showToast('🗑️ Event dihapus');}
+  catch(e){showToast('❌ '+e.message);}
 });
 
-document.getElementById('editBtn').addEventListener('click', () => {
-  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses untuk mengedit'); return; }
-  const ev = events.find(e => e.id === viewingId);
-  if (!ev) return;
-  editingId = viewingId;
-  currentPICs = [...(ev.pics||[])];
-  document.getElementById('addModalTitle').textContent = 'Edit Event';
+document.getElementById('editBtn').addEventListener('click',()=>{
+  if(!canWrite){showToast('⚠️ Anda tidak memiliki akses untuk mengedit');return;}
+  const ev=events.find(e=>e.id===viewingId);if(!ev)return;
+  editingId=viewingId;currentPICs=[...(ev.pics||[])];
+  document.getElementById('addModalTitle').textContent='Edit Event';
   rebuildTypeSelect();
-  document.getElementById('fType').value      = ev.type;
-  document.getElementById('fTitle').value     = ev.title;
-  document.getElementById('fDateStart').value = ev.dateStart;
-  document.getElementById('fDateEnd').value   = ev.dateEnd||'';
-  document.getElementById('fStatus').value    = ev.status||'pending';
-  document.getElementById('fNote').value      = ev.note||'';
-  document.getElementById('picInput').value   = '';
+  document.getElementById('fType').value=ev.type;
+  document.getElementById('fTitle').value=ev.title;
+  document.getElementById('fDateStart').value=ev.dateStart;
+  document.getElementById('fDateEnd').value=ev.dateEnd||'';
+  document.getElementById('fStatus').value=ev.status||'pending';
+  document.getElementById('fNote').value=ev.note||'';
+  document.getElementById('picInput').value='';
   renderPicTags();
   document.getElementById('detailOverlay').classList.remove('open');
   document.getElementById('addOverlay').classList.add('open');
 });
 
-/* ── BOOT ── */
+document.getElementById('saveEditType').addEventListener('click',()=>{
+  const name=document.getElementById('editTypeName').value.trim();
+  const color=document.getElementById('editTypeColor').value;
+  if(!name){showToast('⚠️ Nama jenis tidak boleh kosong');return;}
+  const type=eventTypes.find(t=>t.id===editingTypeId);
+  if(type){type.label=name;type.chip=color;type.lt=hexToLight(color);saveTypes();rebuildFilters();renderCalendar();renderTypeList();}
+  document.getElementById('editTypeOverlay').classList.remove('open');
+  showToast('✅ Jenis event diupdate');
+});
+
+document.getElementById('deleteTypeBtn').addEventListener('click',()=>{
+  if(eventTypes.length<=1){showToast('⚠️ Minimal harus ada 1 jenis event');return;}
+  if(!confirm('Hapus jenis event ini?')) return;
+  eventTypes=eventTypes.filter(t=>t.id!==editingTypeId);
+  saveTypes();rebuildFilters();renderCalendar();renderTypeList();
+  document.getElementById('editTypeOverlay').classList.remove('open');
+  showToast('🗑️ Jenis event dihapus');
+});
+
+document.getElementById('addTypeBtn').addEventListener('click',()=>{
+  const name=document.getElementById('newTypeName').value.trim();
+  const color=document.getElementById('newTypeColor').value;
+  if(!name){showToast('⚠️ Nama jenis tidak boleh kosong');return;}
+  eventTypes.push({id:'custom_'+Date.now(),label:name,chip:color,lt:hexToLight(color)});
+  saveTypes();rebuildFilters();renderCalendar();renderTypeList();
+  document.getElementById('newTypeName').value='';
+  document.getElementById('newTypeColor').value='#6366F1';
+  document.getElementById('newTypeColorSwatch').style.background='#6366F1';
+  showToast('✅ Jenis event ditambahkan');
+});
+
+document.getElementById('newTypeColor').addEventListener('input',e=>{
+  document.getElementById('newTypeColorSwatch').style.background=e.target.value;
+});
+
+/* ════════════════════════════════════════
+   BOOT — FIX #5: skip login, go straight to app
+   ════════════════════════════════════════ */
 rebuildFilters();
-// App boots via login screen buttons — see bootApp() above
-// If Firebase not configured, show app directly (localStorage mode)
-if (!useFirebase) {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'block';
-  canWrite = true;
-  loadEvents();
-  renderCalendar();
+
+if (useFirebase && auth) {
+  /* FIX #5: immediately show app in read-only mode; auth state updates chip */
+  document.body.classList.add('read-only');
+  applyAuthState(null); /* show "Masuk" button */
+  auth.onAuthStateChanged(user => {
+    applyAuthState(user);
+    if (!window._eventsLoaded) { window._eventsLoaded=true; loadEvents(); renderCalendar(); }
+  });
+  /* Load events right away without waiting for auth */
+  if (!window._eventsLoaded) { window._eventsLoaded=true; loadEvents(); renderCalendar(); }
+} else {
+  canWrite=true;
+  document.body.classList.remove('read-only');
+  document.getElementById('authChip').innerHTML='';
+  loadEvents(); renderCalendar();
 }
+
+/* Setup autocomplete after DOM is ready */
+setupTitleAutocomplete();
+setupPicAutocomplete();
 </script>
 </body>
 </html>
