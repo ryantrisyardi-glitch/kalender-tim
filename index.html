@@ -689,111 +689,135 @@ let eventTypes = loadTypes();
 /* ════════════════════════════════════════
    STATE
    ════════════════════════════════════════ */
-let events=[], holidays={}, holidayCache={};
+let events=[], holidays={};
 let currentDate=new Date(), filterType='all', filterPIC='all';
 let editingId=null, viewingId=null, selectedDate=null;
 let currentPICs=[], editingTypeId=null;
 const PRESET_COLORS=['#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E','#10B981','#14B8A6','#06B6D4','#3B82F6','#6366F1','#8B5CF6','#A855F7','#EC4899','#F43F5E','#64748B'];
 
 /* ════════════════════════════════════════
-   FIX #1 — HOLIDAY API: multi-source with fallback + cache
-   Sources tried in order:
-   1. libur.deno.dev/api?year=YYYY  (primary)
-   2. date.nager.at/api/v3          (fallback — global, maps ID public holidays)
-   3. Hardcoded 2025/2026 data      (offline fallback)
+   HOLIDAY API
+   Primary:  libur.deno.dev/api?year=YYYY
+             → response: [{date, name}]
+   Fallback: api-hari-libur.vercel.app/api?year=YYYY
+             → response: {status, data:[{date, description}]}
+   No hardcoded data — fully API-driven, auto-updates setiap tahun.
+   Cache: sessionStorage (per tab, cleared on close)
    ════════════════════════════════════════ */
-const HOLIDAY_FALLBACK = {
-  2025:{
-    '2025-01-01':{name:'Tahun Baru 2025',isCutiBersama:false},
-    '2025-01-27':{name:'Isra Miraj',isCutiBersama:false},
-    '2025-01-28':{name:'Cuti Bersama Isra Miraj',isCutiBersama:true},
-    '2025-01-29':{name:'Tahun Baru Imlek 2576',isCutiBersama:false},
-    '2025-03-29':{name:'Hari Suci Nyepi',isCutiBersama:false},
-    '2025-03-31':{name:'Hari Raya Idul Fitri',isCutiBersama:false},
-    '2025-04-01':{name:'Hari Raya Idul Fitri',isCutiBersama:false},
-    '2025-04-18':{name:'Wafat Isa Almasih',isCutiBersama:false},
-    '2025-05-01':{name:'Hari Buruh Internasional',isCutiBersama:false},
-    '2025-05-12':{name:'Hari Raya Waisak',isCutiBersama:false},
-    '2025-05-29':{name:'Kenaikan Isa Almasih',isCutiBersama:false},
-    '2025-06-01':{name:'Hari Lahir Pancasila',isCutiBersama:false},
-    '2025-06-06':{name:'Hari Raya Idul Adha',isCutiBersama:false},
-    '2025-06-27':{name:'Tahun Baru Islam 1447 H',isCutiBersama:false},
-    '2025-08-17':{name:'Hari Kemerdekaan RI',isCutiBersama:false},
-    '2025-09-05':{name:'Maulid Nabi Muhammad SAW',isCutiBersama:false},
-    '2025-12-25':{name:'Hari Raya Natal',isCutiBersama:false},
-    '2025-12-26':{name:'Cuti Bersama Natal',isCutiBersama:true},
-  },
-  2026:{
-    '2026-01-01':{name:'Tahun Baru 2026',isCutiBersama:false},
-    '2026-01-16':{name:'Isra Miraj',isCutiBersama:false},
-    '2026-01-17':{name:'Tahun Baru Imlek 2577',isCutiBersama:false},
-    '2026-03-19':{name:'Hari Suci Nyepi',isCutiBersama:false},
-    '2026-03-20':{name:'Hari Raya Idul Fitri',isCutiBersama:false},
-    '2026-03-21':{name:'Hari Raya Idul Fitri',isCutiBersama:false},
-    '2026-04-02':{name:'Wafat Isa Almasih',isCutiBersama:false},
-    '2026-05-01':{name:'Hari Buruh Internasional',isCutiBersama:false},
-    '2026-05-14':{name:'Kenaikan Isa Almasih',isCutiBersama:false},
-    '2026-05-26':{name:'Hari Raya Waisak',isCutiBersama:false},
-    '2026-06-01':{name:'Hari Lahir Pancasila',isCutiBersama:false},
-    '2026-08-17':{name:'Hari Kemerdekaan RI',isCutiBersama:false},
-    '2026-12-25':{name:'Hari Raya Natal',isCutiBersama:false},
-  }
-};
+
+const holidayCache = {};   /* { year: {map} | 'fetching' } */
+
+function parseHolidayResponse(data, nameField) {
+  /* Convert array of holiday objects → { 'YYYY-MM-DD': {name, isCutiBersama} } */
+  const map = {};
+  if (!Array.isArray(data)) return map;
+  data.forEach(h => {
+    const date = h.date;
+    const name = h[nameField] || '';
+    if (!date || !name) return;
+    map[date] = {
+      name,
+      isCutiBersama: /cuti\s*bersama/i.test(name)
+    };
+  });
+  return map;
+}
+
+async function fetchFromPrimary(year) {
+  /* libur.deno.dev — response: [{date, name}] */
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  const res   = await fetch(
+    `https://libur.deno.dev/api?year=${year}`,
+    { signal: ctrl.signal, mode: 'cors' }
+  );
+  clearTimeout(timer);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
+  return parseHolidayResponse(data, 'name');
+}
+
+async function fetchFromFallback(year) {
+  /* api-hari-libur.vercel.app — response: {status, data:[{date, description}]} */
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  const res   = await fetch(
+    `https://api-hari-libur.vercel.app/api?year=${year}`,
+    { signal: ctrl.signal, mode: 'cors' }
+  );
+  clearTimeout(timer);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  const data = json.data || json;                          /* support both shapes */
+  if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
+  return parseHolidayResponse(data, 'description');
+}
 
 async function fetchHolidaysForYear(year) {
-  if (holidayCache[year] && Object.keys(holidayCache[year]).length > 0) return holidayCache[year];
-  // Mark as loading to avoid duplicate fetches
-  if (holidayCache[year] === 'loading') return HOLIDAY_FALLBACK[year] || {};
-  holidayCache[year] = 'loading';
+  /* 1. Return from in-memory cache */
+  if (holidayCache[year] && holidayCache[year] !== 'fetching') return holidayCache[year];
 
-  // Try primary source
+  /* 2. Prevent duplicate concurrent fetches — wait for ongoing one */
+  if (holidayCache[year] === 'fetching') {
+    for (let i = 0; i < 80; i++) {
+      await new Promise(r => setTimeout(r, 100));
+      if (holidayCache[year] !== 'fetching') return holidayCache[year] || {};
+    }
+    return {};
+  }
+
+  holidayCache[year] = 'fetching';
+
+  /* 3. Check sessionStorage (persists across re-renders in same tab) */
   try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 5000); // 5s timeout
-    const res = await fetch(`https://libur.deno.dev/api?year=${year}`, {signal: ctrl.signal});
-    clearTimeout(timer);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) throw new Error('Empty data');
-    const map = {};
-    data.forEach(h => { map[h.date] = {name: h.name, isCutiBersama: /cuti bersama/i.test(h.name)}; });
+    const cached = sessionStorage.getItem(`holidays_${year}`);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && Object.keys(parsed).length > 0) {
+        holidayCache[year] = parsed;
+        console.log(`📦 Libur ${year}: ${Object.keys(parsed).length} hari dari sessionStorage`);
+        return parsed;
+      }
+    }
+  } catch(e) { /* sessionStorage tidak tersedia */ }
+
+  /* 4. Try primary: libur.deno.dev */
+  try {
+    const map = await fetchFromPrimary(year);
     holidayCache[year] = map;
+    try { sessionStorage.setItem(`holidays_${year}`, JSON.stringify(map)); } catch(e) {}
     console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari dari libur.deno.dev`);
     return map;
   } catch(e1) {
-    console.warn(`⚠️ libur.deno.dev gagal (${e1.message}), coba fallback nager.at...`);
+    console.warn(`⚠️ libur.deno.dev gagal (${year}): ${e1.message}`);
   }
 
-  // Try fallback: date.nager.at (returns Indonesian public holidays)
+  /* 5. Fallback: api-hari-libur.vercel.app */
   try {
-    const ctrl2 = new AbortController();
-    const timer2 = setTimeout(() => ctrl2.abort(), 5000);
-    const res2 = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/ID`, {signal: ctrl2.signal});
-    clearTimeout(timer2);
-    if (!res2.ok) throw new Error('HTTP ' + res2.status);
-    const data2 = await res2.json();
-    if (!Array.isArray(data2) || data2.length === 0) throw new Error('Empty data');
-    const map2 = {};
-    data2.forEach(h => { map2[h.date] = {name: h.localName || h.name, isCutiBersama: false}; });
+    const map2 = await fetchFromFallback(year);
     holidayCache[year] = map2;
-    console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari dari nager.at`);
+    try { sessionStorage.setItem(`holidays_${year}`, JSON.stringify(map2)); } catch(e) {}
+    console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari dari api-hari-libur.vercel.app`);
     return map2;
   } catch(e2) {
-    console.warn(`⚠️ nager.at juga gagal (${e2.message}), pakai data offline...`);
+    console.warn(`⚠️ api-hari-libur.vercel.app gagal (${year}): ${e2.message}`);
   }
 
-  // Final fallback: hardcoded data
-  const fallback = HOLIDAY_FALLBACK[year] || {};
-  holidayCache[year] = fallback;
-  console.log(`⚠️ Libur ${year}: pakai data offline (${Object.keys(fallback).length} hari)`);
-  return fallback;
+  /* 6. Both failed — return empty, calendar will show no holidays */
+  console.error(`❌ Semua sumber API hari libur gagal untuk tahun ${year}. Kalender tidak menampilkan hari libur.`);
+  holidayCache[year] = {};
+  return {};
 }
 
 async function ensureHolidays(year, month) {
-  const d = await fetchHolidaysForYear(year);
-  if (d && d !== 'loading') Object.assign(holidays, d);
-  if (month === 0)  fetchHolidaysForYear(year-1).then(x => { if(x && x!=='loading') Object.assign(holidays, x); });
-  if (month === 11) fetchHolidaysForYear(year+1).then(x => { if(x && x!=='loading') Object.assign(holidays, x); });
+  /* Await current year so calendar renders correctly on first load */
+  const result = await fetchHolidaysForYear(year);
+  if (result && result !== 'fetching') Object.assign(holidays, result);
+
+  /* Prefetch adjacent years silently; re-render when ready */
+  if (month === 0)  fetchHolidaysForYear(year - 1).then(x => { if (x && x !== 'fetching') { Object.assign(holidays, x); renderCalendar(); }});
+  if (month === 11) fetchHolidaysForYear(year + 1).then(x => { if (x && x !== 'fetching') Object.assign(holidays, x); });
 }
 
 /* ════════════════════════════════════════
