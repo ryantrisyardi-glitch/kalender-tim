@@ -698,23 +698,20 @@ const PRESET_COLORS=['#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E'
 /* ════════════════════════════════════════
    HOLIDAY API — CORS-safe, fully API-driven
    ─────────────────────────────────────────
-   Urutan sumber yang dicoba:
-   1. libur.deno.dev            → support CORS ✅
-   2. api-hari-libur.vercel.app via corsproxy.io → fallback jika #1 gagal
+   Primary:  api-hari-libur.vercel.app via corsproxy.io
+             → data paling lengkap & up-to-date
+             → response: {status, data:[{date, description}]}
+   Fallback: libur.deno.dev (kadang data kosong untuk tahun mendatang)
+             → response: [{date, name}]
 
-   Mengapa corsproxy.io untuk fallback?
-   api-hari-libur.vercel.app tidak mengirim header
-   Access-Control-Allow-Origin, sehingga browser
-   memblokir fetch langsung. corsproxy.io menambahkan
-   header CORS tersebut secara transparan.
-
-   Cache: sessionStorage (per tab, tidak perlu fetch ulang
-   saat navigasi bulan dalam satu sesi).
+   Jika tahun belum tersedia di kedua sumber (mis. 2027+),
+   cache disimpan sebagai {} dan tidak retry terus-menerus.
+   Cache: sessionStorage (per tab).
    ════════════════════════════════════════ */
 
 const holidayCache = {};  /* { year: {map} | 'fetching' } */
 
-/* Ubah array API → { 'YYYY-MM-DD': {name, isCutiBersama} } */
+/* Array API → { 'YYYY-MM-DD': {name, isCutiBersama} } */
 function parseHolidayArray(arr, nameField) {
   const map = {};
   if (!Array.isArray(arr)) return map;
@@ -727,21 +724,31 @@ function parseHolidayArray(arr, nameField) {
   return map;
 }
 
-/* Fetch helper dengan timeout */
-async function fetchWithTimeout(url, timeoutMs = 9000) {
+/* Fetch dengan timeout */
+async function fetchWithTimeout(url, ms = 10000) {
   const ctrl  = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+  const timer = setTimeout(() => ctrl.abort(), ms);
   try {
     const res = await fetch(url, { signal: ctrl.signal });
     clearTimeout(timer);
     return res;
-  } catch(e) {
-    clearTimeout(timer);
-    throw e;
-  }
+  } catch(e) { clearTimeout(timer); throw e; }
 }
 
-/* Sumber 1: libur.deno.dev — CORS open, response: [{date, name}] */
+/* Sumber 1 (Primary): api-hari-libur.vercel.app via corsproxy.io
+   Data lebih lengkap. Vercel tidak kirim CORS header sendiri,
+   corsproxy.io menambahkannya secara transparan. */
+async function fetchFromVercel(year) {
+  const target  = encodeURIComponent(`https://api-hari-libur.vercel.app/api?year=${year}`);
+  const res     = await fetchWithTimeout(`https://corsproxy.io/?url=${target}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  const data = Array.isArray(json) ? json : (json.data || []);
+  if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
+  return parseHolidayArray(data, 'description');
+}
+
+/* Sumber 2 (Fallback): libur.deno.dev — CORS open, kadang kosong untuk tahun mendatang */
 async function fetchFromDenodev(year) {
   const res  = await fetchWithTimeout(`https://libur.deno.dev/api?year=${year}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -750,27 +757,11 @@ async function fetchFromDenodev(year) {
   return parseHolidayArray(data, 'name');
 }
 
-/* Sumber 2: api-hari-libur.vercel.app via corsproxy.io
-   corsproxy.io: free, open-source CORS proxy, tidak perlu API key.
-   Cara kerja: request dikirim ke corsproxy.io → diteruskan ke target
-   → response dikembalikan dengan header CORS yang benar.
-   Response shape: {status, data:[{date, description}]} */
-async function fetchFromVercel(year) {
-  const target  = encodeURIComponent(`https://api-hari-libur.vercel.app/api?year=${year}`);
-  const proxyUrl = `https://corsproxy.io/?url=${target}`;
-  const res  = await fetchWithTimeout(proxyUrl);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  const data = Array.isArray(json) ? json : (json.data || []);
-  if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
-  return parseHolidayArray(data, 'description');
-}
-
 async function fetchHolidaysForYear(year) {
   /* In-memory cache hit */
   if (holidayCache[year] && holidayCache[year] !== 'fetching') return holidayCache[year];
 
-  /* Tunggu fetch yang sedang berjalan (hindari dobel request) */
+  /* Tunggu fetch yang sedang berjalan */
   if (holidayCache[year] === 'fetching') {
     for (let i = 0; i < 90; i++) {
       await new Promise(r => setTimeout(r, 100));
@@ -781,7 +772,7 @@ async function fetchHolidaysForYear(year) {
 
   holidayCache[year] = 'fetching';
 
-  /* sessionStorage cache (bertahan selama tab terbuka) */
+  /* Cek sessionStorage */
   try {
     const raw = sessionStorage.getItem(`hol_${year}`);
     if (raw) {
@@ -794,31 +785,38 @@ async function fetchHolidaysForYear(year) {
     }
   } catch(e) {}
 
-  /* Coba sumber 1: libur.deno.dev */
+  /* Coba Primary: vercel via corsproxy */
   try {
-    const map = await fetchFromDenodev(year);
+    const map = await fetchFromVercel(year);
     holidayCache[year] = map;
     try { sessionStorage.setItem(`hol_${year}`, JSON.stringify(map)); } catch(e) {}
-    console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari (libur.deno.dev)`);
+    console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari (api-hari-libur.vercel.app)`);
     return map;
   } catch(e1) {
-    console.warn(`⚠️ libur.deno.dev gagal [${year}]: ${e1.message} → coba fallback...`);
+    console.warn(`⚠️ Vercel gagal [${year}]: ${e1.message} → coba libur.deno.dev...`);
   }
 
-  /* Coba sumber 2: vercel via corsproxy.io */
+  /* Coba Fallback: libur.deno.dev */
   try {
-    const map2 = await fetchFromVercel(year);
+    const map2 = await fetchFromDenodev(year);
     holidayCache[year] = map2;
     try { sessionStorage.setItem(`hol_${year}`, JSON.stringify(map2)); } catch(e) {}
-    console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari (api-hari-libur.vercel.app via corsproxy)`);
+    console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari (libur.deno.dev)`);
     return map2;
   } catch(e2) {
-    console.warn(`⚠️ Fallback vercel gagal [${year}]: ${e2.message}`);
+    console.warn(`⚠️ libur.deno.dev gagal [${year}]: ${e2.message}`);
   }
 
-  /* Kedua sumber gagal */
-  console.error(`❌ Semua sumber hari libur gagal untuk ${year}. Hari libur tidak ditampilkan.`);
+  /* Kedua gagal — kemungkinan data tahun ini belum tersedia */
+  const currentYear = new Date().getFullYear();
+  if (year > currentYear + 1) {
+    console.info(`ℹ️ Data libur ${year} belum tersedia (terlalu jauh ke depan). Normal.`);
+  } else {
+    console.error(`❌ Semua sumber hari libur gagal untuk ${year}.`);
+  }
   holidayCache[year] = {};
+  /* Simpan ke sessionStorage agar tidak retry terus */
+  try { sessionStorage.setItem(`hol_${year}`, JSON.stringify({})); } catch(e) {}
   return {};
 }
 
@@ -826,16 +824,21 @@ async function ensureHolidays(year, month) {
   const result = await fetchHolidaysForYear(year);
   if (result && result !== 'fetching') Object.assign(holidays, result);
 
-  /* Prefetch tahun sebelum/sesudah secara background */
+  /* Prefetch tahun sebelum — selalu ada datanya */
   if (month === 0) {
     fetchHolidaysForYear(year - 1).then(x => {
       if (x && x !== 'fetching') { Object.assign(holidays, x); renderCalendar(); }
     });
   }
+  /* Prefetch tahun depan — hanya jika masih dalam jangkauan wajar */
   if (month === 11) {
-    fetchHolidaysForYear(year + 1).then(x => {
-      if (x && x !== 'fetching') Object.assign(holidays, x);
-    });
+    const nextYear = year + 1;
+    const currentYear = new Date().getFullYear();
+    if (nextYear <= currentYear + 1) {
+      fetchHolidaysForYear(nextYear).then(x => {
+        if (x && x !== 'fetching') Object.assign(holidays, x);
+      });
+    }
   }
 }
 
@@ -1628,8 +1631,21 @@ document.getElementById('newTypeColor').addEventListener('input',e=>{
 });
 
 /* ════════════════════════════════════════
-   BOOT — FIX #5: skip login, go straight to app
+   BOOT — skip login, go straight to app
    ════════════════════════════════════════ */
+
+/* Invalidate stale holiday cache — bump version number here whenever
+   primary API source changes, forcing fresh fetch on next load. */
+try {
+  if (sessionStorage.getItem('hol_cache_ver') !== '3') {
+    Object.keys(sessionStorage)
+      .filter(k => k.startsWith('hol_'))
+      .forEach(k => sessionStorage.removeItem(k));
+    sessionStorage.setItem('hol_cache_ver', '3');
+    console.log('🔄 Cache hari libur direset — akan fetch ulang dari sumber terbaru.');
+  }
+} catch(e) {}
+
 rebuildFilters();
 
 if (useFirebase && auth) {
