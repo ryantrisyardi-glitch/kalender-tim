@@ -234,6 +234,18 @@ body.read-only .readonly-badge{display:inline-flex}
 .range-preview{background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:10px 14px;font-size:.78rem;color:var(--ink-md);min-height:36px;display:flex;align-items:center;gap:6px}
 .range-preview i{color:var(--ink-lt)}
 
+/* ── ACCESS MANAGER ── */
+.access-info{background:#F5F3FF;border:1.5px solid #C4B5FD;border-radius:var(--r-md);padding:11px 14px;font-size:.78rem;color:#4C1D95;margin-bottom:1rem;display:flex;gap:8px;align-items:flex-start}
+.access-info i{font-size:16px;flex-shrink:0;margin-top:1px}
+.editor-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;max-height:220px;overflow-y:auto}
+.editor-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-lg)}
+.editor-row-email{flex:1;font-size:.83rem;font-weight:600;color:var(--ink);word-break:break-all}
+.editor-row-badge{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:100px;background:#DCFCE7;color:#166534;white-space:nowrap}
+.editor-row-super{background:#EDE9FE;color:#5B21B6}
+.editor-remove{background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:15px;padding:4px;border-radius:var(--r-sm);transition:background .12s,color .12s;flex-shrink:0}
+.editor-remove:hover{background:#FEE2E2;color:#B91C1C}
+.add-editor-row{display:flex;gap:8px;align-items:center}
+
 @media(max-width:900px){
   .main-row{flex-direction:column}
   .panel-col{width:100%;position:static}
@@ -257,6 +269,20 @@ body.read-only .readonly-badge{display:inline-flex}
   <i class="ti ti-alert-triangle"></i>
   <div><strong>Firebase belum dikonfigurasi.</strong> Ganti nilai <code>YOUR_*</code> di <code>firebaseConfig</code>.</div>
 </div>
+<!-- Firestore Rules reminder — shown only in console, not UI -->
+<!--
+  FIRESTORE SECURITY RULES yang diperlukan:
+  rules_version = '2';
+  service cloud.firestore {
+    match /databases/{database}/documents {
+      // Events: anyone read, logged-in write
+      match /events/{id}     { allow read: if true; allow write: if request.auth != null; }
+      match /events_{ws}/{id}{ allow read: if true; allow write: if request.auth != null; }
+      // Config: anyone read (to check editors list), only superadmin write
+      match /_config/{ws}    { allow read: if true; allow write: if request.auth != null && request.auth.token.email == "ryan.trisyardi@gmail.com"; }
+    }
+  }
+-->
 
 <!-- HEADER -->
 <header class="site-header">
@@ -268,6 +294,7 @@ body.read-only .readonly-badge{display:inline-flex}
     <span class="readonly-badge"><i class="ti ti-eye" style="font-size:12px"></i> Mode Lihat</span>
     <div id="authChip"></div>
     <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
+    <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
     <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
     <button class="btn btn-primary write-only" id="addEventBtn"><i class="ti ti-plus"></i> Tambah Event</button>
@@ -436,6 +463,35 @@ body.read-only .readonly-badge{display:inline-flex}
   </div>
 </div>
 
+<!-- ══ ACCESS MANAGER MODAL ══ -->
+<div class="overlay" id="accessManagerOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-shield-lock" style="color:#7C3AED"></i> Kelola Akses — <span id="accessWsLabel" style="color:#7C3AED;font-size:.9rem"></span></div>
+      <button class="btn btn-icon" id="closeAccessManager"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="access-info">
+      <i class="ti ti-info-circle"></i>
+      <div>Tambahkan email Google anggota tim yang boleh <strong>tambah, edit, dan hapus</strong> event di workspace ini. Perubahan langsung tersimpan ke cloud tanpa perlu update file HTML.</div>
+    </div>
+    <div style="font-size:.75rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Editor saat ini</div>
+    <div class="editor-list" id="editorList">
+      <div style="color:var(--ink-lt);font-size:.82rem;padding:8px">Memuat...</div>
+    </div>
+    <div style="border-top:1.5px solid var(--rule);padding-top:1rem;margin-top:.25rem">
+      <div style="font-size:.75rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Tambah Editor Baru</div>
+      <div class="add-editor-row">
+        <input type="email" class="fc" id="newEditorEmail" placeholder="email@gmail.com" style="flex:1"/>
+        <button class="btn btn-primary btn-sm" id="addEditorBtn"><i class="ti ti-plus"></i> Tambah</button>
+      </div>
+      <div style="font-size:.68rem;color:var(--ink-lt);margin-top:6px"><i class="ti ti-info-circle" style="font-size:11px;vertical-align:-1px"></i> Gunakan email Google persis seperti yang dipakai untuk login.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" id="closeAccessManagerOk">Selesai</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ EXCEL RANGE MODAL ══ -->
 <div class="overlay" id="excelRangeOverlay">
   <div class="modal modal-sm">
@@ -504,18 +560,21 @@ const TYPES_KEY     = `cal_types_${WORKSPACE}`;
 const LS_EVENTS_KEY = `cal_events_${WORKSPACE}`;
 
 /* ════════════════════════════════════════
-   WHITELIST EMAILS
+   FIX #2 #3 — DYNAMIC PERMISSION SYSTEM
+   Superadmin: hardcoded (ryan.trisyardi@gmail.com)
+   Workspace editors: stored in Firestore _config/{workspace}
+   No need to edit index.html to manage access!
    ════════════════════════════════════════ */
-const ALLOWED_EMAILS = [
-  "ryan.trisyardi@gmail.com",
-  "ryan.trisyardi@yahoo.com",
-  "ryan.trisyardi@megavision.net.id",
-];
+
+/* Superadmin has full access to ALL workspaces + can manage editors */
+const SUPERADMIN_EMAIL = 'ryan.trisyardi@gmail.com';
 
 /* ── INIT FIREBASE ── */
 let db = null, auth = null, useFirebase = false;
-let currentUser = null;
-let canWrite    = false;
+let currentUser  = null;
+let canWrite     = false;  // can add/edit/delete events in this workspace
+let isSuperAdmin = false;  // can manage editors + access all workspaces
+let wsEditors    = [];     // emails allowed to write in this workspace (from Firestore)
 
 try {
   if (!firebaseConfig.apiKey.includes('YOUR_')) {
@@ -527,11 +586,45 @@ try {
   }
 } catch(e) { console.warn('Firebase init:', e); }
 
+/* ── LOAD WORKSPACE CONFIG FROM FIRESTORE ── */
+/* FIX #4: config lives in _config collection (not workspace-specific events) */
+async function loadWorkspaceConfig() {
+  if (!useFirebase) return;
+  try {
+    const doc = await db.collection('_config').doc(WORKSPACE).get();
+    if (doc.exists) {
+      const data = doc.data();
+      wsEditors = data.editors || [];
+    } else {
+      wsEditors = [];
+    }
+  } catch(e) {
+    console.warn('Could not load workspace config:', e.message);
+    wsEditors = [];
+  }
+  // Re-evaluate write permission with fresh editor list
+  if (currentUser) applyAuthState(currentUser);
+}
+
+/* ── SAVE WORKSPACE CONFIG TO FIRESTORE ── */
+async function saveWorkspaceConfig(editors) {
+  if (!useFirebase || !isSuperAdmin) return;
+  await db.collection('_config').doc(WORKSPACE).set({editors, updatedBy: currentUser.email, updatedAt: firebase.firestore.FieldValue.serverTimestamp()});
+  wsEditors = editors;
+}
+
 /* ── AUTH STATE ── */
 function applyAuthState(user) {
-  currentUser = user;
-  canWrite    = !!(user && ALLOWED_EMAILS.includes(user.email));
+  currentUser  = user;
+  isSuperAdmin = !!(user && user.email === SUPERADMIN_EMAIL);
+  // canWrite = superadmin OR email in workspace editors list
+  canWrite     = isSuperAdmin || !!(user && wsEditors.includes(user.email));
   document.body.classList.toggle('read-only', !canWrite);
+
+  // Show/hide admin gear on manage button
+  document.getElementById('manageTypesBtn').style.display = canWrite ? '' : '';
+  const adminBtn = document.getElementById('manageAccessBtn');
+  if (adminBtn) adminBtn.style.display = isSuperAdmin ? '' : 'none';
 
   const chip = document.getElementById('authChip');
   if (user) {
@@ -539,19 +632,18 @@ function applyAuthState(user) {
     const av = user.photoURL
       ? `<img class="auth-avatar" src="${user.photoURL}" referrerpolicy="no-referrer"/>`
       : `<span class="auth-avatar-fallback">${initial}</span>`;
-    const badge = canWrite
-      ? `<span style="color:#15803D;font-size:.65rem;font-weight:700">✓ Editor</span>`
-      : `<span style="color:#B45309;font-size:.65rem;font-weight:700">Lihat saja</span>`;
-    chip.innerHTML = `<div class="auth-chip">${av}<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.displayName||user.email)}</span>${badge}<button onclick="signOut()" style="background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:13px;padding:0 2px;display:flex;align-items:center" title="Keluar"><i class="ti ti-logout"></i></button></div>`;
+    let badgeText, badgeColor;
+    if (isSuperAdmin)    { badgeText='⚡ Superadmin'; badgeColor='#7C3AED'; }
+    else if (canWrite)   { badgeText='✓ Editor';      badgeColor='#15803D'; }
+    else                 { badgeText='Lihat saja';    badgeColor='#B45309'; }
+    chip.innerHTML = `<div class="auth-chip">${av}<span style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(user.displayName||user.email)}</span><span style="color:${badgeColor};font-size:.65rem;font-weight:700">${badgeText}</span><button onclick="signOut()" style="background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:13px;padding:0 2px;display:flex;align-items:center" title="Keluar"><i class="ti ti-logout"></i></button></div>`;
   } else {
-    /* FIX #5: show "Masuk" button with info text */
     chip.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
       <span style="font-size:.72rem;color:var(--ink-lt)">Bagi user tertentu,</span>
       <button class="btn btn-sm btn-primary" onclick="signInGoogle()"><i class="ti ti-brand-google"></i> Masuk</button>
       <span style="font-size:.72rem;color:var(--ink-lt)">untuk tambah &amp; edit event</span>
     </div>`;
   }
-  /* Panel add btn visibility */
   const pab = document.getElementById('panelAddBtn');
   if (pab) pab.style.display = canWrite ? 'flex' : 'none';
 }
@@ -604,24 +696,104 @@ let currentPICs=[], editingTypeId=null;
 const PRESET_COLORS=['#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E','#10B981','#14B8A6','#06B6D4','#3B82F6','#6366F1','#8B5CF6','#A855F7','#EC4899','#F43F5E','#64748B'];
 
 /* ════════════════════════════════════════
-   HOLIDAY API
+   FIX #1 — HOLIDAY API: multi-source with fallback + cache
+   Sources tried in order:
+   1. libur.deno.dev/api?year=YYYY  (primary)
+   2. date.nager.at/api/v3          (fallback — global, maps ID public holidays)
+   3. Hardcoded 2025/2026 data      (offline fallback)
    ════════════════════════════════════════ */
+const HOLIDAY_FALLBACK = {
+  2025:{
+    '2025-01-01':{name:'Tahun Baru 2025',isCutiBersama:false},
+    '2025-01-27':{name:'Isra Miraj',isCutiBersama:false},
+    '2025-01-28':{name:'Cuti Bersama Isra Miraj',isCutiBersama:true},
+    '2025-01-29':{name:'Tahun Baru Imlek 2576',isCutiBersama:false},
+    '2025-03-29':{name:'Hari Suci Nyepi',isCutiBersama:false},
+    '2025-03-31':{name:'Hari Raya Idul Fitri',isCutiBersama:false},
+    '2025-04-01':{name:'Hari Raya Idul Fitri',isCutiBersama:false},
+    '2025-04-18':{name:'Wafat Isa Almasih',isCutiBersama:false},
+    '2025-05-01':{name:'Hari Buruh Internasional',isCutiBersama:false},
+    '2025-05-12':{name:'Hari Raya Waisak',isCutiBersama:false},
+    '2025-05-29':{name:'Kenaikan Isa Almasih',isCutiBersama:false},
+    '2025-06-01':{name:'Hari Lahir Pancasila',isCutiBersama:false},
+    '2025-06-06':{name:'Hari Raya Idul Adha',isCutiBersama:false},
+    '2025-06-27':{name:'Tahun Baru Islam 1447 H',isCutiBersama:false},
+    '2025-08-17':{name:'Hari Kemerdekaan RI',isCutiBersama:false},
+    '2025-09-05':{name:'Maulid Nabi Muhammad SAW',isCutiBersama:false},
+    '2025-12-25':{name:'Hari Raya Natal',isCutiBersama:false},
+    '2025-12-26':{name:'Cuti Bersama Natal',isCutiBersama:true},
+  },
+  2026:{
+    '2026-01-01':{name:'Tahun Baru 2026',isCutiBersama:false},
+    '2026-01-16':{name:'Isra Miraj',isCutiBersama:false},
+    '2026-01-17':{name:'Tahun Baru Imlek 2577',isCutiBersama:false},
+    '2026-03-19':{name:'Hari Suci Nyepi',isCutiBersama:false},
+    '2026-03-20':{name:'Hari Raya Idul Fitri',isCutiBersama:false},
+    '2026-03-21':{name:'Hari Raya Idul Fitri',isCutiBersama:false},
+    '2026-04-02':{name:'Wafat Isa Almasih',isCutiBersama:false},
+    '2026-05-01':{name:'Hari Buruh Internasional',isCutiBersama:false},
+    '2026-05-14':{name:'Kenaikan Isa Almasih',isCutiBersama:false},
+    '2026-05-26':{name:'Hari Raya Waisak',isCutiBersama:false},
+    '2026-06-01':{name:'Hari Lahir Pancasila',isCutiBersama:false},
+    '2026-08-17':{name:'Hari Kemerdekaan RI',isCutiBersama:false},
+    '2026-12-25':{name:'Hari Raya Natal',isCutiBersama:false},
+  }
+};
+
 async function fetchHolidaysForYear(year) {
-  if (holidayCache[year]!==undefined) return holidayCache[year];
-  holidayCache[year]={};
+  if (holidayCache[year] && Object.keys(holidayCache[year]).length > 0) return holidayCache[year];
+  // Mark as loading to avoid duplicate fetches
+  if (holidayCache[year] === 'loading') return HOLIDAY_FALLBACK[year] || {};
+  holidayCache[year] = 'loading';
+
+  // Try primary source
   try {
-    const res=await fetch(`https://libur.deno.dev/api?year=${year}`);
-    if (!res.ok) throw new Error('HTTP '+res.status);
-    const data=await res.json();
-    const map={};
-    if (Array.isArray(data)) data.forEach(h=>{ map[h.date]={name:h.name,isCutiBersama:/cuti bersama/i.test(h.name)}; });
-    holidayCache[year]=map; return map;
-  } catch(e){ return {}; }
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 5000); // 5s timeout
+    const res = await fetch(`https://libur.deno.dev/api?year=${year}`, {signal: ctrl.signal});
+    clearTimeout(timer);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error('Empty data');
+    const map = {};
+    data.forEach(h => { map[h.date] = {name: h.name, isCutiBersama: /cuti bersama/i.test(h.name)}; });
+    holidayCache[year] = map;
+    console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari dari libur.deno.dev`);
+    return map;
+  } catch(e1) {
+    console.warn(`⚠️ libur.deno.dev gagal (${e1.message}), coba fallback nager.at...`);
+  }
+
+  // Try fallback: date.nager.at (returns Indonesian public holidays)
+  try {
+    const ctrl2 = new AbortController();
+    const timer2 = setTimeout(() => ctrl2.abort(), 5000);
+    const res2 = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/ID`, {signal: ctrl2.signal});
+    clearTimeout(timer2);
+    if (!res2.ok) throw new Error('HTTP ' + res2.status);
+    const data2 = await res2.json();
+    if (!Array.isArray(data2) || data2.length === 0) throw new Error('Empty data');
+    const map2 = {};
+    data2.forEach(h => { map2[h.date] = {name: h.localName || h.name, isCutiBersama: false}; });
+    holidayCache[year] = map2;
+    console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari dari nager.at`);
+    return map2;
+  } catch(e2) {
+    console.warn(`⚠️ nager.at juga gagal (${e2.message}), pakai data offline...`);
+  }
+
+  // Final fallback: hardcoded data
+  const fallback = HOLIDAY_FALLBACK[year] || {};
+  holidayCache[year] = fallback;
+  console.log(`⚠️ Libur ${year}: pakai data offline (${Object.keys(fallback).length} hari)`);
+  return fallback;
 }
-async function ensureHolidays(year,month) {
-  const d=await fetchHolidaysForYear(year); Object.assign(holidays,d);
-  if (month===0)  fetchHolidaysForYear(year-1).then(x=>Object.assign(holidays,x));
-  if (month===11) fetchHolidaysForYear(year+1).then(x=>Object.assign(holidays,x));
+
+async function ensureHolidays(year, month) {
+  const d = await fetchHolidaysForYear(year);
+  if (d && d !== 'loading') Object.assign(holidays, d);
+  if (month === 0)  fetchHolidaysForYear(year-1).then(x => { if(x && x!=='loading') Object.assign(holidays, x); });
+  if (month === 11) fetchHolidaysForYear(year+1).then(x => { if(x && x!=='loading') Object.assign(holidays, x); });
 }
 
 /* ════════════════════════════════════════
@@ -634,7 +806,7 @@ function loadEvents() {
       events=events.map(e=>({...e,pics:Array.isArray(e.pics)?e.pics:(e.pic?[e.pic]:[])}));
       rebuildFilters(); renderCalendar();
       if (selectedDate) renderPanel(selectedDate);
-    }, err=>showToast('Gagal memuat: '+err.message));
+    }, err=>{ console.error('Firestore error:', err.code, err.message); if(err.code==='permission-denied'){showToast('⚠️ Akses ditolak. Periksa Firestore Security Rules.');}else{showToast('Gagal memuat: '+err.message);} });
   } else {
     try { events=JSON.parse(localStorage.getItem(LS_EVENTS_KEY)||'[]'); }catch(e){events=[];}
     events=events.map(e=>({...e,pics:Array.isArray(e.pics)?e.pics:(e.pic?[e.pic]:[])}));
@@ -1065,6 +1237,74 @@ function openEditType(id){
 }
 
 /* ════════════════════════════════════════
+   FIX #2 — ACCESS MANAGER (Superadmin only)
+   Manages workspace editors via Firestore _config
+   ════════════════════════════════════════ */
+
+function openAccessManager() {
+  if (!isSuperAdmin) { showToast('⚠️ Hanya superadmin yang dapat mengelola akses'); return; }
+  document.getElementById('accessWsLabel').textContent = WORKSPACE === 'default' ? 'Default' : WORKSPACE;
+  renderEditorList();
+  document.getElementById('accessManagerOverlay').classList.add('open');
+}
+
+function renderEditorList() {
+  const list = document.getElementById('editorList');
+  const editors = wsEditors.filter(e => e !== SUPERADMIN_EMAIL);
+
+  let html = `<div class="editor-row">
+    <div class="editor-row-email">${escHtml(SUPERADMIN_EMAIL)}</div>
+    <span class="editor-row-badge editor-row-super">⚡ Superadmin</span>
+  </div>`;
+
+  if (editors.length === 0) {
+    html += `<div style="color:var(--ink-lt);font-size:.82rem;padding:8px 12px">Belum ada editor lain. Tambahkan email di bawah.</div>`;
+  } else {
+    html += editors.map(email => `
+      <div class="editor-row">
+        <div class="editor-row-email">${escHtml(email)}</div>
+        <span class="editor-row-badge">✓ Editor</span>
+        <button class="editor-remove" data-email="${escHtml(email)}" title="Hapus akses"><i class="ti ti-trash"></i></button>
+      </div>`).join('');
+  }
+  list.innerHTML = html;
+
+  list.querySelectorAll('.editor-remove').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const email = btn.dataset.email;
+      if (!confirm(`Hapus akses editor untuk ${email}?`)) return;
+      const newEditors = wsEditors.filter(e => e !== email);
+      try {
+        await saveWorkspaceConfig(newEditors);
+        renderEditorList();
+        showToast(`🗑️ Akses ${email} dihapus`);
+      } catch(e) { showToast('❌ Gagal: ' + e.message); }
+    });
+  });
+}
+
+document.getElementById('addEditorBtn').addEventListener('click', async () => {
+  const email = document.getElementById('newEditorEmail').value.trim().toLowerCase();
+  if (!email || !email.includes('@')) { showToast('⚠️ Masukkan email yang valid'); return; }
+  if (wsEditors.includes(email)) { showToast('⚠️ Email ini sudah menjadi editor'); return; }
+  const newEditors = [...wsEditors, email];
+  try {
+    await saveWorkspaceConfig(newEditors);
+    document.getElementById('newEditorEmail').value = '';
+    renderEditorList();
+    showToast(`✅ ${email} ditambahkan sebagai editor`);
+    // Re-check current user's permission
+    if (currentUser) applyAuthState(currentUser);
+  } catch(e) { showToast('❌ Gagal: ' + e.message); }
+});
+
+document.getElementById('closeAccessManager').addEventListener('click', () => document.getElementById('accessManagerOverlay').classList.remove('open'));
+document.getElementById('closeAccessManagerOk').addEventListener('click', () => document.getElementById('accessManagerOverlay').classList.remove('open'));
+document.getElementById('accessManagerOverlay').addEventListener('click', e => { if (e.target === document.getElementById('accessManagerOverlay')) document.getElementById('accessManagerOverlay').classList.remove('open'); });
+document.getElementById('manageAccessBtn').addEventListener('click', openAccessManager);
+document.getElementById('newEditorEmail').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('addEditorBtn').click(); });
+
+/* ════════════════════════════════════════
    FIX #2 — EXCEL EXPORT: colorful + range picker
    ════════════════════════════════════════ */
 
@@ -1208,7 +1448,15 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
   detHdr.forEach((_,ci)=>{const addr=XLSX.utils.encode_cell({r:0,c:ci});if(!ws2[addr])ws2[addr]={v:detHdr[ci],t:'s'};ws2[addr].s={font:{bold:true,sz:10,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}};});
   eventsToExport.forEach((e,ri)=>{
     const t=getTypeById(e.type); const chipHex=t.chip.replace('#',''); const ltHex=(t.lt||hexToLight(t.chip)).replace('#',''); const isEven=ri%2===0;
-    for(let ci=0;ci<detHdr.length;ci++){const addr=XLSX.utils.encode_cell({r:ri+1,c:ci});if(!ws2[addr])ws2[addr]={v:''+(([0,i+1,t.label,e.title,(e.pics||[]).join(', '),SM[e.status]||'',e.note||'',fmtDate(e.dateStart),fmtDate(e.dateEnd||e.dateStart)])[ci+1]??''),t:'s'};ws2[addr].s={font:{sz:9,color:{rgb:'374151'}},fill:{fgColor:{rgb:isEven?'FFFFFF':'F8FAFC'}},alignment:{horizontal:ci===0?'center':'left',vertical:'center'},border:{top:{style:'thin',color:{rgb:'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:'E5E7EB'}},right:{style:'thin',color:{rgb:'E5E7EB'}}}};if(ci===1){ws2[addr].s.font={sz:9,bold:true,color:{rgb:chipHex}};ws2[addr].s.fill={fgColor:{rgb:ltHex}};}if(ci===4&&e.status&&sFill[e.status]){ws2[addr].s.fill={fgColor:{rgb:sFill[e.status]}};ws2[addr].s.font={sz:9,bold:true,color:{rgb:sTx[e.status]||'374151'}};}}
+    const rowVals=[ri+1, t.label, e.title, (e.pics||[]).join(', '), SM[e.status]||'', e.note||'', fmtDate(e.dateStart), fmtDate(e.dateEnd||e.dateStart)];
+    for(let ci=0;ci<detHdr.length;ci++){
+      const addr=XLSX.utils.encode_cell({r:ri+1,c:ci});
+      const v=rowVals[ci]??'';
+      ws2[addr]={v,t:typeof v==='number'?'n':'s'};
+      ws2[addr].s={font:{sz:9,color:{rgb:'374151'}},fill:{fgColor:{rgb:isEven?'FFFFFF':'F8FAFC'}},alignment:{horizontal:ci===0?'center':'left',vertical:'center'},border:{top:{style:'thin',color:{rgb:'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:'E5E7EB'}},right:{style:'thin',color:{rgb:'E5E7EB'}}}};
+      if(ci===1){ws2[addr].s.font={sz:9,bold:true,color:{rgb:chipHex}};ws2[addr].s.fill={fgColor:{rgb:ltHex}};}
+      if(ci===4&&e.status&&sFill[e.status]){ws2[addr].s.fill={fgColor:{rgb:sFill[e.status]}};ws2[addr].s.font={sz:9,bold:true,color:{rgb:sTx[e.status]||'374151'}};}
+    }
   });
   XLSX.utils.book_append_sheet(wb,ws2,'Detail Event');
 
@@ -1342,14 +1590,16 @@ document.getElementById('newTypeColor').addEventListener('input',e=>{
 rebuildFilters();
 
 if (useFirebase && auth) {
-  /* FIX #5: immediately show app in read-only mode; auth state updates chip */
   document.body.classList.add('read-only');
-  applyAuthState(null); /* show "Masuk" button */
-  auth.onAuthStateChanged(user => {
+  applyAuthState(null);
+  // Load workspace config (editors list) then events — both can run in parallel
+  loadWorkspaceConfig();
+  auth.onAuthStateChanged(async user => {
+    // When auth state changes, reload config so editor list is fresh
+    await loadWorkspaceConfig();
     applyAuthState(user);
     if (!window._eventsLoaded) { window._eventsLoaded=true; loadEvents(); renderCalendar(); }
   });
-  /* Load events right away without waiting for auth */
   if (!window._eventsLoaded) { window._eventsLoaded=true; loadEvents(); renderCalendar(); }
 } else {
   canWrite=true;
