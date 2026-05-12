@@ -246,6 +246,24 @@ body.read-only .readonly-badge{display:inline-flex}
 .editor-remove:hover{background:#FEE2E2;color:#B91C1C}
 .add-editor-row{display:flex;gap:8px;align-items:center}
 
+/* ── HOLIDAY MANAGER ── */
+.hol-mgr-info{background:#FFF7ED;border:1.5px solid #FBD38D;border-radius:var(--r-md);padding:10px 14px;font-size:.78rem;color:#78350F;margin-bottom:1rem;display:flex;gap:8px;align-items:flex-start}
+.hol-mgr-info i{font-size:16px;flex-shrink:0;margin-top:1px}
+.hol-list{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem;max-height:240px;overflow-y:auto}
+.hol-row{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-lg)}
+.hol-row-date{font-size:.8rem;font-weight:700;color:var(--ink);white-space:nowrap;min-width:80px}
+.hol-row-name{flex:1;font-size:.82rem;color:var(--ink-md)}
+.hol-row-badge{font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;white-space:nowrap}
+.hol-badge-libnas{background:#FEF2F2;color:#B91C1C}
+.hol-badge-cutib{background:#FFF7ED;color:#B45309}
+.hol-remove{background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:15px;padding:4px;border-radius:var(--r-sm);transition:background .12s,color .12s;flex-shrink:0}
+.hol-remove:hover{background:#FEE2E2;color:#B91C1C}
+.hol-add-row{display:grid;grid-template-columns:130px 1fr auto;gap:8px;align-items:end}
+.hol-type-row{display:flex;gap:8px;margin-top:6px}
+.hol-type-btn{flex:1;padding:7px;font-size:.75rem;font-weight:600;border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);cursor:pointer;transition:background .14s,border-color .14s}
+.hol-type-btn.active{background:#FEE2E2;border-color:#FCA5A5;color:#B91C1C}
+.hol-type-btn.active.cutib{background:#FFF7ED;border-color:#FBD38D;color:#B45309}
+
 @media(max-width:900px){
   .main-row{flex-direction:column}
   .panel-col{width:100%;position:static}
@@ -295,6 +313,7 @@ body.read-only .readonly-badge{display:inline-flex}
     <div id="authChip"></div>
     <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
     <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
+    <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
     <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
     <button class="btn btn-primary write-only" id="addEventBtn"><i class="ti ti-plus"></i> Tambah Event</button>
@@ -348,6 +367,46 @@ body.read-only .readonly-badge{display:inline-flex}
 </div>
 
 </div><!-- /mainApp -->
+
+<!-- ══ HOLIDAY MANAGER MODAL ══ -->
+<div class="overlay" id="holidayManagerOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-calendar-plus" style="color:#D97706"></i> Libur Custom</div>
+      <button class="btn btn-icon" id="closeHolidayManager"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="hol-mgr-info">
+      <i class="ti ti-info-circle"></i>
+      <div>Tambahkan hari libur yang belum tercatat di API (misalnya karena API belum update). Data disimpan di browser dan akan digabung dengan data API secara otomatis.</div>
+    </div>
+    <div style="font-size:.75rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Libur Custom yang ditambahkan</div>
+    <div class="hol-list" id="holCustomList">
+      <div style="color:var(--ink-lt);font-size:.82rem;padding:8px">Belum ada libur custom.</div>
+    </div>
+    <div style="border-top:1.5px solid var(--rule);padding-top:1rem;margin-top:.25rem">
+      <div style="font-size:.75rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Tambah Libur Baru</div>
+      <div class="hol-add-row">
+        <div class="fg" style="margin:0">
+          <label class="fl">Tanggal</label>
+          <input type="date" class="fc" id="newHolDate"/>
+        </div>
+        <div class="fg" style="margin:0">
+          <label class="fl">Nama Hari Libur</label>
+          <input type="text" class="fc" id="newHolName" placeholder="Contoh: Hari Raya Idul Adha 1447H"/>
+        </div>
+        <button class="btn btn-primary btn-sm" id="addHolBtn" style="height:38px"><i class="ti ti-plus"></i></button>
+      </div>
+      <div class="hol-type-row">
+        <button class="hol-type-btn active" id="holTypeLibnas" data-type="libnas">🔴 Libur Nasional</button>
+        <button class="hol-type-btn cutib" id="holTypeCutib" data-type="cutib">🟠 Cuti Bersama</button>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="clearAllHolBtn"><i class="ti ti-trash"></i> Hapus Semua Custom</button>
+      <button class="btn btn-primary" id="closeHolidayManagerOk">Selesai</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══ ADD / EDIT MODAL ══ -->
 <div class="overlay" id="addOverlay">
@@ -698,21 +757,21 @@ const PRESET_COLORS=['#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E'
 /* ════════════════════════════════════════
    HOLIDAY API — CORS-safe, fully API-driven
    ─────────────────────────────────────────
-   Primary:  api-hari-libur.vercel.app (data paling lengkap & up-to-date)
-             Tidak support CORS → dibungkus CORS proxy (dicoba bergantian)
-   Fallback: libur.deno.dev (CORS terbuka langsung)
+   Primary:  libur.deno.dev (CORS terbuka, data lengkap & reliable)
+             → response: [{date, name}]
+   Fallback: api-hari-libur.vercel.app via CORS proxy
+             → response: {status, data:[{date, description}]}
 
-   Cache: sessionStorage per tab. Object kosong {} TIDAK di-cache
-   agar fetch bisa dicoba ulang jika sebelumnya gagal.
+   Cache: sessionStorage per tab.
+   {} kosong TIDAK di-cache ke sessionStorage agar bisa retry.
    ════════════════════════════════════════ */
 
-const holidayCache = {};  /* { year: {map} }  — TIDAK menyimpan {} kosong */
+const holidayCache = {};  /* { year: {map} | 'fetching' } */
 
-/* CORS proxy list — dicoba bergantian jika proxy pertama gagal */
+/* CORS proxy list untuk fallback vercel */
 const CORS_PROXIES = [
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://cors-anywhere.herokuapp.com/${url}`,
 ];
 
 /* Array API → { 'YYYY-MM-DD': {name, isCutiBersama} } */
@@ -739,31 +798,7 @@ async function fetchWithTimeout(url, ms = 10000) {
   } catch(e) { clearTimeout(timer); throw e; }
 }
 
-/* Sumber 1 (Primary): api-hari-libur.vercel.app via CORS proxy
-   Dicoba semua proxy sampai salah satu berhasil */
-async function fetchFromVercel(year) {
-  const targetUrl = `https://api-hari-libur.vercel.app/api?year=${year}`;
-  let lastErr;
-
-  for (const proxyFn of CORS_PROXIES) {
-    try {
-      const res  = await fetchWithTimeout(proxyFn(targetUrl), 9000);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      const data = Array.isArray(json) ? json : (json.data || []);
-      if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
-      const map = parseHolidayArray(data, 'description');
-      if (Object.keys(map).length === 0) throw new Error('Parsed map kosong');
-      return map;
-    } catch(e) {
-      lastErr = e;
-      console.warn(`  proxy gagal: ${proxyFn(targetUrl).slice(0,60)}... → ${e.message}`);
-    }
-  }
-  throw new Error(`Semua proxy gagal: ${lastErr?.message}`);
-}
-
-/* Sumber 2 (Fallback): libur.deno.dev — CORS terbuka langsung */
+/* Sumber 1 (Primary): libur.deno.dev — CORS terbuka langsung, data reliable */
 async function fetchFromDenodev(year) {
   const res  = await fetchWithTimeout(`https://libur.deno.dev/api?year=${year}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -774,11 +809,30 @@ async function fetchFromDenodev(year) {
   return map;
 }
 
+/* Sumber 2 (Fallback): api-hari-libur.vercel.app via CORS proxy */
+async function fetchFromVercel(year) {
+  const targetUrl = `https://api-hari-libur.vercel.app/api?year=${year}`;
+  let lastErr;
+  for (const proxyFn of CORS_PROXIES) {
+    try {
+      const res  = await fetchWithTimeout(proxyFn(targetUrl), 9000);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const data = Array.isArray(json) ? json : (json.data || []);
+      if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
+      const map = parseHolidayArray(data, 'description');
+      if (Object.keys(map).length === 0) throw new Error('Parsed map kosong');
+      return map;
+    } catch(e) { lastErr = e; }
+  }
+  throw new Error(`Semua proxy gagal: ${lastErr?.message}`);
+}
+
 async function fetchHolidaysForYear(year) {
-  /* In-memory cache hit — hanya jika ada isinya (bukan {}) */
+  /* In-memory cache — hanya jika ada isinya */
   if (holidayCache[year] && Object.keys(holidayCache[year]).length > 0) return holidayCache[year];
 
-  /* Tunggu fetch yang sedang berjalan (flag string, bukan object) */
+  /* Tunggu fetch yang sedang berjalan */
   if (holidayCache[year] === 'fetching') {
     for (let i = 0; i < 100; i++) {
       await new Promise(r => setTimeout(r, 100));
@@ -802,49 +856,52 @@ async function fetchHolidaysForYear(year) {
         console.log(`📦 Libur ${year}: ${Object.keys(parsed).length} hari (sessionStorage)`);
         return parsed;
       } else {
-        /* Hapus cache kosong agar bisa dicoba ulang */
         sessionStorage.removeItem(`hol_${year}`);
       }
     }
   } catch(e) {}
 
-  /* Coba Primary: vercel via CORS proxy */
+  /* Coba Primary: libur.deno.dev */
   try {
-    const map = await fetchFromVercel(year);
+    const map = await fetchFromDenodev(year);
     holidayCache[year] = map;
     try { sessionStorage.setItem(`hol_${year}`, JSON.stringify(map)); } catch(e) {}
-    console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari (api-hari-libur.vercel.app)`);
+    console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari (libur.deno.dev)`);
     return map;
   } catch(e1) {
-    console.warn(`⚠️ Semua proxy vercel gagal [${year}]: ${e1.message} → coba libur.deno.dev...`);
+    console.warn(`⚠️ libur.deno.dev gagal [${year}]: ${e1.message} → coba fallback vercel...`);
   }
 
-  /* Coba Fallback: libur.deno.dev */
+  /* Coba Fallback: vercel via proxy */
   try {
-    const map2 = await fetchFromDenodev(year);
+    const map2 = await fetchFromVercel(year);
     holidayCache[year] = map2;
     try { sessionStorage.setItem(`hol_${year}`, JSON.stringify(map2)); } catch(e) {}
-    console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari (libur.deno.dev)`);
+    console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari (api-hari-libur.vercel.app)`);
     return map2;
   } catch(e2) {
-    console.warn(`⚠️ libur.deno.dev gagal [${year}]: ${e2.message}`);
+    console.warn(`⚠️ Fallback vercel gagal [${year}]: ${e2.message}`);
   }
 
-  /* Kedua sumber gagal — simpan {} HANYA di in-memory, bukan sessionStorage
-     sehingga pada reload halaman bisa dicoba ulang */
+  /* Kedua sumber gagal */
   const currentYear = new Date().getFullYear();
   if (year > currentYear + 1) {
     console.info(`ℹ️ Data libur ${year} belum tersedia (wajar untuk tahun terlalu jauh ke depan).`);
   } else {
-    console.error(`❌ Semua sumber hari libur gagal untuk ${year}. Cek koneksi atau coba refresh.`);
+    console.error(`❌ Semua sumber hari libur gagal untuk ${year}. Hari libur tidak ditampilkan.`);
   }
-  holidayCache[year] = {};   /* in-memory saja, tidak ke sessionStorage */
+  holidayCache[year] = {};   /* in-memory saja, tidak ke sessionStorage agar bisa retry saat reload */
   return {};
+}
+
 }
 
 async function ensureHolidays(year, month) {
   const result = await fetchHolidaysForYear(year);
   if (result && Object.keys(result).length > 0) Object.assign(holidays, result);
+
+  /* Always merge custom holidays on top of API data */
+  applyCustomHolidays();
 
   /* Prefetch tahun sebelum — selalu ada datanya */
   if (month === 0) {
@@ -1372,6 +1429,126 @@ document.getElementById('manageAccessBtn').addEventListener('click', openAccessM
 document.getElementById('newEditorEmail').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('addEditorBtn').click(); });
 
 /* ════════════════════════════════════════
+   CUSTOM HOLIDAYS — user-defined, stored in localStorage
+   Merged with API holidays on render.
+   Key: cal_custom_holidays (shared across workspaces — libur nasional sama)
+   ════════════════════════════════════════ */
+const CUSTOM_HOL_KEY = 'cal_custom_holidays';
+
+function loadCustomHolidays() {
+  try {
+    return JSON.parse(localStorage.getItem(CUSTOM_HOL_KEY) || '{}');
+  } catch(e) { return {}; }
+}
+function saveCustomHolidays(map) {
+  try { localStorage.setItem(CUSTOM_HOL_KEY, JSON.stringify(map)); } catch(e) {}
+}
+
+/* Merge custom holidays INTO the global holidays object */
+function applyCustomHolidays() {
+  const custom = loadCustomHolidays();
+  Object.assign(holidays, custom);
+}
+
+/* ── HOLIDAY MANAGER UI ── */
+let holTypeSelected = 'libnas'; // 'libnas' | 'cutib'
+
+function openHolidayManager() {
+  renderHolCustomList();
+  document.getElementById('newHolDate').value = '';
+  document.getElementById('newHolName').value = '';
+  holTypeSelected = 'libnas';
+  document.getElementById('holTypeLibnas').classList.add('active');
+  document.getElementById('holTypeCutib').classList.remove('active');
+  document.getElementById('holidayManagerOverlay').classList.add('open');
+}
+
+function renderHolCustomList() {
+  const custom = loadCustomHolidays();
+  const list   = document.getElementById('holCustomList');
+  const entries = Object.entries(custom).sort((a,b) => a[0].localeCompare(b[0]));
+
+  if (!entries.length) {
+    list.innerHTML = '<div style="color:var(--ink-lt);font-size:.82rem;padding:8px">Belum ada libur custom.</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(([date, hol]) => {
+    const d = new Date(date + 'T00:00:00');
+    const dateLabel = d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+    const badgeCls  = hol.isCutiBersama ? 'hol-badge-cutib' : 'hol-badge-libnas';
+    const badgeTxt  = hol.isCutiBersama ? '🟠 Cuti Bersama' : '🔴 Libur Nasional';
+    return `<div class="hol-row">
+      <div class="hol-row-date">${dateLabel}</div>
+      <div class="hol-row-name">${escHtml(hol.name)}</div>
+      <span class="hol-row-badge ${badgeCls}">${badgeTxt}</span>
+      <button class="hol-remove" data-date="${date}" title="Hapus"><i class="ti ti-trash"></i></button>
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.hol-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const custom = loadCustomHolidays();
+      delete custom[btn.dataset.date];
+      delete holidays[btn.dataset.date];   // remove from live cache
+      saveCustomHolidays(custom);
+      renderHolCustomList();
+      renderCalendar();
+      showToast('🗑️ Libur dihapus');
+    });
+  });
+}
+
+document.getElementById('holTypeLibnas').addEventListener('click', () => {
+  holTypeSelected = 'libnas';
+  document.getElementById('holTypeLibnas').classList.add('active');
+  document.getElementById('holTypeCutib').classList.remove('active');
+});
+document.getElementById('holTypeCutib').addEventListener('click', () => {
+  holTypeSelected = 'cutib';
+  document.getElementById('holTypeCutib').classList.add('active');
+  document.getElementById('holTypeLibnas').classList.remove('active');
+});
+
+document.getElementById('addHolBtn').addEventListener('click', () => {
+  const date = document.getElementById('newHolDate').value;
+  const name = document.getElementById('newHolName').value.trim();
+  if (!date) { showToast('⚠️ Pilih tanggal terlebih dahulu'); return; }
+  if (!name) { showToast('⚠️ Isi nama hari libur'); return; }
+
+  const custom = loadCustomHolidays();
+  custom[date] = { name, isCutiBersama: holTypeSelected === 'cutib', isCustom: true };
+  saveCustomHolidays(custom);
+  // Merge into live holidays cache immediately
+  holidays[date] = custom[date];
+  document.getElementById('newHolDate').value = '';
+  document.getElementById('newHolName').value = '';
+  renderHolCustomList();
+  renderCalendar();
+  showToast(`✅ Libur "${name}" ditambahkan`);
+});
+
+document.getElementById('newHolName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('addHolBtn').click();
+});
+
+document.getElementById('clearAllHolBtn').addEventListener('click', () => {
+  if (!confirm('Hapus semua libur custom?')) return;
+  const custom = loadCustomHolidays();
+  // Remove from live cache
+  Object.keys(custom).forEach(d => delete holidays[d]);
+  saveCustomHolidays({});
+  renderHolCustomList();
+  renderCalendar();
+  showToast('🗑️ Semua libur custom dihapus');
+});
+
+document.getElementById('closeHolidayManager').addEventListener('click', () => document.getElementById('holidayManagerOverlay').classList.remove('open'));
+document.getElementById('closeHolidayManagerOk').addEventListener('click', () => document.getElementById('holidayManagerOverlay').classList.remove('open'));
+document.getElementById('holidayManagerOverlay').addEventListener('click', e => { if (e.target === document.getElementById('holidayManagerOverlay')) document.getElementById('holidayManagerOverlay').classList.remove('open'); });
+document.getElementById('manageHolidayBtn').addEventListener('click', openHolidayManager);
+
+/* ════════════════════════════════════════
    FIX #2 — EXCEL EXPORT: colorful + range picker
    ════════════════════════════════════════ */
 
@@ -1658,11 +1835,11 @@ document.getElementById('newTypeColor').addEventListener('input',e=>{
 /* Invalidate stale holiday cache — bump version number here whenever
    primary API source changes, forcing fresh fetch on next load. */
 try {
-  if (sessionStorage.getItem('hol_cache_ver') !== '4') {
+  if (sessionStorage.getItem('hol_cache_ver') !== '5') {
     Object.keys(sessionStorage)
       .filter(k => k.startsWith('hol_'))
       .forEach(k => sessionStorage.removeItem(k));
-    sessionStorage.setItem('hol_cache_ver', '4');
+    sessionStorage.setItem('hol_cache_ver', '5');
     console.log('🔄 Cache hari libur direset — akan fetch ulang dari sumber terbaru.');
   }
 } catch(e) {}
