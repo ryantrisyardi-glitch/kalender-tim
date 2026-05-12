@@ -282,8 +282,8 @@ body.read-only .readonly-badge{display:inline-flex}
 
 <div class="page" id="mainApp">
 
-<!-- CONFIG NOTICE -->
-<div class="cfg-notice" id="cfgNotice">
+<!-- CONFIG NOTICE — hidden by default, shown only if Firebase truly unconfigured -->
+<div class="cfg-notice" id="cfgNotice" style="display:none">
   <i class="ti ti-alert-triangle"></i>
   <div><strong>Firebase belum dikonfigurasi.</strong> Ganti nilai <code>YOUR_*</code> di <code>firebaseConfig</code>.</div>
 </div>
@@ -641,9 +641,16 @@ try {
     db   = firebase.firestore();
     auth = firebase.auth();
     useFirebase = true;
-    document.getElementById('cfgNotice').style.display = 'none';
+    /* Config valid — keep cfgNotice hidden */
+  } else {
+    /* Still has placeholder values — show warning */
+    document.getElementById('cfgNotice').style.display = 'flex';
   }
-} catch(e) { console.warn('Firebase init:', e); }
+} catch(e) {
+  console.warn('Firebase init gagal:', e);
+  /* Show notice if init throws */
+  document.getElementById('cfgNotice').style.display = 'flex';
+}
 
 /* ── LOAD WORKSPACE CONFIG FROM FIRESTORE ── */
 /* FIX #4: config lives in _config collection (not workspace-specific events) */
