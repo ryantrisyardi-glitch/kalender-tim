@@ -901,6 +901,7 @@ async function fetchHolidaysForYear(year) {
   return {};
 }
 
+
 async function ensureHolidays(year, month) {
   const result = await fetchHolidaysForYear(year);
   if (result && Object.keys(result).length > 0) Object.assign(holidays, result);
