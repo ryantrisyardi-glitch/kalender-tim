@@ -10,7 +10,7 @@
 <!-- SheetJS for Excel export -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -72,13 +72,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .cal-shell{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.05)}
 .cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg-dk);border-bottom:1.5px solid var(--rule)}
 /* FIX #6: Day headers more visible */
-.dh{text-align:center;padding:11px 4px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#78716C}
+.dh{text-align:center;padding:13px 4px;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#57534E}
 .dh.sun{color:#DC2626;font-weight:800}
 .dh.sat{color:#1D4ED8;font-weight:800}
 .cal-body{display:grid;grid-template-columns:repeat(7,1fr)}
 
 /* ── DAY CELLS ── FIX #1: up to 5 events, auto height, tidy */
-.dc{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);min-height:90px;padding:6px 5px 5px;position:relative;background:var(--surface);overflow:hidden;transition:background .12s}
+.dc{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);min-height:120px;padding:8px 7px 6px;position:relative;background:var(--surface);overflow:visible;transition:background .12s}
 .dc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;opacity:0}
 .dc:nth-child(7n){border-right:none}
 .dc:hover{background:#FAF8F5}
@@ -88,39 +88,30 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .dc.is-cutib{background:var(--cutib-bg)}.dc.is-cutib::before{background:var(--cutib-side);opacity:1}.dc.is-cutib .day-num{color:var(--cutib-num)!important;font-weight:800}
 .dc.other{opacity:.25;pointer-events:none}
 .dc.today{outline:2px solid #3B82F6;outline-offset:-2px}
-.dc.today .day-num{background:var(--ink)!important;color:#fff!important;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.dc.today .day-num{background:var(--ink)!important;color:#fff!important;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800}
 .dc.selected{outline:2px solid var(--ink);outline-offset:-2px}
 
-.day-num{font-size:.8rem;font-weight:700;color:#57534E;margin-bottom:3px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .12s,color .12s;flex-shrink:0;z-index:2;position:relative}
+.day-num{font-size:.92rem;font-weight:800;color:#57534E;margin-bottom:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .12s,color .12s;flex-shrink:0;z-index:2;position:relative}
 .day-num:hover{background:var(--ink);color:#fff!important}
-.hol-label{font-size:.57rem;font-weight:700;line-height:1.3;margin-bottom:2px;margin-left:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.hol-label{font-size:.65rem;font-weight:700;line-height:1.3;margin-bottom:3px;margin-left:1px;white-space:normal;word-break:break-word;max-width:100%}
 .is-libnas .hol-label{color:var(--libnas-name)}.is-cutib .hol-label{color:var(--cutib-name)}
 
 /* ── CHIPS: compact, max 5 ── */
-.chip{display:block;font-size:.59rem;font-weight:700;padding:1px 5px;border-radius:3px;margin-bottom:2px;white-space:normal;overflow:hidden;word-break:break-word;cursor:pointer;color:#fff;line-height:1.45;transition:opacity .12s}
+/* .chip defined in additions below */
 .chip:hover{opacity:.8}
 .chip-more{font-size:.58rem;color:var(--ink-lt);padding:0 4px;display:block;cursor:pointer;line-height:1.6}
 
 /* ── RIGHT PANEL ── */
 .day-panel{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.06)}
-.panel-head{padding:10px 14px 9px;border-bottom:1.5px solid var(--rule);display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.panel-date-label{font-size:.85rem;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
-.panel-day-name{font-size:.67rem;font-weight:600;color:var(--ink-lt);margin-top:0;letter-spacing:.02em}
+.panel-head{padding:14px 16px 12px;border-bottom:1.5px solid var(--rule);display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.panel-date-label{font-size:.95rem;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.panel-day-name{font-size:.72rem;font-weight:600;color:var(--ink-lt);margin-top:1px;letter-spacing:.02em}
 .panel-hol-badge{font-size:.64rem;font-weight:700;padding:3px 8px;border-radius:100px;margin-top:4px;display:inline-block}
-.panel-body{padding:8px 12px;max-height:calc(100vh - 170px);overflow-y:auto}
+.panel-body{padding:12px 14px;max-height:calc(100vh - 200px);overflow-y:auto}
 .panel-empty{text-align:center;padding:2rem 1rem;color:var(--ink-lt);font-size:.82rem}
 .panel-empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.4}
-.panel-event-item{border:1px solid var(--rule);border-radius:var(--r-md);padding:8px 10px;margin-bottom:5px;cursor:pointer;transition:box-shadow .14s,transform .12s;display:flex;gap:8px;align-items:flex-start}
-.panel-event-item:hover{box-shadow:0 3px 14px rgba(28,25,23,.09);transform:translateY(-1px)}
-.pei-bar{width:3px;border-radius:100px;flex-shrink:0;align-self:stretch;min-height:24px}
-.pei-body{flex:1;min-width:0}
-.pei-type{font-size:.58rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1px}
-.pei-title{font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:3px;line-height:1.3}
-.pei-pics{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:3px}
-.pic-badge{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#1C1917;color:#F5F0E8;letter-spacing:.01em}
-.pei-meta{font-size:.64rem;color:var(--ink-lt);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-/* FIX #1: note in panel — vivid highlight */
-.pei-note{font-size:.66rem;color:#1C1917;margin-top:4px;line-height:1.4;background:#FEF9C3;border-radius:var(--r-sm);padding:4px 7px;border-left:2px solid #EAB308;font-weight:500}
+/* panel-event-item redefined in additions section */
+/* pei-* redefined in additions section */
 
 /* ── EVENT LIST ── */
 .list-section{margin-top:1.75rem}
@@ -264,10 +255,115 @@ body.read-only .readonly-badge{display:inline-flex}
 .hol-type-btn.active{background:#FEE2E2;border-color:#FCA5A5;color:#B91C1C}
 .hol-type-btn.active.cutib{background:#FFF7ED;border-color:#FBD38D;color:#B45309}
 
-/* ── JUMP PICKER ── */
-.month-label{cursor:pointer}
-.month-label:hover{color:var(--ink-lt)}
-#jumpPicker select{font-size:.82rem}
+
+/* ── JUMP NAV ── */
+.jump-wrap{display:flex;align-items:center;gap:6px}
+.jump-month{font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--ink);background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:6px 10px;cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23A8A29E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 6px center;padding-right:22px;transition:border-color .14s}
+.jump-month:focus{border-color:var(--ink-md)}
+.jump-year{font-family:var(--font);font-size:.85rem;font-weight:700;color:var(--ink);background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:6px 8px;outline:none;width:72px;text-align:center;transition:border-color .14s;-moz-appearance:textfield}
+.jump-year::-webkit-outer-spin-button,.jump-year::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.jump-year:focus{border-color:var(--ink-md)}
+
+/* ── CHIP with full text wrap (not ellipsis) ── */
+.chip{display:block;font-size:.68rem;font-weight:600;padding:3px 7px;border-radius:4px;margin-bottom:3px;white-space:normal;word-break:break-word;overflow:visible;cursor:pointer;color:#fff;line-height:1.5;transition:opacity .12s}
+
+/* ── STATUS CHECK ICON on chip ── */
+.chip-check{display:inline-block;margin-left:3px;opacity:.85}
+
+/* ── PANEL: compact ── */
+.panel-event-item{border:1px solid var(--rule);border-radius:var(--r-md);padding:7px 10px;margin-bottom:5px;cursor:pointer;transition:box-shadow .14s;display:flex;gap:8px;align-items:flex-start}
+.panel-event-item:hover{box-shadow:0 2px 10px rgba(28,25,23,.09)}
+.pei-bar{width:3px;border-radius:100px;flex-shrink:0;align-self:stretch;min-height:28px}
+.pei-body{flex:1;min-width:0}
+.pei-type{font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1px}
+.pei-title{font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:3px;line-height:1.3}
+.pei-pics{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:3px}
+.pic-badge{font-size:.63rem;font-weight:700;padding:1px 6px;border-radius:100px;background:#1C1917;color:#F5F0E8}
+.pei-meta{font-size:.67rem;color:var(--ink-lt);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.pei-note{font-size:.67rem;color:#1C1917;margin-top:4px;line-height:1.4;background:#FEF9C3;border-radius:3px;padding:4px 7px;border-left:3px solid #EAB308;font-weight:500}
+.pei-status{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:100px}
+
+/* ── DARK MODE ── */
+body.dark{
+  --bg:#0F0E0C;--bg-dk:#1A1916;--surface:#1E1C1A;
+  --ink:#F0ECE6;--ink-md:#C5BDB4;--ink-lt:#6B635C;--rule:#2E2B28;
+  --libnas-bg:#2D1515;--libnas-side:#7F1D1D;--libnas-num:#FCA5A5;--libnas-name:#FCA5A5;
+  --cutib-bg:#2D2010;--cutib-side:#78350F;--cutib-num:#FCD34D;--cutib-name:#FCD34D;
+  --sun-bg:#1E1515;--sun-num:#FCA5A5;
+  --sat-bg:#141A24;--sat-num:#93C5FD;
+  --s-achieve-bg:#14372A;--s-achieve-tx:#86EFAC;
+  --s-not-bg:#3B1515;--s-not-tx:#FCA5A5;
+  --s-pending-bg:#2D2410;--s-pending-tx:#FDE68A;
+}
+body.dark .dh{color:#8C8580}
+body.dark .dh.sun{color:#FCA5A5}
+body.dark .dh.sat{color:#93C5FD}
+body.dark .dc:hover{background:#252320}
+body.dark .cal-shell{box-shadow:0 2px 20px rgba(0,0,0,.4)}
+body.dark .btn{background:var(--surface);color:var(--ink-md);border-color:var(--rule)}
+body.dark .btn:hover{background:var(--bg-dk)}
+body.dark .btn-primary{background:#F0ECE6;color:#1C1917;border-color:#F0ECE6}
+body.dark .btn-primary:hover{background:#E0D9D0}
+body.dark .btn-green{background:#14372A;color:#86EFAC;border-color:#166534}
+body.dark .btn-danger{background:#3B1515;color:#FCA5A5;border-color:#7F1D1D}
+body.dark .fc{background:var(--bg-dk);border-color:var(--rule);color:var(--ink)}
+body.dark .fc:focus{background:var(--surface);border-color:var(--ink-lt)}
+body.dark .filter-select{background:var(--surface);color:var(--ink);border-color:var(--rule)}
+body.dark .jump-month,.jump-year{background:var(--surface);color:var(--ink);border-color:var(--rule)}
+body.dark .jump-year{background:var(--surface);color:var(--ink)}
+body.dark .pic-badge{background:#F0ECE6;color:#1C1917}
+body.dark .ac-list,.pic-ac-list{background:var(--surface);border-color:var(--rule)}
+body.dark .ac-item:hover,.ac-item.ac-active,.pic-ac-item:hover,.pic-ac-item.ac-active{background:var(--bg-dk)}
+body.dark .overlay{background:rgba(0,0,0,.65)}
+body.dark .modal{background:var(--surface)}
+body.dark .pic-input-wrap{background:var(--bg-dk);border-color:var(--rule)}
+body.dark .pic-input-wrap:focus-within{background:var(--surface)}
+body.dark .pic-input-field{color:var(--ink)}
+body.dark .type-row,.editor-row,.hol-row{background:var(--bg-dk)}
+body.dark .ecard{background:var(--surface)}
+body.dark .ecard:hover{box-shadow:0 4px 16px rgba(0,0,0,.4)}
+body.dark .day-panel{background:var(--surface)}
+body.dark .panel-event-item{border-color:var(--rule)}
+body.dark .panel-event-item:hover{box-shadow:0 2px 10px rgba(0,0,0,.4)}
+body.dark .legend-bar{background:var(--bg-dk)}
+body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
+
+
+/* ── MONTH TITLE ── */
+.month-display-title{
+  font-family:'Playfair Display',serif;
+  font-size:2.4rem;
+  font-weight:700;
+  color:var(--ink);
+  letter-spacing:-.02em;
+  line-height:1;
+  margin-bottom:.25rem;
+}
+.month-display-year{
+  font-size:.85rem;
+  font-weight:700;
+  color:var(--ink-lt);
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.month-title-row{margin-bottom:1rem}
+
+/* ── PRINT STYLES ── */
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body{background:#fff!important}
+  body.dark{--bg:#fff;--surface:#fff;--ink:#000;--ink-md:#333;--ink-lt:#666;--rule:#ccc;--bg-dk:#f5f5f5}
+  .hdr-right,.control-bar,.filter-group,.legend-bar,.list-section,.panel-col,.toast,.overlay{display:none!important}
+  .page{padding:.5rem!important;max-width:100%!important}
+  .main-row{display:block!important}
+  .cal-col{width:100%!important}
+  .cal-shell{box-shadow:none!important;border:1px solid #ccc!important}
+  .dc{min-height:100px!important;page-break-inside:avoid}
+  .chip{font-size:.6rem!important;padding:2px 5px!important}
+  .month-display-title{font-size:2rem!important;margin-bottom:.1rem!important}
+  .site-header{margin-bottom:.5rem!important}
+  .brand-sub{display:none}
+}
 
 @media(max-width:900px){
   .main-row{flex-direction:column}
@@ -319,32 +415,33 @@ body.read-only .readonly-badge{display:inline-flex}
     <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
     <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
     <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
-    <button class="btn" id="exportReportBtn" style="background:#F0FDF4;border-color:#86EFAC;color:#15803D"><i class="ti ti-file-spreadsheet"></i> Report Excel</button>
-    <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Gantt Excel</button>
+    <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
+    <button class="btn" id="printBtn" title="Print Kalender" onclick="window.print()"><i class="ti ti-printer"></i></button>
+    <button class="btn" id="darkModeBtn" title="Dark Mode"><i class="ti ti-moon"></i></button>
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
     <button class="btn btn-primary write-only" id="addEventBtn"><i class="ti ti-plus"></i> Tambah Event</button>
   </div>
 </header>
 
+<!-- MONTH TITLE DISPLAY -->
+<div class="month-title-row" id="monthTitleRow">
+  <div class="month-display-title" id="monthDisplayTitle">–</div>
+</div>
+
 <!-- CONTROL BAR -->
 <div class="control-bar">
   <div class="month-nav">
     <button class="btn btn-icon" id="prevBtn"><i class="ti ti-chevron-left"></i></button>
-    <div style="position:relative">
-      <span class="month-label" id="monthLabel" style="cursor:pointer;user-select:none" title="Klik untuk pilih bulan/tahun">–</span>
-      <div id="jumpPicker" style="display:none;position:absolute;top:110%;left:50%;transform:translateX(-50%);background:#fff;border:1.5px solid var(--rule);border-radius:var(--r-lg);box-shadow:0 8px 32px rgba(28,25,23,.14);z-index:200;width:260px;padding:14px">
-        <div style="font-size:.7rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;text-align:center">Pilih Bulan &amp; Tahun</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <select id="jumpMonth" class="fc" style="flex:1">
-            <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
-            <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
-            <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
-            <option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
-          </select>
-          <select id="jumpYear" class="fc" style="width:90px"></select>
-        </div>
-        <button class="btn btn-primary" id="jumpGoBtn" style="width:100%;justify-content:center">Pergi ke Bulan Ini</button>
-      </div>
+    <div class="jump-wrap">
+      <select class="jump-month" id="jumpMonth">
+        <option value="0">Januari</option><option value="1">Februari</option>
+        <option value="2">Maret</option><option value="3">April</option>
+        <option value="4">Mei</option><option value="5">Juni</option>
+        <option value="6">Juli</option><option value="7">Agustus</option>
+        <option value="8">September</option><option value="9">Oktober</option>
+        <option value="10">November</option><option value="11">Desember</option>
+      </select>
+      <input type="number" class="jump-year" id="jumpYear" min="2000" max="2099" placeholder="2026"/>
     </div>
     <button class="btn btn-icon" id="nextBtn"><i class="ti ti-chevron-right"></i></button>
   </div>
@@ -568,49 +665,6 @@ body.read-only .readonly-badge{display:inline-flex}
     </div>
     <div class="modal-foot">
       <button class="btn btn-primary" id="closeAccessManagerOk">Selesai</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ EXCEL REPORT MODAL ══ -->
-<div class="overlay" id="excelReportOverlay">
-  <div class="modal" style="width:520px">
-    <div class="modal-head">
-      <div class="modal-title"><i class="ti ti-file-spreadsheet" style="color:#15803D"></i> Export Report Excel</div>
-      <button class="btn btn-icon" id="closeExcelReport"><i class="ti ti-x"></i></button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:.9rem">
-      <div class="fg" style="margin:0">
-        <label class="fl">Jenis Laporan</label>
-        <select class="fc" id="reportType">
-          <option value="summary">Summary per Jenis Event</option>
-          <option value="pic">Rekap per PIC</option>
-          <option value="detail">Detail Semua Event</option>
-          <option value="status">Rekap Status (Achieve/Pending/Not Achieve)</option>
-        </select>
-      </div>
-      <div class="frow" style="margin:0">
-        <div class="fg" style="margin:0"><label class="fl">Dari Tanggal</label><input type="date" class="fc" id="rptFrom"/></div>
-        <div class="fg" style="margin:0"><label class="fl">Sampai Tanggal</label><input type="date" class="fc" id="rptTo"/></div>
-      </div>
-      <div class="frow" style="margin:0">
-        <div class="fg" style="margin:0">
-          <label class="fl">Filter Jenis Event</label>
-          <select class="fc" id="rptFilterType"><option value="all">Semua Jenis</option></select>
-        </div>
-        <div class="fg" style="margin:0">
-          <label class="fl">Filter PIC</label>
-          <select class="fc" id="rptFilterPIC"><option value="all">Semua PIC</option></select>
-        </div>
-      </div>
-      <div class="range-preview" id="rptPreview">
-        <i class="ti ti-info-circle"></i>
-        <span id="rptPreviewText">Pilih jenis laporan dan rentang tanggal.</span>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn" id="cancelExcelReport">Batal</button>
-      <button class="btn btn-green" id="doReportBtn"><i class="ti ti-download"></i> Download Report</button>
     </div>
   </div>
 </div>
@@ -969,19 +1023,22 @@ async function fetchHolidaysForYear(year) {
 async function ensureHolidays(year, month) {
   const result = await fetchHolidaysForYear(year);
   if (result && Object.keys(result).length > 0) Object.assign(holidays, result);
+
+  /* Always merge custom holidays on top of API data */
   applyCustomHolidays();
 
-  /* Prefetch silently — NO renderCalendar() call to avoid infinite loop */
+  /* Prefetch tahun sebelum — selalu ada datanya */
   if (month === 0) {
     fetchHolidaysForYear(year - 1).then(x => {
       if (x && Object.keys(x).length > 0) Object.assign(holidays, x);
-      /* Only update the calendar cells background without full re-render */
+      /* intentionally no renderCalendar() — would cause infinite loop */
     });
   }
+  /* Prefetch tahun depan — hanya jika masih dalam jangkauan wajar */
   if (month === 11) {
-    const ny = year + 1;
-    if (ny <= new Date().getFullYear() + 1) {
-      fetchHolidaysForYear(ny).then(x => {
+    const nextYear = year + 1;
+    if (nextYear <= new Date().getFullYear() + 1) {
+      fetchHolidaysForYear(nextYear).then(x => {
         if (x && Object.keys(x).length > 0) Object.assign(holidays, x);
       });
     }
@@ -1076,8 +1133,9 @@ function getEventsForDate(ds){
 function picsLabel(ev){
   const p=ev.pics||[];
   if (!p.length) return ev.title;
-  if (p.length===1) return `${ev.title} · ${p[0]}`;
-  return `${ev.title} · ${p[0]} +${p.length-1}`;
+  /* PIC appears first per requirement */
+  const picStr=p.length===1?p[0]:`${p[0]} +${p.length-1}`;
+  return `${picStr} — ${ev.title}`;
 }
 
 /* ════════════════════════════════════════
@@ -1086,7 +1144,10 @@ function picsLabel(ev){
 async function renderCalendar() {
   const year=currentDate.getFullYear(), month=currentDate.getMonth();
   const todayStr=toStr(new Date());
-  document.getElementById('monthLabel').textContent=new Date(year,month,1).toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+  document.getElementById('jumpMonth').value = String(month);
+  document.getElementById('jumpYear').value  = String(year);
+  const MONTHS_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  document.getElementById('monthDisplayTitle').textContent = MONTHS_ID[month] + ' ' + year;
 
   const DAYS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
   document.getElementById('calHdr').innerHTML=DAYS.map((d,i)=>`<div class="dh${i===0?' sun':i===6?' sat':''}">${d}</div>`).join('');
@@ -1124,7 +1185,8 @@ async function renderCalendar() {
     const MAX=5; /* FIX #1 */
     let chipsHtml=evs.slice(0,MAX).map(e=>{
       const t=getTypeById(e.type);
-      return `<span class="chip" style="background:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${escHtml(picsLabel(e))}</span>`;
+      const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':'';
+      return `<span class="chip" style="background:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${checkIcon}${escHtml(picsLabel(e))}</span>`;
     }).join('');
     if(evs.length>MAX) chipsHtml+=`<span class="chip-more">+${evs.length-MAX} lainnya</span>`;
 
@@ -1194,9 +1256,11 @@ function renderPanel(ds) {
     const t=getTypeById(e.type);
     const pics=e.pics||[];
     const dl=e.dateEnd&&e.dateEnd!==e.dateStart?`${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}`:fmtDate(e.dateStart);
-    const sp=e.status?`<span class="status-pill s-${e.status}" style="font-size:.62rem">${SM[e.status]}</span>`:'';
-    /* FIX #3: catatan */
-    const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:11px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
+    const spIcon=e.status==='achieve'?'✓':e.status==='not_achieve'?'✗':'';
+    const spColor=e.status==='achieve'?'var(--s-achieve-tx)':e.status==='not_achieve'?'var(--s-not-tx)':'var(--s-pending-tx)';
+    const spBg=e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':'var(--s-pending-bg)';
+    const sp=e.status?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[e.status]}</span>`:'';
+    const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:10px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
     return `<div class="panel-event-item" data-id="${e.id}">
       <div class="pei-bar" style="background:${t.chip}"></div>
       <div class="pei-body">
@@ -1772,281 +1836,86 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
   });
   XLSX.utils.book_append_sheet(wb,ws2,'Detail Event');
 
+  /* ── SHEET 3: Rekap per PIC ── */
+  const allPICsForSheet = [...new Set(eventsToExport.flatMap(e=>e.pics||[]).filter(Boolean))].sort();
+  const picSummaryHdr = ['PIC','Jumlah Event','Achieve','Not Achieve','Pending','Jenis Event (ringkasan)'];
+  const picSummaryData = allPICsForSheet.map(pic => {
+    const pe = eventsToExport.filter(e=>(e.pics||[]).includes(pic));
+    const achieve = pe.filter(e=>e.status==='achieve').length;
+    const notA = pe.filter(e=>e.status==='not_achieve').length;
+    const pend = pe.filter(e=>e.status==='pending').length;
+    const types = [...new Set(pe.map(e=>getTypeById(e.type).label))].join(', ');
+    return [pic, pe.length, achieve, notA, pend, types];
+  });
+  const ws3 = XLSX.utils.aoa_to_sheet([picSummaryHdr, ...picSummaryData]);
+  ws3['!cols'] = [{wch:24},{wch:14},{wch:10},{wch:12},{wch:10},{wch:36}];
+  ws3['!rows'] = [{hpt:22},...picSummaryData.map(()=>({hpt:18}))];
+  picSummaryHdr.forEach((_,ci)=>{const a=XLSX.utils.encode_cell({r:0,c:ci});if(!ws3[a])ws3[a]={v:picSummaryHdr[ci],t:'s'};ws3[a].s={font:{bold:true,sz:10,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}};});
+  picSummaryData.forEach((row,ri)=>{
+    row.forEach((val,ci)=>{
+      const a=XLSX.utils.encode_cell({r:ri+1,c:ci});
+      ws3[a]={v:val??'',t:typeof val==='number'?'n':'s'};
+      ws3[a].s={font:{sz:9},fill:{fgColor:{rgb:ri%2===0?'FFFFFF':'F8FAFC'}},alignment:{horizontal:ci===0?'left':'center',vertical:'center'},border:{top:{style:'thin',color:{rgb:'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:'E5E7EB'}},right:{style:'thin',color:{rgb:'E5E7EB'}}}};
+    });
+  });
+  XLSX.utils.book_append_sheet(wb, ws3, 'Rekap per PIC');
+
+  /* ── SHEET 4: Rekap per Jenis Event ── */
+  const typeHdr = ['Jenis Event','Jumlah Event','Achieve','Not Achieve','Pending'];
+  const typeData = eventTypes.map(t => {
+    const te = eventsToExport.filter(e=>e.type===t.id);
+    const achieve = te.filter(e=>e.status==='achieve').length;
+    const notA = te.filter(e=>e.status==='not_achieve').length;
+    const pend = te.filter(e=>e.status==='pending').length;
+    return [t.label, te.length, achieve, notA, pend];
+  }).filter(r=>r[1]>0);
+  const ws4 = XLSX.utils.aoa_to_sheet([typeHdr, ...typeData]);
+  ws4['!cols'] = [{wch:24},{wch:14},{wch:10},{wch:12},{wch:10}];
+  ws4['!rows'] = [{hpt:22},...typeData.map(()=>({hpt:18}))];
+  typeHdr.forEach((_,ci)=>{const a=XLSX.utils.encode_cell({r:0,c:ci});if(!ws4[a])ws4[a]={v:typeHdr[ci],t:'s'};ws4[a].s={font:{bold:true,sz:10,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}};});
+  typeData.forEach((row,ri)=>{
+    const t = eventTypes.find(t=>t.label===row[0]);
+    const chipHex = t ? t.chip.replace('#','') : '888888';
+    row.forEach((val,ci)=>{
+      const a=XLSX.utils.encode_cell({r:ri+1,c:ci});
+      ws4[a]={v:val??'',t:typeof val==='number'?'n':'s'};
+      ws4[a].s={font:{sz:9,bold:ci===0,color:{rgb:ci===0?chipHex:'374151'}},fill:{fgColor:{rgb:ci===0?(t?t.lt.replace('#',''):'F8FAFC'):(ri%2===0?'FFFFFF':'F8FAFC')}},alignment:{horizontal:ci===0?'left':'center',vertical:'center'},border:{top:{style:'thin',color:{rgb:'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:'E5E7EB'}},right:{style:'thin',color:{rgb:'E5E7EB'}}}};
+    });
+  });
+  XLSX.utils.book_append_sheet(wb, ws4, 'Rekap per Jenis');
+
+  /* ── SHEET 5: Timeline per PIC ── */
+  const tlHdr = ['PIC','Judul Event','Jenis','Status','Catatan','Tgl Mulai','Tgl Selesai'];
+  const tlData = [];
+  allPICsForSheet.forEach(pic => {
+    const pe = eventsToExport.filter(e=>(e.pics||[]).includes(pic)).sort((a,b)=>a.dateStart.localeCompare(b.dateStart));
+    pe.forEach(e => {
+      tlData.push([pic, e.title, getTypeById(e.type).label, SM[e.status]||'', e.note||'', fmtDate(e.dateStart), fmtDate(e.dateEnd||e.dateStart)]);
+    });
+  });
+  const ws5 = XLSX.utils.aoa_to_sheet([tlHdr, ...tlData]);
+  ws5['!cols'] = [{wch:22},{wch:32},{wch:18},{wch:12},{wch:28},{wch:12},{wch:12}];
+  ws5['!rows'] = [{hpt:22},...tlData.map(()=>({hpt:18}))];
+  tlHdr.forEach((_,ci)=>{const a=XLSX.utils.encode_cell({r:0,c:ci});if(!ws5[a])ws5[a]={v:tlHdr[ci],t:'s'};ws5[a].s={font:{bold:true,sz:10,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}};});
+  let prevPic='';
+  tlData.forEach((row,ri)=>{
+    const isPicChange = row[0]!==prevPic;
+    prevPic=row[0];
+    row.forEach((val,ci)=>{
+      const a=XLSX.utils.encode_cell({r:ri+1,c:ci});
+      ws5[a]={v:val??'',t:'s'};
+      const baseFill = isPicChange&&ci===0?'EDE9FE':(ri%2===0?'FFFFFF':'F8FAFC');
+      ws5[a].s={font:{sz:9,bold:ci===0&&isPicChange,color:{rgb:ci===0&&isPicChange?'5B21B6':'374151'}},fill:{fgColor:{rgb:baseFill}},alignment:{horizontal:'left',vertical:'center'},border:{top:{style:isPicChange?'medium':'thin',color:{rgb:isPicChange?'8B5CF6':'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:'E5E7EB'}},right:{style:'thin',color:{rgb:'E5E7EB'}}}};
+    });
+  });
+  XLSX.utils.book_append_sheet(wb, ws5, 'Timeline per PIC');
+
   const safeName=rangeLabel.replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_');
   const fname=`Kalender${WORKSPACE!=='default'?'_'+WORKSPACE:''}_${safeName}.xlsx`;
   XLSX.writeFile(wb,fname);
-  showToast('✅ Excel berhasil didownload!');
+  showToast('✅ Excel (5 sheet) berhasil didownload!');
 }
 
-
-/* ════════════════════════════════════════
-   FIX 3 — JUMP TO MONTH/YEAR
-   ════════════════════════════════════════ */
-function initJumpPicker() {
-  const picker = document.getElementById('jumpPicker');
-  const label  = document.getElementById('monthLabel');
-  const selM   = document.getElementById('jumpMonth');
-  const selY   = document.getElementById('jumpYear');
-  const goBtn  = document.getElementById('jumpGoBtn');
-
-  /* Populate year range: 3 years back to 3 years forward */
-  const thisYear = new Date().getFullYear();
-  for (let y = thisYear - 5; y <= thisYear + 3; y++) {
-    const opt = document.createElement('option');
-    opt.value = y; opt.textContent = y;
-    selY.appendChild(opt);
-  }
-
-  function syncSelectors() {
-    selM.value = currentDate.getMonth();
-    selY.value = currentDate.getFullYear();
-    /* If year not in list, add it */
-    if (!selY.value) {
-      const opt = document.createElement('option');
-      opt.value = currentDate.getFullYear();
-      opt.textContent = currentDate.getFullYear();
-      selY.insertBefore(opt, selY.firstChild);
-      selY.value = currentDate.getFullYear();
-    }
-  }
-
-  label.addEventListener('click', e => {
-    e.stopPropagation();
-    syncSelectors();
-    picker.style.display = picker.style.display === 'none' ? 'block' : 'none';
-  });
-
-  goBtn.addEventListener('click', () => {
-    currentDate = new Date(parseInt(selY.value), parseInt(selM.value), 1);
-    picker.style.display = 'none';
-    renderCalendar();
-  });
-
-  /* Close picker when clicking outside */
-  document.addEventListener('click', e => {
-    if (!picker.contains(e.target) && e.target !== label) {
-      picker.style.display = 'none';
-    }
-  });
-
-  selM.addEventListener('keydown', e => { if(e.key==='Enter') goBtn.click(); });
-  selY.addEventListener('keydown', e => { if(e.key==='Enter') goBtn.click(); });
-}
-
-/* ════════════════════════════════════════
-   FIX 4 — REPORT EXCEL
-   ════════════════════════════════════════ */
-function openReportModal() {
-  /* Pre-fill current month range */
-  const y=currentDate.getFullYear(), m=currentDate.getMonth();
-  document.getElementById('rptFrom').value=`${y}-${String(m+1).padStart(2,'0')}-01`;
-  const ld=new Date(y,m+1,0).getDate();
-  document.getElementById('rptTo').value=`${y}-${String(m+1).padStart(2,'0')}-${String(ld).padStart(2,'0')}`;
-  document.getElementById('reportType').value='detail';
-  document.getElementById('rptFilterType').value='all';
-  document.getElementById('rptFilterPIC').value='all';
-
-  /* Populate filter dropdowns */
-  const tSel = document.getElementById('rptFilterType');
-  tSel.innerHTML='<option value="all">Semua Jenis</option>'+eventTypes.map(t=>`<option value="${t.id}">${escHtml(t.label)}</option>`).join('');
-  const pSel = document.getElementById('rptFilterPIC');
-  const allPICs=[...new Set(events.flatMap(e=>e.pics||[]).filter(Boolean))].sort();
-  pSel.innerHTML='<option value="all">Semua PIC</option>'+allPICs.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
-
-  updateRptPreview();
-  document.getElementById('excelReportOverlay').classList.add('open');
-}
-
-function updateRptPreview() {
-  const rtype = document.getElementById('reportType').value;
-  const from  = document.getElementById('rptFrom').value;
-  const to    = document.getElementById('rptTo').value;
-  const ftPIC = document.getElementById('rptFilterPIC').value;
-  const ftType= document.getElementById('rptFilterType').value;
-  const rptLabels = {summary:'Summary per Jenis', pic:'Rekap per PIC', detail:'Detail Semua Event', status:'Rekap Status'};
-  let txt = `Laporan: ${rptLabels[rtype]}`;
-  if (from && to) txt += ` | ${fmtDate(from)} – ${fmtDate(to)}`;
-  if (ftPIC  !== 'all') txt += ` | PIC: ${ftPIC}`;
-  if (ftType !== 'all') txt += ` | Jenis: ${eventTypes.find(t=>t.id===ftType)?.label||ftType}`;
-  document.getElementById('rptPreviewText').textContent = txt;
-}
-
-function getFilteredForReport() {
-  const from   = document.getElementById('rptFrom').value;
-  const to     = document.getElementById('rptTo').value;
-  const ftType = document.getElementById('rptFilterType').value;
-  const ftPIC  = document.getElementById('rptFilterPIC').value;
-  return events.filter(e => {
-    const es=e.dateStart, ee=e.dateEnd||e.dateStart;
-    if (from && to && !(es<=to && ee>=from)) return false;
-    if (ftType!=='all' && e.type!==ftType) return false;
-    if (ftPIC!=='all'  && !(e.pics||[]).includes(ftPIC)) return false;
-    return true;
-  }).sort((a,b)=>a.dateStart.localeCompare(b.dateStart));
-}
-
-function doReport() {
-  const rtype  = document.getElementById('reportType').value;
-  const evs    = getFilteredForReport();
-  const from   = document.getElementById('rptFrom').value;
-  const to     = document.getElementById('rptTo').value;
-  const ftPIC  = document.getElementById('rptFilterPIC').value;
-  const ftType = document.getElementById('rptFilterType').value;
-
-  if (!evs.length) { showToast('⚠️ Tidak ada event pada filter yang dipilih'); return; }
-
-  const SM = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'Pending'};
-  const sFill = {achieve:'D1FAE5', not_achieve:'FEE2E2', pending:'FEF9C3'};
-  const sTx   = {achieve:'166534', not_achieve:'991B1B', pending:'92400E'};
-  const wb = XLSX.utils.book_new();
-
-  /* ── Helper: style header row ── */
-  function styleHeader(ws, ncols, fillRgb='1C1917') {
-    for (let ci=0; ci<ncols; ci++) {
-      const addr = XLSX.utils.encode_cell({r:0,c:ci});
-      if (!ws[addr]) ws[addr]={v:'',t:'s'};
-      ws[addr].s={font:{bold:true,sz:10,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:fillRgb}},alignment:{horizontal:'center',vertical:'center'},border:{bottom:{style:'medium',color:{rgb:'64748B'}}}};
-    }
-  }
-  function cellStyle(rgb='FFFFFF', isEven=true, bold=false, color='374151') {
-    return {font:{sz:9,bold,color:{rgb:color}},fill:{fgColor:{rgb:isEven?rgb:'F8FAFC'}},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:{top:{style:'thin',color:{rgb:'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:'E5E7EB'}},right:{style:'thin',color:{rgb:'E5E7EB'}}}};
-  }
-  function makeTitle(ws, txt, ncols) {
-    /* Insert title row above header */
-    const data = ws['!data'] || [];
-    const addr = XLSX.utils.encode_cell({r:0,c:0});
-    ws[addr] = {v:txt, t:'s', s:{font:{bold:true,sz:13,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}}};
-    ws['!merges'] = (ws['!merges']||[]).concat([{s:{r:0,c:0},e:{r:0,c:ncols-1}}]);
-  }
-
-  /* ────────────────────────────────────────────
-     SHEET 1 — always: Detail Event
-  ──────────────────────────────────────────── */
-  const detHdr = ['No','Tanggal Mulai','Tanggal Selesai','Jenis Event','Judul / Nama Event','PIC','Status','Catatan'];
-  const detRows = evs.map((e,i) => [
-    i+1, fmtDate(e.dateStart), fmtDate(e.dateEnd||e.dateStart),
-    getTypeById(e.type).label, e.title,
-    (e.pics||[]).join(', '), SM[e.status]||'', e.note||''
-  ]);
-  const ws1 = XLSX.utils.aoa_to_sheet([detHdr,...detRows]);
-  ws1['!cols']=[{wch:4},{wch:12},{wch:12},{wch:18},{wch:34},{wch:26},{wch:12},{wch:32}];
-  ws1['!rows']=[{hpt:22},...detRows.map(()=>({hpt:18}))];
-  styleHeader(ws1, detHdr.length);
-  evs.forEach((e,ri) => {
-    const t=getTypeById(e.type); const chipHex=t.chip.replace('#',''); const ltHex=(t.lt||hexToLight(t.chip)).replace('#','');
-    const isEven=ri%2===0;
-    detHdr.forEach((_,ci) => {
-      const addr=XLSX.utils.encode_cell({r:ri+1,c:ci});
-      if (!ws1[addr]) ws1[addr]={v:detRows[ri][ci]??'',t:'s'};
-      ws1[addr].s = cellStyle(isEven?'FFFFFF':'F8FAFC',isEven);
-      if (ci===3){ws1[addr].s.font={sz:9,bold:true,color:{rgb:chipHex}};ws1[addr].s.fill={fgColor:{rgb:ltHex}};}
-      if (ci===6&&e.status&&sFill[e.status]){ws1[addr].s.fill={fgColor:{rgb:sFill[e.status]}};ws1[addr].s.font={sz:9,bold:true,color:{rgb:sTx[e.status]}};}
-    });
-  });
-  XLSX.utils.book_append_sheet(wb, ws1, 'Detail Event');
-
-  /* ────────────────────────────────────────────
-     SHEET 2 — Summary per Jenis
-  ──────────────────────────────────────────── */
-  const sumHdr = ['Jenis Event','Total Event','Achieve','Pending','Not Achieve','% Achieve'];
-  const sumMap = {};
-  eventTypes.forEach(t => { sumMap[t.id]={label:t.label,color:t.chip,total:0,achieve:0,pending:0,not:0}; });
-  evs.forEach(e => {
-    if (!sumMap[e.type]) sumMap[e.type]={label:getTypeById(e.type).label,color:getTypeById(e.type).chip,total:0,achieve:0,pending:0,not:0};
-    sumMap[e.type].total++;
-    if (e.status==='achieve')     sumMap[e.type].achieve++;
-    else if (e.status==='pending') sumMap[e.type].pending++;
-    else if (e.status==='not_achieve') sumMap[e.type].not++;
-  });
-  const sumRows = Object.values(sumMap).filter(r=>r.total>0).map(r=>[
-    r.label, r.total, r.achieve, r.pending, r.not,
-    r.total>0?Math.round(r.achieve/r.total*100)+'%':'–'
-  ]);
-  const ws2 = XLSX.utils.aoa_to_sheet([sumHdr,...sumRows]);
-  ws2['!cols']=[{wch:20},{wch:12},{wch:10},{wch:10},{wch:12},{wch:10}];
-  ws2['!rows']=[{hpt:22},...sumRows.map(()=>({hpt:18}))];
-  styleHeader(ws2, sumHdr.length, '1D4ED8');
-  Object.values(sumMap).filter(r=>r.total>0).forEach((r,ri) => {
-    const chipHex=r.color.replace('#','');
-    sumHdr.forEach((_,ci) => {
-      const addr=XLSX.utils.encode_cell({r:ri+1,c:ci});
-      if (!ws2[addr]) ws2[addr]={v:sumRows[ri][ci]??'',t:'s'};
-      ws2[addr].s=cellStyle(ri%2===0?'FFFFFF':'F8FAFC',ri%2===0);
-      if (ci===0){ws2[addr].s.font={sz:9,bold:true,color:{rgb:chipHex}};}
-      if (ci===2){ws2[addr].s.fill={fgColor:{rgb:'D1FAE5'}};ws2[addr].s.font={sz:9,bold:true,color:{rgb:'166534'}};}
-      if (ci===4){ws2[addr].s.fill={fgColor:{rgb:'FEE2E2'}};ws2[addr].s.font={sz:9,bold:true,color:{rgb:'991B1B'}};}
-    });
-  });
-  XLSX.utils.book_append_sheet(wb, ws2, 'Summary Jenis');
-
-  /* ────────────────────────────────────────────
-     SHEET 3 — Rekap per PIC
-  ──────────────────────────────────────────── */
-  const picHdr = ['Nama PIC','Total Event','Achieve','Pending','Not Achieve','% Achieve','Jenis Event Terlibat'];
-  const picMap = {};
-  evs.forEach(e => {
-    (e.pics||[]).forEach(pic => {
-      if (!picMap[pic]) picMap[pic]={total:0,achieve:0,pending:0,not:0,types:new Set()};
-      picMap[pic].total++;
-      if (e.status==='achieve')        picMap[pic].achieve++;
-      else if (e.status==='pending')    picMap[pic].pending++;
-      else if (e.status==='not_achieve')picMap[pic].not++;
-      picMap[pic].types.add(getTypeById(e.type).label);
-    });
-  });
-  const picRows = Object.entries(picMap).sort((a,b)=>b[1].total-a[1].total).map(([pic,r])=>[
-    pic, r.total, r.achieve, r.pending, r.not,
-    r.total>0?Math.round(r.achieve/r.total*100)+'%':'–',
-    [...r.types].join(', ')
-  ]);
-  const ws3 = XLSX.utils.aoa_to_sheet([picHdr,...picRows]);
-  ws3['!cols']=[{wch:22},{wch:12},{wch:10},{wch:10},{wch:12},{wch:10},{wch:30}];
-  ws3['!rows']=[{hpt:22},...picRows.map(()=>({hpt:18}))];
-  styleHeader(ws3, picHdr.length, '7C3AED');
-  picRows.forEach((row,ri) => {
-    picHdr.forEach((_,ci) => {
-      const addr=XLSX.utils.encode_cell({r:ri+1,c:ci});
-      if (!ws3[addr]) ws3[addr]={v:row[ci]??'',t:'s'};
-      ws3[addr].s=cellStyle(ri%2===0?'FFFFFF':'F8FAFC',ri%2===0);
-      if (ci===0){ws3[addr].s.font={sz:9,bold:true,color:{rgb:'1C1917'}};}
-      if (ci===2){ws3[addr].s.fill={fgColor:{rgb:'D1FAE5'}};ws3[addr].s.font={sz:9,bold:true,color:{rgb:'166534'}};}
-      if (ci===4){ws3[addr].s.fill={fgColor:{rgb:'FEE2E2'}};ws3[addr].s.font={sz:9,bold:true,color:{rgb:'991B1B'}};}
-    });
-  });
-  XLSX.utils.book_append_sheet(wb, ws3, 'Rekap PIC');
-
-  /* ────────────────────────────────────────────
-     SHEET 4 — Rekap Status
-  ──────────────────────────────────────────── */
-  const statHdr = ['Status','Total','Persentase','Event-event'];
-  const statMap = {achieve:{label:'Achieve',fill:'D1FAE5',tx:'166534',evs:[]}, pending:{label:'Pending',fill:'FEF9C3',tx:'92400E',evs:[]}, not_achieve:{label:'Not Achieve',fill:'FEE2E2',tx:'991B1B',evs:[]}};
-  evs.forEach(e => { if (statMap[e.status]) statMap[e.status].evs.push(e.title+(e.pics?.length?' ('+e.pics[0]+')':'')); });
-  const total = evs.length;
-  const statRows = Object.entries(statMap).map(([k,v])=>[
-    v.label, v.evs.length,
-    total>0?Math.round(v.evs.length/total*100)+'%':'0%',
-    v.evs.join('; ')
-  ]);
-  const ws4 = XLSX.utils.aoa_to_sheet([statHdr,...statRows]);
-  ws4['!cols']=[{wch:16},{wch:8},{wch:12},{wch:60}];
-  ws4['!rows']=[{hpt:22},...statRows.map(()=>({hpt:22}))];
-  styleHeader(ws4, statHdr.length, '374151');
-  Object.entries(statMap).forEach(([k,v],ri) => {
-    statHdr.forEach((_,ci) => {
-      const addr=XLSX.utils.encode_cell({r:ri+1,c:ci});
-      if (!ws4[addr]) ws4[addr]={v:statRows[ri][ci]??'',t:'s'};
-      ws4[addr].s={font:{sz:9,bold:ci<2,color:{rgb:v.tx}},fill:{fgColor:{rgb:v.fill}},alignment:{horizontal:ci<2?'center':'left',vertical:'center',wrapText:ci===3},border:{top:{style:'thin',color:{rgb:'E5E7EB'}},bottom:{style:'thin',color:{rgb:'E5E7EB'}},left:{style:'thin',color:{rgb:'E5E7EB'}},right:{style:'thin',color:{rgb:'E5E7EB'}}}};
-    });
-  });
-  XLSX.utils.book_append_sheet(wb, ws4, 'Rekap Status');
-
-  /* Download */
-  const rangeLabel=from&&to?`${from.slice(0,7)}_to_${to.slice(0,7)}`:'all';
-  const fname=`Report${WORKSPACE!=='default'?'_'+WORKSPACE:''}_${rangeLabel}.xlsx`;
-  XLSX.writeFile(wb, fname);
-  showToast('✅ Report Excel berhasil didownload!');
-  document.getElementById('excelReportOverlay').classList.remove('open');
-}
 
 /* ════════════════════════════════════════
    GLOBAL LISTENERS
@@ -2054,16 +1923,6 @@ function doReport() {
 document.getElementById('addEventBtn').addEventListener('click',()=>{if(!canWrite){showToast('⚠️ Silakan masuk untuk menambah event');return;}openAdd();});
 document.getElementById('manageTypesBtn').addEventListener('click',()=>{if(!canWrite){showToast('⚠️ Hanya editor yang dapat mengelola jenis event');return;}openTypeManager();});
 document.getElementById('exportExcelBtn').addEventListener('click',exportExcel);
-document.getElementById('exportReportBtn').addEventListener('click',openReportModal);
-document.getElementById('reportType').addEventListener('change',updateRptPreview);
-document.getElementById('rptFrom').addEventListener('change',updateRptPreview);
-document.getElementById('rptTo').addEventListener('change',updateRptPreview);
-document.getElementById('rptFilterType').addEventListener('change',updateRptPreview);
-document.getElementById('rptFilterPIC').addEventListener('change',updateRptPreview);
-document.getElementById('doReportBtn').addEventListener('click',doReport);
-document.getElementById('cancelExcelReport').addEventListener('click',()=>document.getElementById('excelReportOverlay').classList.remove('open'));
-document.getElementById('closeExcelReport').addEventListener('click',()=>document.getElementById('excelReportOverlay').classList.remove('open'));
-document.getElementById('excelReportOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('excelReportOverlay'))document.getElementById('excelReportOverlay').classList.remove('open');});
 // Excel range modal
 document.getElementById('excelMode').addEventListener('change',updateExcelPreview);
 document.getElementById('excelFrom').addEventListener('change',updateExcelPreview);
@@ -2175,6 +2034,40 @@ document.getElementById('newTypeColor').addEventListener('input',e=>{
   document.getElementById('newTypeColorSwatch').style.background=e.target.value;
 });
 
+/* ── JUMP NAV ── */
+document.getElementById('jumpMonth').addEventListener('change', () => {
+  const m = parseInt(document.getElementById('jumpMonth').value);
+  currentDate.setMonth(m);
+  renderCalendar();
+});
+document.getElementById('jumpYear').addEventListener('change', () => {
+  const y = parseInt(document.getElementById('jumpYear').value);
+  if (!isNaN(y) && y >= 1900 && y <= 2200) {
+    currentDate.setFullYear(y);
+    renderCalendar();
+  }
+});
+document.getElementById('jumpYear').addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const y = parseInt(e.target.value);
+    if (!isNaN(y) && y >= 1900 && y <= 2200) {
+      currentDate.setFullYear(y);
+      renderCalendar();
+    }
+  }
+});
+
+/* ── DARK MODE ── */
+(function(){
+  const btn = document.getElementById('darkModeBtn');
+  const saved = localStorage.getItem('cal_darkmode');
+  if (saved === '1') document.body.classList.add('dark');
+  if (btn) btn.addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('cal_darkmode', document.body.classList.contains('dark') ? '1' : '0');
+  });
+})();
+
 /* ════════════════════════════════════════
    BOOT — skip login, go straight to app
    ════════════════════════════════════════ */
@@ -2215,7 +2108,6 @@ if (useFirebase && auth) {
 /* Setup autocomplete after DOM is ready */
 setupTitleAutocomplete();
 setupPicAutocomplete();
-initJumpPicker();
 </script>
 </body>
 </html>
