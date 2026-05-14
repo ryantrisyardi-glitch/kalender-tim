@@ -34,7 +34,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .page{max-width:1300px;margin:0 auto;padding:1.75rem 1.5rem 4rem;display:flex;flex-direction:column}
 .main-row{display:flex;gap:16px;align-items:flex-start}
 .cal-col{flex:1;min-width:0}
-.panel-col{width:var(--panel-w);flex-shrink:0;position:sticky;top:1.5rem}
+.panel-col{width:var(--panel-w);flex-shrink:0;position:sticky;top:1rem;max-height:calc(100vh - 2rem);overflow:visible}
 
 /* ── HEADER ── */
 .site-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.6rem;flex-wrap:wrap;gap:12px}
@@ -88,7 +88,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .dc.is-cutib{background:var(--cutib-bg)}.dc.is-cutib::before{background:var(--cutib-side);opacity:1}.dc.is-cutib .day-num{color:var(--cutib-num)!important;font-weight:800}
 .dc.other{opacity:.25;pointer-events:none}
 .dc.today{outline:2px solid #3B82F6;outline-offset:-2px}
-.dc.today .day-num{background:var(--ink)!important;color:#fff!important;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800}
+.dc.today .day-num{background:#3B82F6!important;color:#fff!important;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800}
 .dc.selected{outline:2px solid var(--ink);outline-offset:-2px}
 
 .day-num{font-size:.92rem;font-weight:800;color:#57534E;margin-bottom:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;transition:background .12s,color .12s;flex-shrink:0;z-index:2;position:relative}
@@ -102,12 +102,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .chip-more{font-size:.58rem;color:var(--ink-lt);padding:0 4px;display:block;cursor:pointer;line-height:1.6}
 
 /* ── RIGHT PANEL ── */
-.day-panel{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.06)}
-.panel-head{padding:14px 16px 12px;border-bottom:1.5px solid var(--rule);display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.day-panel{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.06);display:flex;flex-direction:column;max-height:calc(100vh - 2rem)}
+.panel-head{padding:11px 14px 10px;border-bottom:1.5px solid var(--rule);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-shrink:0}
 .panel-date-label{font-size:.95rem;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
 .panel-day-name{font-size:.72rem;font-weight:600;color:var(--ink-lt);margin-top:1px;letter-spacing:.02em}
 .panel-hol-badge{font-size:.64rem;font-weight:700;padding:3px 8px;border-radius:100px;margin-top:4px;display:inline-block}
-.panel-body{padding:12px 14px;max-height:calc(100vh - 200px);overflow-y:auto}
+.panel-body{padding:10px 12px;flex:1;overflow-y:auto;min-height:0}
 .panel-empty{text-align:center;padding:2rem 1rem;color:var(--ink-lt);font-size:.82rem}
 .panel-empty i{font-size:28px;display:block;margin-bottom:8px;opacity:.4}
 /* panel-event-item redefined in additions section */
@@ -331,11 +331,11 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
 
 /* ── MONTH TITLE ── */
 .month-display-title{
-  font-family:'Playfair Display',serif;
+  font-family:'Plus Jakarta Sans',sans-serif;
   font-size:2.4rem;
-  font-weight:700;
+  font-weight:800;
   color:var(--ink);
-  letter-spacing:-.02em;
+  letter-spacing:-.04em;
   line-height:1;
   margin-bottom:.25rem;
 }
@@ -346,14 +346,26 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
   letter-spacing:.05em;
   text-transform:uppercase;
 }
-.month-title-row{margin-bottom:1rem}
+.month-title-row{margin-bottom:0;display:none}
 
 /* ── PRINT STYLES ── */
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   body{background:#fff!important}
-  body.dark{--bg:#fff;--surface:#fff;--ink:#000;--ink-md:#333;--ink-lt:#666;--rule:#ccc;--bg-dk:#f5f5f5}
-  .hdr-right,.control-bar,.filter-group,.legend-bar,.list-section,.panel-col,.toast,.overlay{display:none!important}
+  body,body.dark{
+    --bg:#fff!important;--bg-dk:#f5f5f5!important;--surface:#fff!important;
+    --ink:#111!important;--ink-md:#333!important;--ink-lt:#666!important;--rule:#ccc!important;
+    --libnas-bg:#FEF2F2!important;--libnas-side:#FCA5A5!important;--libnas-num:#DC2626!important;--libnas-name:#B91C1C!important;
+    --cutib-bg:#FFF7ED!important;--cutib-side:#FBD38D!important;--cutib-num:#D97706!important;--cutib-name:#B45309!important;
+    --sun-bg:#FFF5F5!important;--sun-num:#DC2626!important;
+    --sat-bg:#EFF6FF!important;--sat-num:#1D4ED8!important;
+  }
+  .dh{color:#57534E!important}
+  .dh.sun{color:#DC2626!important}
+  .dh.sat{color:#1D4ED8!important}
+  .day-num{color:#57534E!important}
+  .dc.today .day-num{background:#3B82F6!important;color:#fff!important}
+  .hdr-right,.filter-group,.legend-bar,.list-section,.panel-col,.toast,.overlay{display:none!important}
   .page{padding:.5rem!important;max-width:100%!important}
   .main-row{display:block!important}
   .cal-col{width:100%!important}
@@ -361,8 +373,11 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
   .dc{min-height:100px!important;page-break-inside:avoid}
   .chip{font-size:.6rem!important;padding:2px 5px!important}
   .month-display-title{font-size:2rem!important;margin-bottom:.1rem!important}
-  .site-header{margin-bottom:.5rem!important}
+  .month-title-row{display:block!important;margin-bottom:.5rem!important}
+  .month-display-title{font-size:2rem!important}
+  .site-header{margin-bottom:.25rem!important}
   .brand-sub{display:none}
+  .control-bar{display:none!important}
 }
 
 @media(max-width:900px){
@@ -380,6 +395,10 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
 </style>
 </head>
 <body>
+<script>
+// Apply saved dark mode immediately to avoid flash of wrong theme
+(function(){try{if(localStorage.getItem('cal_darkmode')==='1')document.body.classList.add('dark');}catch(e){}}());
+</script>
 
 <div class="page" id="mainApp">
 
@@ -417,7 +436,7 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
     <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
     <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
     <button class="btn" id="printBtn" title="Print Kalender" onclick="window.print()"><i class="ti ti-printer"></i></button>
-    <button class="btn" id="darkModeBtn" title="Dark Mode"><i class="ti ti-moon"></i></button>
+    <button class="btn" id="darkModeBtn" title="Dark Mode / Light Mode"><i class="ti ti-moon"></i></button>
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
     <button class="btn btn-primary write-only" id="addEventBtn"><i class="ti ti-plus"></i> Tambah Event</button>
   </div>
@@ -2058,15 +2077,11 @@ document.getElementById('jumpYear').addEventListener('keydown', e => {
 });
 
 /* ── DARK MODE ── */
-(function(){
-  const btn = document.getElementById('darkModeBtn');
-  const saved = localStorage.getItem('cal_darkmode');
-  if (saved === '1') document.body.classList.add('dark');
-  if (btn) btn.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    localStorage.setItem('cal_darkmode', document.body.classList.contains('dark') ? '1' : '0');
-  });
-})();
+// Dark mode already applied at page load via inline script above (no flash)
+document.getElementById('darkModeBtn').addEventListener('click', () => {
+  document.body.classList.toggle('dark');
+  localStorage.setItem('cal_darkmode', document.body.classList.contains('dark') ? '1' : '0');
+});
 
 /* ════════════════════════════════════════
    BOOT — skip login, go straight to app
