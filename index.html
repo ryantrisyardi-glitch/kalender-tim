@@ -104,9 +104,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 
 /* ── CHIPS: compact, max 5 ── */
 /* .chip defined in additions below */
-.chip:hover{opacity:.75}
-.chip-more{font-size:.58rem;color:var(--ink-lt);padding:2px 8px;display:block;cursor:pointer;line-height:1.6;border-left:3px solid transparent;position:relative}
-.chip-more::before{content:'';display:block;border-top:1.5px dashed var(--rule);margin:0 -7px 0 -8px;opacity:.6}
+.chip:hover{opacity:.8}
+
 
 /* ── RIGHT PANEL ── */
 .day-panel{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.06);display:flex;flex-direction:column;max-height:calc(100vh - 2rem)}
@@ -273,11 +272,12 @@ body.read-only .readonly-badge{display:inline-flex}
 .jump-year::-webkit-outer-spin-button,.jump-year::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .jump-year:focus{border-color:var(--ink-md)}
 
-/* ── CHIP with full text wrap (not ellipsis) ── */
-.chip{display:block;font-size:.68rem;font-weight:600;padding:3px 7px 3px 8px;margin-bottom:0;white-space:normal;word-break:break-word;overflow:visible;cursor:pointer;line-height:1.5;transition:opacity .12s;border-left:3px solid transparent;position:relative}
-.chip:hover{opacity:.75}
-/* Separator between events: dashed line */
-.chip+.chip::before,.chip-more+.chip::before{content:'';display:block;border-top:1.5px dashed var(--rule);margin:0 -7px 0 -8px;opacity:.6}
+/* ── CHIP: background berwarna, font putih, separator garis putus ── */
+.chip{display:block;font-size:.68rem;font-weight:600;padding:3px 7px;margin-bottom:0;white-space:normal;word-break:break-word;overflow:visible;cursor:pointer;color:#fff;line-height:1.5;transition:opacity .12s;position:relative}
+.chip:hover{opacity:.8}
+/* Separator antara event: garis putus-putus */
+.chip+.chip{border-top:1.5px dashed rgba(255,255,255,.3)}
+.chip-more{font-size:.58rem;color:var(--ink-lt);padding:2px 7px;display:block;cursor:pointer;line-height:1.6;border-top:1.5px dashed var(--rule)}
 
 /* ── STATUS CHECK ICON on chip ── */
 .chip-check{display:inline-block;margin-left:3px;opacity:.85}
@@ -382,6 +382,8 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
   .day-num{color:#57534E!important}
   .dc.today .day-num{background:#3B82F6!important;color:#fff!important}
   .hdr-right,.filter-group,.legend-bar,.list-section,.panel-col,.toast,.overlay{display:none!important}
+  #reportView{display:none!important}
+  .tab-nav{display:none!important}
   .page{padding:.5rem!important;max-width:100%!important}
   .main-row{display:block!important}
   .cal-col{width:100%!important}
@@ -397,7 +399,68 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
   .control-bar{display:none!important}
 }
 
-@media(max-width:900px){
+/* ══ TAB NAVIGATION ══ */
+.tab-nav{display:flex;gap:4px;margin-bottom:1rem;border-bottom:2px solid var(--rule);padding-bottom:0}
+.tab-btn{font-family:var(--font);font-size:.82rem;font-weight:700;padding:9px 16px;border:none;background:none;color:var(--ink-lt);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;display:inline-flex;align-items:center;gap:6px;border-radius:var(--r-md) var(--r-md) 0 0;transition:color .14s,background .14s}
+.tab-btn:hover{color:var(--ink);background:var(--bg-dk)}
+.tab-btn.active{color:var(--ink);border-bottom-color:var(--ink);background:var(--surface)}
+
+/* ══ REPORT VIEW ══ */
+.rpt-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.2rem}
+.rpt-filter-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rpt-range-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rpt-table-wrap{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.05)}
+.rpt-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.rpt-table th{text-align:left;padding:11px 14px;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);background:var(--bg-dk);border-bottom:1.5px solid var(--rule);white-space:nowrap}
+.rpt-month-hdr td{background:#1C1917;color:#fff;font-size:.78rem;font-weight:800;padding:9px 16px;letter-spacing:.04em}
+body.dark .rpt-month-hdr td{background:#F0ECE6;color:#1C1917}
+.rpt-row{border-bottom:1px solid var(--rule);transition:background .12s;cursor:pointer}
+.rpt-row:last-child{border-bottom:none}
+.rpt-row:hover{background:var(--bg-dk)}
+.rpt-row td{padding:10px 14px;vertical-align:middle}
+.rpt-date{font-size:.8rem;font-weight:700;color:var(--ink-md);white-space:nowrap;min-width:110px}
+.rpt-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;flex-shrink:0;vertical-align:middle;margin-top:-1px}
+.rpt-type-pill{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:100px;white-space:nowrap}
+.rpt-status{display:inline-block;font-size:.66rem;font-weight:700;padding:3px 9px;border-radius:100px;white-space:nowrap}
+.rpt-title{font-size:.86rem;font-weight:700;color:var(--ink);line-height:1.3}
+.rpt-pic-list{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.rpt-pic-badge{font-size:.63rem;font-weight:700;padding:1px 7px;border-radius:100px;background:var(--bg-dk);color:var(--ink-md);border:1px solid var(--rule)}
+.rpt-note{font-size:.74rem;color:var(--ink-md);line-height:1.4;max-width:320px}
+.rpt-empty{text-align:center;padding:3rem;color:var(--ink-lt);font-size:.84rem}
+.rpt-empty i{font-size:32px;display:block;margin-bottom:10px;opacity:.35}
+
+/* Print-only title */
+.rpt-print-title{display:none}
+@media print{
+  .rpt-print-title{display:block;margin-bottom:1rem}
+  .rpt-print-title h2{font-size:1.3rem;font-weight:800;color:#1C1917}
+  .rpt-print-title p{font-size:.78rem;color:#666;margin-top:3px}
+  body.print-report .tab-nav,
+  body.print-report .rpt-controls,
+  body.print-report .hdr-right,
+  body.print-report .legend-bar,
+  body.print-report .list-section,
+  body.print-report .panel-col,
+  body.print-report .toast,
+  body.print-report .overlay,
+  body.print-report .control-bar,
+  body.print-report .main-row{display:none!important}
+  body.print-report #reportView{display:block!important}
+  body.print-report .rpt-print-title{display:block!important}
+  .rpt-table-wrap{box-shadow:none;border:1px solid #ccc}
+  .rpt-table th{background:#f0f0f0!important;color:#333!important}
+  .rpt-row:hover{background:none}
+  .rpt-type-pill{border:1px solid #ccc!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .rpt-status{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+
+body.dark .tab-btn.active{background:var(--surface);border-bottom-color:var(--ink-lt)}
+body.dark .rpt-table-wrap{background:var(--surface);border-color:var(--rule)}
+body.dark .rpt-table th{background:var(--bg-dk);color:var(--ink-lt);border-color:var(--rule)}
+body.dark .rpt-row{border-color:var(--rule)}
+body.dark .rpt-row:hover{background:var(--bg-dk)}
+body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:var(--ink-md)}
+
   .main-row{flex-direction:column}
   .panel-col{width:100%;position:static}
   .panel-col .day-panel{max-height:280px}
@@ -464,6 +527,12 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
   <div class="month-display-title" id="monthDisplayTitle">–</div>
 </div>
 
+<!-- TAB NAVIGATION -->
+<div class="tab-nav" id="tabNav">
+  <button class="tab-btn active" id="tabCalBtn" onclick="switchTab('calendar')"><i class="ti ti-calendar-month"></i> Kalender</button>
+  <button class="tab-btn" id="tabReportBtn" onclick="switchTab('report')"><i class="ti ti-list-details"></i> Timeline Report</button>
+</div>
+
 <!-- CONTROL BAR -->
 <div class="control-bar">
   <div class="month-nav">
@@ -520,7 +589,41 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
   </div>
 </div>
 
-</div><!-- /mainApp -->
+</div><!-- /main-row -->
+
+<!-- ══ TIMELINE REPORT VIEW ══ -->
+<div id="reportView" style="display:none">
+  <!-- Report Controls -->
+  <div class="rpt-controls">
+    <div class="rpt-filter-group">
+      <span class="filter-sep">Filter</span>
+      <select class="filter-select" id="rptFilterType"><option value="all">Semua Jenis</option></select>
+      <select class="filter-select" id="rptFilterPIC"><option value="all">Semua PIC</option></select>
+      <select class="filter-select" id="rptFilterStatus">
+        <option value="all">Semua Status</option>
+        <option value="achieve">Achieve</option>
+        <option value="not_achieve">Not Achieve</option>
+        <option value="pending">In Process</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="rpt-range-wrap">
+        <label class="filter-sep">Dari</label>
+        <input type="month" class="jump-year" id="rptFrom" style="width:140px;padding:6px 8px" />
+        <label class="filter-sep">s/d</label>
+        <input type="month" class="jump-year" id="rptTo" style="width:140px;padding:6px 8px" />
+      </div>
+      <button class="btn btn-green" id="rptExportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
+      <button class="btn" id="rptPrintBtn"><i class="ti ti-printer"></i> Print PDF</button>
+    </div>
+  </div>
+  <!-- Report Title (for print) -->
+  <div class="rpt-print-title" id="rptPrintTitle"></div>
+  <!-- Report Table -->
+  <div class="rpt-table-wrap" id="rptTableWrap">
+    <div style="text-align:center;padding:3rem;color:var(--ink-lt)"><i class="ti ti-loader" style="font-size:24px"></i><br>Memuat data...</div>
+  </div>
+</div>
 
 <!-- ══ HOLIDAY MANAGER MODAL ══ -->
 <div class="overlay" id="holidayManagerOverlay">
@@ -596,7 +699,7 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
     <div class="fg">
       <label class="fl">Status</label>
       <select class="fc" id="fStatus">
-        <option value="pending">Pending</option>
+        <option value="pending">In Process</option>
         <option value="achieve">Achieve</option>
         <option value="not_achieve">Not Achieve</option>
       </select>
@@ -1223,7 +1326,7 @@ async function renderCalendar() {
     let chipsHtml=evs.slice(0,MAX).map(e=>{
       const t=getTypeById(e.type);
       const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':'';
-      return `<span class="chip" style="border-left-color:${t.chip};color:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${checkIcon}${escHtml(picsLabel(e))}</span>`;
+      return `<span class="chip" style="background:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${checkIcon}${escHtml(picsLabel(e))}</span>`;
     }).join('');
     if(evs.length>MAX) chipsHtml+=`<span class="chip-more">+${evs.length-MAX} lainnya</span>`;
 
@@ -1256,6 +1359,12 @@ async function renderCalendar() {
   });
 
   renderEventList(year,month);
+
+  // Refresh report view jika sedang aktif
+  if (typeof activeTab !== 'undefined' && activeTab === 'report') {
+    rebuildReportFilters();
+    renderReport();
+  }
 }
 
 /* ════════════════════════════════════════
@@ -1291,7 +1400,7 @@ function renderPanel(ds) {
   const body=document.getElementById('panelBody');
   if(!evs.length){body.innerHTML=`<div class="panel-empty"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`;return;}
 
-  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process'};
   body.innerHTML=evs.map(e=>{
     const t=getTypeById(e.type);
     const pics=e.pics||[];
@@ -1332,7 +1441,7 @@ function renderEventList(year,month) {
   const grid=document.getElementById('eventGrid');
   if(!filtered.length){grid.innerHTML=`<p style="color:var(--ink-lt);font-size:.82rem;grid-column:1/-1">Tidak ada event bulan ini.</p>`;return;}
 
-  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process'};
   grid.innerHTML=filtered.map(e=>{
     const t=getTypeById(e.type), pics=e.pics||[];
     const dl=e.dateEnd?`${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}`:fmtDate(e.dateStart);
@@ -1477,7 +1586,7 @@ function openDetail(id) {
   viewingId=id;
   const t=getTypeById(ev.type);
   const dl=ev.dateEnd?`${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`:fmtDate(ev.dateStart);
-  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process'};
   const sp=ev.status?`<span class="status-pill s-${ev.status}">${SM[ev.status]}</span>`:'';
   const pics=ev.pics||[];
   const lt=t.lt||hexToLight(t.chip);
@@ -1782,7 +1891,7 @@ function doExport() {
 }
 
 function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
-  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'Pending'};
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process'};
   const sFill={achieve:'D1FAE5',not_achieve:'FEE2E2',pending:'FEF9C3'};
   const sTx  ={achieve:'166534',not_achieve:'991B1B',pending:'92400E'};
 
@@ -1878,7 +1987,7 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
 
   /* ── SHEET 3: Rekap per PIC ── */
   const allPICsForSheet = [...new Set(eventsToExport.flatMap(e=>e.pics||[]).filter(Boolean))].sort();
-  const picSummaryHdr = ['PIC','Jumlah Event','Achieve','Not Achieve','Pending','Jenis Event (ringkasan)'];
+  const picSummaryHdr = ['PIC','Jumlah Event','Achieve','Not Achieve','In Process','Jenis Event (ringkasan)'];
   const picSummaryData = allPICsForSheet.map(pic => {
     const pe = eventsToExport.filter(e=>(e.pics||[]).includes(pic));
     const achieve = pe.filter(e=>e.status==='achieve').length;
@@ -1901,7 +2010,7 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
   XLSX.utils.book_append_sheet(wb, ws3, 'Rekap per PIC');
 
   /* ── SHEET 4: Rekap per Jenis Event ── */
-  const typeHdr = ['Jenis Event','Jumlah Event','Achieve','Not Achieve','Pending'];
+  const typeHdr = ['Jenis Event','Jumlah Event','Achieve','Not Achieve','In Process'];
   const typeData = eventTypes.map(t => {
     const te = eventsToExport.filter(e=>e.type===t.id);
     const achieve = te.filter(e=>e.status==='achieve').length;
@@ -2155,6 +2264,231 @@ if (useFirebase && auth) {
 /* Setup autocomplete after DOM is ready */
 setupTitleAutocomplete();
 setupPicAutocomplete();
+initReportRange();
+
+/* ════════════════════════════════════════
+   TAB SWITCHING
+   ════════════════════════════════════════ */
+let activeTab = 'calendar';
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.getElementById('tabCalBtn').classList.toggle('active', tab==='calendar');
+  document.getElementById('tabReportBtn').classList.toggle('active', tab==='report');
+
+  const calViews = [
+    document.querySelector('.control-bar'),
+    document.getElementById('legendBar'),
+    document.querySelector('.main-row'),
+  ];
+  const reportView = document.getElementById('reportView');
+
+  if (tab === 'calendar') {
+    calViews.forEach(el => { if(el) el.style.display = ''; });
+    reportView.style.display = 'none';
+  } else {
+    calViews.forEach(el => { if(el) el.style.display = 'none'; });
+    reportView.style.display = 'block';
+    rebuildReportFilters();
+    renderReport();
+  }
+}
+
+/* ════════════════════════════════════════
+   TIMELINE REPORT
+   ════════════════════════════════════════ */
+
+/* Set default range: first event month → last event month (max 12 mo) */
+function initReportRange() {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth()+1;
+  const pad = n => String(n).padStart(2,'0');
+  // Default: current month
+  const fromVal = `${y}-${pad(m)}`;
+  // To: 2 months ahead
+  const toDate = new Date(y, now.getMonth()+2, 1);
+  const toVal = `${toDate.getFullYear()}-${pad(toDate.getMonth()+1)}`;
+  document.getElementById('rptFrom').value = fromVal;
+  document.getElementById('rptTo').value   = toVal;
+}
+
+function rebuildReportFilters() {
+  // Type filter
+  const tSel = document.getElementById('rptFilterType');
+  const tCur = tSel.value;
+  tSel.innerHTML = '<option value="all">Semua Jenis</option>' +
+    eventTypes.map(t=>`<option value="${t.id}">${escHtml(t.label)}</option>`).join('');
+  if (eventTypes.find(t=>t.id===tCur)) tSel.value = tCur;
+
+  // PIC filter
+  const pSel = document.getElementById('rptFilterPIC');
+  const pCur = pSel.value;
+  const allPICs = [...new Set(events.flatMap(e=>e.pics||[]).filter(Boolean))].sort();
+  pSel.innerHTML = '<option value="all">Semua PIC</option>' +
+    allPICs.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
+  if (allPICs.includes(pCur)) pSel.value = pCur;
+
+  // Init range if empty
+  if (!document.getElementById('rptFrom').value) initReportRange();
+}
+
+function getReportFiltered() {
+  const rType   = document.getElementById('rptFilterType').value;
+  const rPIC    = document.getElementById('rptFilterPIC').value;
+  const rStatus = document.getElementById('rptFilterStatus').value;
+  const rFrom   = document.getElementById('rptFrom').value;  // "YYYY-MM"
+  const rTo     = document.getElementById('rptTo').value;    // "YYYY-MM"
+
+  // Convert month range to date strings
+  const fromStr = rFrom ? rFrom + '-01' : '0000-01-01';
+  const toStr   = rTo   ? rTo + '-31'   : '9999-12-31';
+
+  return events
+    .filter(e => {
+      if (rType   !== 'all' && e.type !== rType) return false;
+      if (rPIC    !== 'all' && !(e.pics||[]).includes(rPIC)) return false;
+      if (rStatus !== 'all' && e.status !== rStatus) return false;
+      // Overlap: event is visible if its range overlaps the selected range
+      const es = e.dateStart, ee = e.dateEnd || e.dateStart;
+      return es <= toStr && ee >= fromStr;
+    })
+    .sort((a,b) => a.dateStart.localeCompare(b.dateStart));
+}
+
+function renderReport() {
+  const filtered = getReportFiltered();
+  const wrap = document.getElementById('rptTableWrap');
+  const SM   = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process'};
+
+  // Update print title
+  const rFrom = document.getElementById('rptFrom').value;
+  const rTo   = document.getElementById('rptTo').value;
+  const rPIC  = document.getElementById('rptFilterPIC').value;
+  const MONTHS_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const fmtMonth = s => { if(!s) return ''; const [y,m]=s.split('-'); return `${MONTHS_ID[parseInt(m)-1]} ${y}`; };
+  const rangeLabel = rFrom===rTo ? fmtMonth(rFrom) : `${fmtMonth(rFrom)} – ${fmtMonth(rTo)}`;
+  const picLabel   = rPIC !== 'all' ? ` · ${rPIC}` : '';
+  document.getElementById('rptPrintTitle').innerHTML =
+    `<h2>Timeline Kegiatan${picLabel ? ' — '+escHtml(rPIC) : ''}${WORKSPACE!=='default'?' ('+escHtml(WORKSPACE)+')':''}</h2><p>${rangeLabel}</p>`;
+
+  if (!filtered.length) {
+    wrap.innerHTML = `<div class="rpt-empty"><i class="ti ti-calendar-off"></i>Tidak ada event pada periode yang dipilih.</div>`;
+    return;
+  }
+
+  // Group by month
+  const groups = {};
+  filtered.forEach(e => {
+    const mo = e.dateStart.slice(0,7);
+    if (!groups[mo]) groups[mo] = [];
+    groups[mo].push(e);
+  });
+
+  let html = `<table class="rpt-table">
+    <thead><tr>
+      <th style="width:120px">Tanggal</th>
+      <th style="width:170px">Jenis Event</th>
+      <th>Nama / Judul</th>
+      <th style="width:160px">PIC</th>
+      <th style="width:110px">Status</th>
+      <th>Keterangan</th>
+    </tr></thead><tbody>`;
+
+  Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mo, evs]) => {
+    const [y,m] = mo.split('-');
+    html += `<tr class="rpt-month-hdr"><td colspan="6">${MONTHS_ID[parseInt(m)-1].toUpperCase()} ${y}</td></tr>`;
+
+    evs.forEach(e => {
+      const t    = getTypeById(e.type);
+      const pics = e.pics || [];
+      const dl   = e.dateEnd && e.dateEnd !== e.dateStart
+        ? `${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}`
+        : fmtDate(e.dateStart);
+      const statusTx  = e.status==='achieve'?'var(--s-achieve-tx)':e.status==='not_achieve'?'var(--s-not-tx)':'var(--s-pending-tx)';
+      const statusBg  = e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':'var(--s-pending-bg)';
+      const statusTxt = SM[e.status] || e.status || '–';
+      // type pill: light bg from lt, colored text
+      const lt = t.lt || hexToLight(t.chip);
+
+      html += `<tr class="rpt-row" data-id="${e.id}">
+        <td class="rpt-date"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ink-lt);margin-right:6px;vertical-align:middle"></span>${dl}</td>
+        <td><span class="rpt-type-pill" style="background:${lt};color:${t.chip}">${escHtml(t.label)}${e.status?` · <span style="opacity:.8">${statusTxt}</span>`:''}</span></td>
+        <td><div class="rpt-title">${escHtml(e.title)}</div></td>
+        <td><div class="rpt-pic-list">${pics.map(p=>`<span class="rpt-pic-badge">${escHtml(p)}</span>`).join('')}</div></td>
+        <td>${e.status?`<span class="rpt-status" style="background:${statusBg};color:${statusTx}">${statusTxt}</span>`:'–'}</td>
+        <td class="rpt-note">${escHtml(e.note||'')}</td>
+      </tr>`;
+    });
+  });
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+
+  // Click to open detail
+  wrap.querySelectorAll('.rpt-row[data-id]').forEach(row => {
+    row.addEventListener('click', () => openDetail(row.dataset.id));
+  });
+}
+
+/* Report filter listeners */
+['rptFilterType','rptFilterPIC','rptFilterStatus','rptFrom','rptTo'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    if (activeTab === 'report') renderReport();
+  });
+});
+
+/* Print PDF */
+document.getElementById('rptPrintBtn').addEventListener('click', () => {
+  document.body.classList.add('print-report');
+  window.print();
+  setTimeout(() => document.body.classList.remove('print-report'), 1000);
+});
+
+/* Export Excel dari Timeline Report */
+document.getElementById('rptExportExcelBtn').addEventListener('click', () => {
+  const filtered = getReportFiltered();
+  if (!filtered.length) { showToast('⚠️ Tidak ada data untuk diexport'); return; }
+  const SM = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process'};
+  const MONTHS_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  const rFrom = document.getElementById('rptFrom').value;
+  const rTo   = document.getElementById('rptTo').value;
+  const fmtMonth = s => { if(!s) return ''; const [y,m]=s.split('-'); return `${MONTHS_ID[parseInt(m)-1]} ${y}`; };
+  const rangeLabel = rFrom===rTo ? fmtMonth(rFrom) : `${fmtMonth(rFrom)}-${fmtMonth(rTo)}`;
+
+  const headers = ['Tanggal Mulai','Tanggal Selesai','Jenis Event','Nama / Judul','PIC','Status','Keterangan'];
+  const rows = filtered.map(e => {
+    const t = getTypeById(e.type);
+    return [
+      fmtDate(e.dateStart),
+      fmtDate(e.dateEnd || e.dateStart),
+      t.label,
+      e.title,
+      (e.pics||[]).join(', '),
+      SM[e.status] || '',
+      e.note || ''
+    ];
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = [{wch:13},{wch:13},{wch:20},{wch:36},{wch:26},{wch:12},{wch:40}];
+  ws['!rows'] = [{hpt:22}, ...rows.map(()=>({hpt:18}))];
+  // Style header row
+  headers.forEach((_,ci) => {
+    const a = XLSX.utils.encode_cell({r:0,c:ci});
+    if (!ws[a]) ws[a] = {v:headers[ci],t:'s'};
+    ws[a].s = {font:{bold:true,sz:10,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}};
+  });
+  XLSX.utils.book_append_sheet(wb, ws, 'Timeline Report');
+  const safeName = rangeLabel.replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_');
+  XLSX.writeFile(wb, `Timeline_${safeName}.xlsx`);
+  showToast('✅ Excel Timeline berhasil didownload!');
+});
+
+/* Also update rebuildFilters to update report filters when tab is active */
+const _origRebuildFilters = rebuildFilters;
+// patch: after events reload, if on report tab, re-render
+const _origLoadEventsSnapshot = null; // handled via renderCalendar hook
 </script>
 </body>
 </html>
