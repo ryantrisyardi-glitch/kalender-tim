@@ -8,7 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <!-- SheetJS for Excel export -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
@@ -406,11 +406,11 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
 .tab-btn.active{color:var(--ink);border-bottom-color:var(--ink);background:var(--surface)}
 
 /* ══ REPORT VIEW ══ */
-.rpt-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1.2rem}
+.rpt-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 auto 1.2rem;max-width:1300px;padding:0 20px}
 .rpt-filter-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .rpt-range-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.rpt-table-wrap{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.05)}
-.rpt-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.rpt-table-wrap{max-width:1300px;margin:0 auto;padding:0 20px;background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.05)}
+.rpt-table{width:100%;border-collapse:collapse;font-size:.82rem;table-layout:fixed}
 .rpt-table th{text-align:left;padding:11px 14px;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);background:var(--bg-dk);border-bottom:1.5px solid var(--rule);white-space:nowrap}
 .rpt-month-hdr td{background:#1C1917;color:#fff;font-size:.78rem;font-weight:800;padding:9px 16px;letter-spacing:.04em}
 body.dark .rpt-month-hdr td{background:#F0ECE6;color:#1C1917}
@@ -430,7 +430,7 @@ body.dark .rpt-month-hdr td{background:#F0ECE6;color:#1C1917}
 .rpt-empty i{font-size:32px;display:block;margin-bottom:10px;opacity:.35}
 
 /* Print-only title */
-.rpt-print-title{display:none}
+.rpt-print-title{display:none;max-width:1300px;margin:0 auto;padding:0 20px;text-align:center}
 @media print{
   .rpt-print-title{display:block;margin-bottom:1rem}
   .rpt-print-title h2{font-size:1.3rem;font-weight:800;color:#1C1917}
@@ -461,10 +461,6 @@ body.dark .rpt-row{border-color:var(--rule)}
 body.dark .rpt-row:hover{background:var(--bg-dk)}
 body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:var(--ink-md)}
 
-  .main-row{flex-direction:column}
-  .panel-col{width:100%;position:static}
-  .panel-col .day-panel{max-height:280px}
-}
 @media(max-width:600px){
   .brand-title{font-size:1.2rem}
   .dc{min-height:70px;padding:4px 3px}
