@@ -215,7 +215,23 @@ code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;font-size:.76r
 .color-swatch-opt:hover{transform:scale(1.1)}
 .color-swatch-opt.selected{border-color:var(--ink)}
 
-/* ── AUTH ── */
+/* ── REPORT COLUMN RESIZE ── */
+.col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+}
+.col-resize-handle:hover {
+  background: rgba(0,0,0,0.1);
+}
+body.dark .col-resize-handle:hover {
+  background: rgba(255,255,255,0.1);
+}
+
 .write-only{transition:opacity .2s}
 body.read-only .write-only{opacity:.35;pointer-events:none;cursor:not-allowed}
 .readonly-badge{display:none;font-size:.68rem;font-weight:700;padding:3px 9px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:100px;align-items:center;gap:4px}
@@ -410,10 +426,10 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
 .rpt-filter-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .rpt-range-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .rpt-table-wrap{max-width:1300px;margin:0 auto;padding:0 20px;background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.05)}
-.rpt-table{width:100%;border-collapse:collapse;font-size:.82rem;table-layout:fixed}
-.rpt-table th{text-align:left;padding:11px 14px;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);background:var(--bg-dk);border-bottom:1.5px solid var(--rule);white-space:nowrap}
-.rpt-month-hdr td{background:#1C1917;color:#fff;font-size:.78rem;font-weight:800;padding:9px 16px;letter-spacing:.04em}
-body.dark .rpt-month-hdr td{background:#F0ECE6;color:#1C1917}
+.rpt-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem;table-layout:fixed}
+.rpt-table th{text-align:left;padding:11px 14px;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);background:var(--bg-dk);border-bottom:1.5px solid var(--rule);white-space:nowrap;position:relative}
+.rpt-month-hdr td{background:var(--ink);color:#fff;font-size:.78rem;font-weight:800;padding:9px 16px;letter-spacing:.04em;border-bottom:1.5px solid var(--rule)}
+body.dark .rpt-month-hdr td{background:var(--surface);color:var(--ink)}
 .rpt-row{border-bottom:1px solid var(--rule);transition:background .12s;cursor:pointer}
 .rpt-row:last-child{border-bottom:none}
 .rpt-row:hover{background:var(--bg-dk)}
@@ -2381,13 +2397,13 @@ function renderReport() {
   });
 
   let html = `<table class="rpt-table">
-    <thead><tr>
-      <th style="width:120px">Tanggal</th>
-      <th style="width:170px">Jenis Event</th>
-      <th>Nama / Judul</th>
-      <th style="width:160px">PIC</th>
-      <th style="width:110px">Status</th>
-      <th>Keterangan</th>
+    <thead><tr id="rptHeaderRow">
+      <th style="width:120px">Tanggal<div class="col-resize-handle"></div></th>
+      <th style="width:170px">Jenis Event<div class="col-resize-handle"></div></th>
+      <th>Nama / Judul<div class="col-resize-handle"></div></th>
+      <th style="width:160px">PIC<div class="col-resize-handle"></div></th>
+      <th style="width:110px">Status<div class="col-resize-handle"></div></th>
+      <th>Keterangan<div class="col-resize-handle"></div></th>
     </tr></thead><tbody>`;
 
   Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mo, evs]) => {
@@ -2424,6 +2440,32 @@ function renderReport() {
   wrap.querySelectorAll('.rpt-row[data-id]').forEach(row => {
     row.addEventListener('click', () => openDetail(row.dataset.id));
   });
+
+  // Column Resize Logic
+  const headerRow = document.getElementById('rptHeaderRow');
+  if (headerRow) {
+    headerRow.querySelectorAll('.col-resize-handle').forEach(handle => {
+      handle.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const th = handle.parentElement;
+        const startX = e.pageX;
+        const startWidth = th.offsetWidth;
+
+        const onMouseMove = (me) => {
+          const currentWidth = startWidth + (me.pageX - startX);
+          th.style.width = currentWidth + 'px';
+        };
+
+        const onMouseUp = () => {
+          document.removeEventListener('mousemove', onMouseMove);
+          document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+    });
+  }
 }
 
 /* Report filter listeners */
@@ -2469,12 +2511,19 @@ document.getElementById('rptExportExcelBtn').addEventListener('click', () => {
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
   ws['!cols'] = [{wch:13},{wch:13},{wch:20},{wch:36},{wch:26},{wch:12},{wch:40}];
   ws['!rows'] = [{hpt:22}, ...rows.map(()=>({hpt:18}))];
-  // Style header row
+
+  // Style header row (using xlsx-js-style)
   headers.forEach((_,ci) => {
     const a = XLSX.utils.encode_cell({r:0,c:ci});
     if (!ws[a]) ws[a] = {v:headers[ci],t:'s'};
-    ws[a].s = {font:{bold:true,sz:10,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}};
+    ws[a].s = {
+      font:{bold:true,sz:10,color:{rgb:'FFFFFF'}},
+      fill:{fgColor:{rgb:'1C1917'}},
+      alignment:{horizontal:'center',vertical:'center'},
+      border:{bottom:{style:'thin',color:{rgb:'E7E2DA'}}}
+    };
   });
+
   XLSX.utils.book_append_sheet(wb, ws, 'Timeline Report');
   const safeName = rangeLabel.replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_');
   XLSX.writeFile(wb, `Timeline_${safeName}.xlsx`);
