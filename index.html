@@ -7,8 +7,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<!-- SheetJS for Excel export -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.full.min.js"></script>
+<!-- SheetJS for Excel export (with styling support) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
@@ -71,11 +71,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 /* ── CALENDAR SHELL ── */
 .cal-shell{background:transparent;border:none;border-radius:var(--r-xl);overflow:visible;box-shadow:none}
 .cal-hdr-sticky-wrap{position:sticky;top:0;z-index:100;border-radius:var(--r-xl) var(--r-xl) 0 0;overflow:hidden;border:1.5px solid var(--rule);border-bottom:none;background:var(--bg-dk);box-shadow:0 2px 8px rgba(28,25,23,.06)}
-.cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg-dk);border-bottom:1.5px solid var(--rule)}
-/* FIX #6: Day headers more visible */
-.dh{text-align:center;padding:13px 4px;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#57534E}
-.dh.sun{color:#DC2626;font-weight:800}
-.dh.sat{color:#1D4ED8;font-weight:800}
+.cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:var(--ink);border-bottom:1.5px solid var(--rule);border-top-left-radius:var(--r-xl);border-top-right-radius:var(--r-xl)}
+/* FIX: Day headers more visible and colors adjusted for dark background */
+.dh{text-align:center;padding:13px 4px;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.8)}
+.dh.sun{color:#FCA5A5;font-weight:800}
+.dh.sat{color:#93C5FD;font-weight:800}
 .cal-body{display:grid;grid-template-columns:repeat(7,1fr);border:1.5px solid var(--rule);border-top:none;border-radius:0 0 var(--r-xl) var(--r-xl);overflow:hidden}
 
 /* ── DAY CELLS ── FIX #1: up to 5 events, auto height, tidy */
