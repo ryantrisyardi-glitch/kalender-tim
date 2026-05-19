@@ -299,7 +299,10 @@ body.read-only .readonly-badge{display:inline-flex}
 .chip-check{display:inline-block;margin-left:3px;opacity:.85}
 
 /* ── PANEL: compact ── */
-.panel-event-item{border:1px solid var(--rule);border-radius:var(--r-md);padding:7px 10px;margin-bottom:5px;cursor:pointer;transition:box-shadow .14s;display:flex;gap:8px;align-items:flex-start}
+.panel-event-item{border:1px solid var(--rule);border-radius:var(--r-md);padding:7px 10px;margin-bottom:5px;cursor:pointer;transition:box-shadow .14s;display:flex;gap:8px;align-items:flex-start;position:relative}
+.pei-copy-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--ink-lt);cursor:pointer;padding:4px;border-radius:var(--r-sm);transition:background .12s,color .12s;display:flex;align-items:center;justify-content:center;z-index:2}
+.pei-copy-btn:hover{background:var(--bg-dk);color:var(--ink)}
+body.dark .pei-copy-btn:hover{background:var(--bg-dk);color:var(--ink)}
 .panel-event-item:hover{box-shadow:0 2px 10px rgba(28,25,23,.09)}
 .pei-bar{width:3px;border-radius:100px;flex-shrink:0;align-self:stretch;min-height:28px}
 .pei-body{flex:1;min-width:0}
@@ -593,6 +596,7 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
           <div id="panelHolBadge"></div>
         </div>
         <button class="btn btn-icon btn-sm write-only" id="panelAddBtn" style="display:none"><i class="ti ti-plus"></i></button>
+        <button class="btn btn-icon btn-sm write-only" id="panelCopyAllBtn" style="display:none" title="Copy Semua Event Hari Ini"><i class="ti ti-copy"></i></button>
       </div>
       <div class="panel-body" id="panelBody">
         <div class="panel-empty"><i class="ti ti-calendar-off"></i>Belum ada tanggal dipilih</div>
@@ -1235,6 +1239,54 @@ async function deleteEvent(id) {
   }
 }
 
+async function copySingleEvent(id) {
+  const ev = events.find(e => e.id === id);
+  if (!ev) return;
+  const target = prompt('Masukkan tanggal target (YYYY-MM-DD):', toStr(new Date()));
+  if (!target) return;
+  if (!target.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    showToast('⚠️ Format tanggal salah (YYYY-MM-DD)');
+    return;
+  }
+  const { id: _, ...data } = ev;
+  data.dateStart = target;
+  if (data.dateEnd) {
+    const start = new Date(ev.dateStart + 'T00:00:00'), end = new Date(ev.dateEnd + 'T00:00:00');
+    const diff = end.getTime() - start.getTime();
+    const newS = new Date(target + 'T00:00:00'), newE = new Date(newS.getTime() + diff);
+    data.dateEnd = toStr(newE);
+  }
+  const prevId = editingId; editingId = null;
+  await saveEvent(data); editingId = prevId;
+  showToast(`✅ Event dicopy ke ${fmtDate(target)}`);
+  renderCalendar(); if (selectedDate) renderPanel(selectedDate);
+}
+
+async function copyAllEvents(sourceDate) {
+  const dayEvs = events.filter(e => e.dateStart === sourceDate);
+  if (!dayEvs.length) { showToast('⚠️ Tidak ada event untuk dicopy'); return; }
+  const target = prompt('Masukkan tanggal target (YYYY-MM-DD):', toStr(new Date()));
+  if (!target) return;
+  if (!target.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    showToast('⚠️ Format tanggal salah (YYYY-MM-DD)');
+    return;
+  }
+  for (const ev of dayEvs) {
+    const { id: _, ...data } = ev;
+    data.dateStart = target;
+    if (data.dateEnd) {
+      const start = new Date(ev.dateStart + 'T00:00:00'), end = new Date(ev.dateEnd + 'T00:00:00');
+      const diff = end.getTime() - start.getTime();
+      const newS = new Date(target + 'T00:00:00'), newE = new Date(newS.getTime() + diff);
+      data.dateEnd = toStr(newE);
+    }
+    const prevId = editingId; editingId = null;
+    await saveEvent(data); editingId = prevId;
+  }
+  showToast(`✅ ${dayEvs.length} event dicopy ke ${fmtDate(target)}`);
+  renderCalendar(); if (selectedDate) renderPanel(selectedDate);
+}
+
 /* ════════════════════════════════════════
    FILTERS / LEGEND
    ════════════════════════════════════════ */
@@ -1395,6 +1447,8 @@ function renderPanel(ds) {
   document.getElementById('panelDayName').textContent=DNAMES[d.getDay()];
   document.getElementById('panelAddBtn').style.display=canWrite?'flex':'none';
   document.getElementById('panelAddBtn').onclick=()=>openAdd(ds);
+  document.getElementById('panelCopyAllBtn').style.display=canWrite?'flex':'none';
+  document.getElementById('panelCopyAllBtn').onclick=()=>copyAllEvents(ds);
 
   const hol=holidays[ds];
   const holBadge=document.getElementById('panelHolBadge');
@@ -1431,6 +1485,7 @@ function renderPanel(ds) {
         <div class="pei-meta"><span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px"></i> ${dl}</span>${sp}</div>
         ${noteHtml}
       </div>
+      <button class="pei-copy-btn write-only" onclick="event.stopPropagation(); copySingleEvent('${e.id}')" title="Copy Event"><i class="ti ti-copy"></i></button>
     </div>`;
   }).join('');
 
