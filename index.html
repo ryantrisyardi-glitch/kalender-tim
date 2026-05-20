@@ -445,39 +445,81 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
 .rpt-controls{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin:0 auto 1.2rem;max-width:1300px;padding:0 20px}
 .rpt-filter-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .rpt-range-wrap{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.rpt-table-wrap{max-width:1300px;margin:0 auto;padding:0;background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;box-shadow:0 2px 20px rgba(28,25,23,.05)}
-.rpt-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem;table-layout:fixed;border:none}
-
-/* ── MODERN HEADER ── */
-.rpt-table thead{background:linear-gradient(135deg,#1C1917 0%,#292524 60%,#3D3530 100%)}
-.rpt-table th{
-  text-align:left;padding:14px 16px;
-  font-size:.67rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
-  color:rgba(255,255,255,0.7);
-  background:transparent;
-  border-bottom:2px solid rgba(255,255,255,.08);
-  border-right:1px solid rgba(255,255,255,.06);
-  white-space:nowrap;position:relative;
-  overflow:visible;
-  transition:color .14s;
+.rpt-table-wrap{
+  max-width:1300px;margin:0 auto;padding:0;
+  background:var(--surface);
+  border:1.5px solid var(--rule);
+  border-radius:var(--r-xl);
+  overflow-x:auto;
+  overflow-y:auto;
+  max-height:78vh;
+  box-shadow:0 2px 20px rgba(28,25,23,.05);
 }
-.rpt-table th:hover{color:rgba(255,255,255,0.95)}
+.rpt-table{width:100%;border-collapse:separate;border-spacing:0;font-size:.82rem;table-layout:auto;border:none}
+
+/* ── STICKY MODERN HEADER ── */
+.rpt-table thead{position:sticky;top:0;z-index:20}
+.rpt-table th{
+  text-align:left;padding:13px 16px;
+  font-size:.67rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--ink-md);
+  background:var(--bg-dk);
+  border-bottom:2px solid var(--rule);
+  border-right:1px solid var(--rule);
+  white-space:nowrap;position:relative;overflow:visible;
+  transition:color .14s,background .14s;
+}
+.rpt-table th:hover{color:var(--ink);background:#E8E3DB}
 .rpt-table th:first-child{border-top-left-radius:var(--r-xl)}
 .rpt-table th:last-child{border-top-right-radius:var(--r-xl);border-right:none}
 
-/* month row */
-.rpt-month-hdr td{background:linear-gradient(90deg,#2D2A27,#1C1917);color:rgba(255,255,255,.6);font-size:.68rem;font-weight:700;padding:7px 16px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1.5px solid var(--rule)}
+/* month / separator rows */
+.rpt-month-hdr td{
+  background:var(--bg-dk);
+  color:var(--ink-lt);
+  font-size:.66rem;font-weight:700;
+  padding:6px 16px;letter-spacing:.12em;text-transform:uppercase;
+  border-bottom:1px solid var(--rule);
+  border-top:2px solid var(--rule);
+}
 body.dark .rpt-month-hdr td{background:var(--bg-dk);color:var(--ink-lt)}
 
+/* ── ZEBRA ROWS ── */
 .rpt-row{border-bottom:1px solid var(--rule);transition:background .12s;cursor:pointer}
 .rpt-row:last-child{border-bottom:none}
-.rpt-row:hover{background:var(--bg-dk)}
+.rpt-row:nth-child(even){background:#FAF8F5}
+.rpt-row:nth-child(odd){background:var(--surface)}
+.rpt-row:hover{background:#F0EBE3!important}
 .rpt-row td{padding:0 14px;height:44px;vertical-align:middle}
-.rpt-date{font-size:.79rem;font-weight:700;color:var(--ink-md);white-space:nowrap;min-width:130px}
+
+/* date col — always fit, never wrap */
+.rpt-date{font-size:.79rem;font-weight:700;color:var(--ink-md);white-space:nowrap;width:1%;min-width:0}
 .rpt-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;flex-shrink:0;vertical-align:middle;margin-top:-1px}
 .rpt-type-pill{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:100px;white-space:nowrap}
-/* full-cell type column */
-.rpt-type-cell{white-space:nowrap;text-align:center;font-weight:700;letter-spacing:.03em;padding:0!important;vertical-align:middle}
+
+/* ── TYPE CELL: full field + dark accent bar on left ── */
+.rpt-type-cell{
+  white-space:nowrap;
+  font-weight:700;letter-spacing:.03em;
+  padding:0!important;
+  vertical-align:middle;
+  overflow:hidden;
+}
+.rpt-type-inner{
+  display:flex;align-items:stretch;height:100%;min-height:44px;
+}
+.rpt-type-accent{
+  width:6px;flex-shrink:0;
+  /* color set inline via style */
+}
+.rpt-type-label{
+  flex:1;display:flex;align-items:center;
+  padding:0 12px;
+  font-size:.72rem;font-weight:700;letter-spacing:.04em;
+  color:#fff;
+  /* background set inline */
+}
+
 .rpt-status{display:inline-block;font-size:.66rem;font-weight:700;padding:3px 9px;border-radius:100px;white-space:nowrap}
 .rpt-title{font-size:.86rem;font-weight:700;color:var(--ink);line-height:1.3}
 .rpt-pic-list{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
@@ -485,6 +527,12 @@ body.dark .rpt-month-hdr td{background:var(--bg-dk);color:var(--ink-lt)}
 .rpt-note{font-size:.74rem;color:var(--ink-md);line-height:1.4;max-width:320px}
 .rpt-empty{text-align:center;padding:3rem;color:var(--ink-lt);font-size:.84rem}
 .rpt-empty i{font-size:32px;display:block;margin-bottom:10px;opacity:.35}
+
+body.dark .rpt-table th{background:var(--bg-dk);color:var(--ink-md);border-color:var(--rule)}
+body.dark .rpt-table th:hover{background:#252320;color:var(--ink)}
+body.dark .rpt-row:nth-child(even){background:#1A1916}
+body.dark .rpt-row:nth-child(odd){background:var(--surface)}
+body.dark .rpt-row:hover{background:#252320!important}
 
 /* Print-only title */
 .rpt-print-title{display:none;max-width:1300px;margin:0 auto;padding:0 20px;text-align:center}
@@ -514,9 +562,7 @@ body.dark .rpt-month-hdr td{background:var(--bg-dk);color:var(--ink-lt)}
 
 body.dark .tab-btn.active{background:var(--surface);border-bottom-color:var(--ink-lt)}
 body.dark .rpt-table-wrap{background:var(--surface);border-color:var(--rule)}
-body.dark .rpt-table th{background:var(--ink);color:var(--surface);border-color:var(--rule)}
 body.dark .rpt-row{border-color:var(--rule)}
-body.dark .rpt-row:hover{background:var(--bg-dk)}
 body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:var(--ink-md)}
 
 @media(max-width:600px){
@@ -1060,6 +1106,13 @@ function hexToLight(hex) {
   const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
   const m=c=>Math.round(c*.15+255*.85).toString(16).padStart(2,'0');
   return `#${m(r)}${m(g)}${m(b)}`;
+}
+function hexDarken(hex, amount) {
+  // amount 0–1: how much to darken (0=original, 1=black)
+  const h = hex.replace('#','');
+  const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  const d=c=>Math.max(0,Math.round(c*(1-amount))).toString(16).padStart(2,'0');
+  return `#${d(r)}${d(g)}${d(b)}`;
 }
 function getTypeById(id) { return eventTypes.find(t=>t.id===id)||eventTypes[eventTypes.length-1]||DEFAULT_TYPES[4]; }
 let eventTypes = loadTypes();
@@ -2494,8 +2547,8 @@ function renderReport() {
 
   let html = `<table class="rpt-table">
     <thead><tr id="rptHeaderRow">
-      <th style="width:140px">Tanggal<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
-      <th style="width:170px">Jenis Event<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
+      <th style="width:1%;white-space:nowrap">Tanggal<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
+      <th style="width:160px">Jenis Event<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
       <th>Nama / Judul<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
       <th style="width:160px">PIC<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
       <th style="width:110px">Status<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
@@ -2515,10 +2568,12 @@ function renderReport() {
       const statusTx  = e.status==='achieve'?'var(--s-achieve-tx)':e.status==='not_achieve'?'var(--s-not-tx)':'var(--s-pending-tx)';
       const statusBg  = e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':'var(--s-pending-bg)';
       const statusTxt = SM[e.status] || e.status || '–';
+      // Darken chip color for accent bar
+      const accentColor = hexDarken(t.chip, 0.28);
 
       html += `<tr class="rpt-row" data-id="${e.id}">
-        <td class="rpt-date"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${t.chip};margin-right:6px;vertical-align:middle"></span>${dl}</td>
-        <td class="rpt-type-cell" style="background:${t.chip};color:#fff;font-size:.72rem;font-weight:700;letter-spacing:.04em;padding:0 14px">${escHtml(t.label)}</td>
+        <td class="rpt-date" style="white-space:nowrap;width:1%"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.chip};margin-right:6px;vertical-align:middle"></span>${dl}</td>
+        <td class="rpt-type-cell"><div class="rpt-type-inner"><div class="rpt-type-accent" style="background:${accentColor}"></div><div class="rpt-type-label" style="background:${t.chip}">${escHtml(t.label)}</div></div></td>
         <td><div class="rpt-title">${escHtml(e.title)}</div></td>
         <td><div class="rpt-pic-list">${pics.map(p=>`<span class="rpt-pic-badge">${escHtml(p)}</span>`).join('')}</div></td>
         <td>${e.status?`<span class="rpt-status" style="background:${statusBg};color:${statusTx}">${statusTxt}</span>`:'–'}</td>
