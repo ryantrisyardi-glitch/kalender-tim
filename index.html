@@ -253,6 +253,18 @@ body.dark .col-resize-handle:hover {
 body.read-only .write-only{opacity:.35;pointer-events:none;cursor:not-allowed}
 .readonly-badge{display:none;font-size:.68rem;font-weight:700;padding:3px 9px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:100px;align-items:center;gap:4px}
 body.read-only .readonly-badge{display:inline-flex}
+
+/* ── TOGGLE EVENT VISIBILITY (read-only users only) ── */
+.btn-toggle-events{display:none}
+body.read-only .btn-toggle-events{display:inline-flex}
+body.events-hidden .dc-events{visibility:hidden;opacity:0;pointer-events:none}
+body.events-hidden .chip-more{visibility:hidden;opacity:0}
+body.events-hidden .event-grid{opacity:.35;pointer-events:none;filter:blur(3px);user-select:none}
+body.events-hidden .panel-event-item{opacity:.35;pointer-events:none;filter:blur(3px);user-select:none}
+.btn-toggle-events.events-visible{background:#DCFCE7;color:#15803D;border-color:#86EFAC}
+.btn-toggle-events.events-visible:hover{border-color:#15803D}
+.btn-toggle-events.events-hidden-state{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}
+.btn-toggle-events.events-hidden-state:hover{border-color:#B91C1C}
 .auth-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;background:var(--bg-dk);border:1.5px solid var(--rule);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--ink-md)}
 .auth-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover}
 .auth-avatar-fallback{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
@@ -610,6 +622,9 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
   </div>
   <div class="hdr-right">
     <span class="readonly-badge"><i class="ti ti-eye" style="font-size:12px"></i> Mode Lihat</span>
+    <button class="btn btn-toggle-events events-visible" id="toggleEventsBtn" title="Sembunyikan / Tampilkan Event">
+      <i class="ti ti-eye-off"></i> Sembunyikan Event
+    </button>
     <div id="authChip"></div>
     <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
     <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
@@ -2702,6 +2717,45 @@ document.getElementById('rptExportExcelBtn').addEventListener('click', () => {
 const _origRebuildFilters = rebuildFilters;
 // patch: after events reload, if on report tab, re-render
 const _origLoadEventsSnapshot = null; // handled via renderCalendar hook
+
+/* ════════════════════════════════════════
+   TOGGLE HIDE/SHOW EVENTS (view-only users)
+   ════════════════════════════════════════ */
+(function() {
+  const LS_KEY = `cal_events_hidden_${WORKSPACE}`;
+  let eventsHidden = false;
+
+  // Restore saved preference
+  try { eventsHidden = localStorage.getItem(LS_KEY) === '1'; } catch(e) {}
+
+  function applyToggleState() {
+    const btn = document.getElementById('toggleEventsBtn');
+    if (!btn) return;
+    if (eventsHidden) {
+      document.body.classList.add('events-hidden');
+      btn.classList.remove('events-visible');
+      btn.classList.add('events-hidden-state');
+      btn.innerHTML = '<i class="ti ti-eye"></i> Tampilkan Event';
+      btn.title = 'Tampilkan event di kalender';
+    } else {
+      document.body.classList.remove('events-hidden');
+      btn.classList.add('events-visible');
+      btn.classList.remove('events-hidden-state');
+      btn.innerHTML = '<i class="ti ti-eye-off"></i> Sembunyikan Event';
+      btn.title = 'Sembunyikan event di kalender';
+    }
+  }
+
+  document.getElementById('toggleEventsBtn').addEventListener('click', () => {
+    eventsHidden = !eventsHidden;
+    try { localStorage.setItem(LS_KEY, eventsHidden ? '1' : '0'); } catch(e) {}
+    applyToggleState();
+    showToast(eventsHidden ? '🙈 Event disembunyikan' : '👁️ Event ditampilkan');
+  });
+
+  // Apply initial state after DOM ready
+  applyToggleState();
+})();
 </script>
 </body>
 </html>
