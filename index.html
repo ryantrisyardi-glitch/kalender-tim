@@ -254,17 +254,23 @@ body.read-only .write-only{opacity:.35;pointer-events:none;cursor:not-allowed}
 .readonly-badge{display:none;font-size:.68rem;font-weight:700;padding:3px 9px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:100px;align-items:center;gap:4px}
 body.read-only .readonly-badge{display:inline-flex}
 
-/* ── TOGGLE EVENT VISIBILITY (read-only users only) ── */
-.btn-toggle-events{display:none}
-body.read-only .btn-toggle-events{display:inline-flex}
-body.events-hidden .dc-events{visibility:hidden;opacity:0;pointer-events:none}
-body.events-hidden .chip-more{visibility:hidden;opacity:0}
-body.events-hidden .event-grid{opacity:.35;pointer-events:none;filter:blur(3px);user-select:none}
-body.events-hidden .panel-event-item{opacity:.35;pointer-events:none;filter:blur(3px);user-select:none}
-.btn-toggle-events.events-visible{background:#DCFCE7;color:#15803D;border-color:#86EFAC}
-.btn-toggle-events.events-visible:hover{border-color:#15803D}
-.btn-toggle-events.events-hidden-state{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}
-.btn-toggle-events.events-hidden-state:hover{border-color:#B91C1C}
+/* ── EVENT HIDDEN / VISIBILITY TOGGLE ── */
+/* Chip di kalender: event tersembunyi ditampilkan dengan strikethrough+redup ke editor */
+.chip.is-hidden-event{opacity:.45;text-decoration:line-through;filter:grayscale(.6)}
+/* Ikon kunci kecil di chip */
+.chip.is-hidden-event::before{content:'🔒 ';font-size:.65em}
+/* Ecard & panel item tersembunyi: hanya tampil ke editor dengan efek redup */
+.ecard.is-hidden-event{opacity:.5;border-style:dashed}
+.ecard.is-hidden-event .ecard-title::after{content:' 🔒';font-size:.7em;color:var(--ink-lt)}
+.panel-event-item.is-hidden-event{opacity:.5}
+.panel-event-item.is-hidden-event .pei-title::after{content:' 🔒';font-size:.7em;color:var(--ink-lt)}
+/* Badge "Disembunyikan" di detail modal */
+.hidden-event-badge{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1.5px solid #FDE68A;margin-top:6px}
+/* Tombol toggle visibility di detail modal footer */
+.btn-toggle-vis{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+.btn-toggle-vis:hover{background:#FDE68A;border-color:#D97706}
+.btn-toggle-vis.is-visible{background:#DCFCE7;color:#15803D;border-color:#86EFAC}
+.btn-toggle-vis.is-visible:hover{background:#BBF7D0;border-color:#15803D}
 .auth-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;background:var(--bg-dk);border:1.5px solid var(--rule);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--ink-md)}
 .auth-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover}
 .auth-avatar-fallback{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;flex-shrink:0}
@@ -622,9 +628,6 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
   </div>
   <div class="hdr-right">
     <span class="readonly-badge"><i class="ti ti-eye" style="font-size:12px"></i> Mode Lihat</span>
-    <button class="btn btn-toggle-events events-visible" id="toggleEventsBtn" title="Sembunyikan / Tampilkan Event">
-      <i class="ti ti-eye-off"></i> Sembunyikan Event
-    </button>
     <div id="authChip"></div>
     <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
     <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
@@ -841,6 +844,7 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
     <div id="detailContent"></div>
     <div class="modal-foot">
       <button class="btn btn-danger write-only" id="deleteBtn"><i class="ti ti-trash"></i> Hapus</button>
+      <button class="btn write-only btn-toggle-vis" id="toggleVisBtn" style="margin-right:auto"><i class="ti ti-eye-off"></i> Sembunyikan</button>
       <button class="btn btn-primary write-only" id="editBtn"><i class="ti ti-edit"></i> Edit</button>
     </div>
   </div>
@@ -1455,6 +1459,7 @@ function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt
 function showToast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 function getEventsForDate(ds){
   return events.filter(e=>{
+    if (!canWrite && e.hidden) return false;  // hidden events invisible to view-only users
     if (filterType!=='all'&&e.type!==filterType) return false;
     if (filterPIC!=='all'&&!(e.pics||[]).includes(filterPIC)) return false;
     if (e.dateEnd&&e.dateStart<=ds&&e.dateEnd>=ds) return true;
@@ -1518,7 +1523,8 @@ async function renderCalendar() {
     let chipsHtml=evs.slice(0,MAX).map(e=>{
       const t=getTypeById(e.type);
       const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':'';
-      return `<span class="chip" style="background:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${checkIcon}${escHtml(picsLabel(e))}</span>`;
+      const hiddenCls=e.hidden?' is-hidden-event':'';
+      return `<span class="chip${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${checkIcon}${escHtml(picsLabel(e))}</span>`;
     }).join('');
     if(evs.length>MAX) chipsHtml+=`<span class="chip-more">+${evs.length-MAX} lainnya</span>`;
 
@@ -1587,6 +1593,7 @@ function renderPanel(ds) {
   } else { holBadge.innerHTML=''; }
 
   const evs=events.filter(e=>{
+    if (!canWrite && e.hidden) return false;  // hidden from view-only users
     if(e.dateEnd&&e.dateStart<=ds&&e.dateEnd>=ds) return true;
     return e.dateStart===ds;
   });
@@ -1604,10 +1611,12 @@ function renderPanel(ds) {
     const spBg=e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':'var(--s-pending-bg)';
     const sp=e.status?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[e.status]}</span>`:'';
     const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:10px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
-    return `<div class="panel-event-item" data-id="${e.id}">
+    const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;margin-left:4px">🔒 Tersembunyi</span>`:'';
+    const hiddenCls=e.hidden?' is-hidden-event':'';
+    return `<div class="panel-event-item${hiddenCls}" data-id="${e.id}">
       <div class="pei-bar" style="background:${t.chip}"></div>
       <div class="pei-body">
-        <div class="pei-type" style="color:${t.chip}">${escHtml(t.label)}</div>
+        <div class="pei-type" style="color:${t.chip}">${escHtml(t.label)}${hiddenBadge}</div>
         <div class="pei-title">${escHtml(e.title)}</div>
         ${pics.length?`<div class="pei-pics">${pics.map(p=>`<span class="pic-badge">${escHtml(p)}</span>`).join('')}</div>`:''}
         <div class="pei-meta"><span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px"></i> ${dl}</span>${sp}</div>
@@ -1627,6 +1636,7 @@ function renderEventList(year,month) {
   const mStr=`${year}-${String(month+1).padStart(2,'0')}`;
   const filtered=events
     .filter(e=>{
+      if (!canWrite && e.hidden) return false;  // hidden from view-only users
       if(filterType!=='all'&&e.type!==filterType) return false;
       if(filterPIC!=='all'&&!(e.pics||[]).includes(filterPIC)) return false;
       return e.dateStart.startsWith(mStr)||(e.dateEnd&&e.dateEnd.startsWith(mStr));
@@ -1645,7 +1655,9 @@ function renderEventList(year,month) {
     const titleDisp=pics.length?`${escHtml(e.title)} · ${escHtml(pics[0])}${extra}`:escHtml(e.title);
     /* FIX #3 */
     const noteHtml=e.note?`<div class="ecard-note"><i class="ti ti-notes" style="font-size:11px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
-    return `<div class="ecard" data-id="${e.id}">
+    const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A">🔒 Tersembunyi dari publik</span>`:'';
+    const hiddenCls=e.hidden?' is-hidden-event':'';
+    return `<div class="ecard${hiddenCls}" data-id="${e.id}">
       <div class="ecard-bar" style="background:${t.chip}"></div>
       <div class="ecard-body">
         <div class="ecard-type" style="color:${t.chip}">${escHtml(t.label)}</div>
@@ -1657,6 +1669,7 @@ function renderEventList(year,month) {
         </div>
         ${pics.length>1?`<div class="pics-row">${pics.map(p=>`<span class="pic-badge" style="font-size:.62rem">${escHtml(p)}</span>`).join('')}</div>`:''}
         ${noteHtml}
+        ${hiddenBadge}
       </div>
     </div>`;
   }).join('');
@@ -1786,16 +1799,36 @@ function openDetail(id) {
   const pics=ev.pics||[];
   const lt=t.lt||hexToLight(t.chip);
 
+  const hiddenBadgeHtml=ev.hidden
+    ?`<div class="hidden-event-badge"><i class="ti ti-eye-off" style="font-size:12px"></i> Event ini disembunyikan dari pengguna Mode Lihat</div>`
+    :'';
+
   document.getElementById('detailContent').innerHTML=`
     <div class="det-banner" style="background:${lt}">
       <div class="det-type" style="color:${t.chip}">${escHtml(t.label)}</div>
       <div class="det-title" style="color:${t.chip}">${escHtml(ev.title)}</div>
     </div>
+    ${hiddenBadgeHtml}
     <div class="drow"><i class="ti ti-calendar drow-ico"></i><span class="drow-lbl">Tanggal</span><span class="drow-val">${dl}</span></div>
     ${pics.length?`<div class="drow"><i class="ti ti-users drow-ico"></i><span class="drow-lbl">PIC</span><span class="drow-val"><div class="det-pics">${pics.map(p=>`<span class="det-pic-badge">${escHtml(p)}</span>`).join('')}</div></span></div>`:''}
     ${ev.status?`<div class="drow"><i class="ti ti-circle-check drow-ico"></i><span class="drow-lbl">Status</span><span class="drow-val">${sp}</span></div>`:''}
     ${ev.note?`<div class="drow"><i class="ti ti-notes drow-ico"></i><span class="drow-lbl">Catatan</span><span class="drow-val">${escHtml(ev.note)}</span></div>`:''}
   `;
+
+  // Update toggle visibility button state
+  const tvBtn = document.getElementById('toggleVisBtn');
+  if (tvBtn) {
+    if (ev.hidden) {
+      tvBtn.classList.remove('is-visible');
+      tvBtn.innerHTML = '<i class="ti ti-eye"></i> Tampilkan';
+      tvBtn.title = 'Tampilkan event ini ke semua pengguna';
+    } else {
+      tvBtn.classList.add('is-visible');
+      tvBtn.innerHTML = '<i class="ti ti-eye-off"></i> Sembunyikan';
+      tvBtn.title = 'Sembunyikan event ini dari pengguna Mode Lihat';
+    }
+  }
+
   document.getElementById('detailOverlay').classList.add('open');
 }
 
@@ -2336,6 +2369,28 @@ document.getElementById('deleteBtn').addEventListener('click',async()=>{
   catch(e){showToast('❌ '+e.message);}
 });
 
+document.getElementById('toggleVisBtn').addEventListener('click', async () => {
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return; }
+  const ev = events.find(e => e.id === viewingId);
+  if (!ev) return;
+  const newHidden = !ev.hidden;
+  try {
+    if (useFirebase) {
+      await db.collection(EVENTS_COLL).doc(viewingId).update({ hidden: newHidden });
+    } else {
+      events = events.map(e => e.id === viewingId ? { ...e, hidden: newHidden } : e);
+      localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
+      rebuildFilters(); renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    }
+    // Update local state immediately for UI refresh before Firestore snapshot
+    ev.hidden = newHidden;
+    // Refresh toggle button & badge in detail modal
+    openDetail(viewingId);
+    showToast(newHidden ? '🔒 Event disembunyikan dari pengguna Mode Lihat' : '👁️ Event sekarang terlihat oleh semua pengguna');
+  } catch(e) { showToast('❌ ' + e.message); }
+});
+
 document.getElementById('editBtn').addEventListener('click',()=>{
   if(!canWrite){showToast('⚠️ Anda tidak memiliki akses untuk mengedit');return;}
   const ev=events.find(e=>e.id===viewingId);if(!ev)return;
@@ -2540,6 +2595,7 @@ function getReportFiltered() {
 
   return events
     .filter(e => {
+      if (!canWrite && e.hidden) return false;  // hidden from view-only users
       if (rType   !== 'all' && e.type !== rType) return false;
       if (rPIC    !== 'all' && !(e.pics||[]).includes(rPIC)) return false;
       if (rStatus !== 'all' && e.status !== rStatus) return false;
@@ -2717,45 +2773,6 @@ document.getElementById('rptExportExcelBtn').addEventListener('click', () => {
 const _origRebuildFilters = rebuildFilters;
 // patch: after events reload, if on report tab, re-render
 const _origLoadEventsSnapshot = null; // handled via renderCalendar hook
-
-/* ════════════════════════════════════════
-   TOGGLE HIDE/SHOW EVENTS (view-only users)
-   ════════════════════════════════════════ */
-(function() {
-  const LS_KEY = `cal_events_hidden_${WORKSPACE}`;
-  let eventsHidden = false;
-
-  // Restore saved preference
-  try { eventsHidden = localStorage.getItem(LS_KEY) === '1'; } catch(e) {}
-
-  function applyToggleState() {
-    const btn = document.getElementById('toggleEventsBtn');
-    if (!btn) return;
-    if (eventsHidden) {
-      document.body.classList.add('events-hidden');
-      btn.classList.remove('events-visible');
-      btn.classList.add('events-hidden-state');
-      btn.innerHTML = '<i class="ti ti-eye"></i> Tampilkan Event';
-      btn.title = 'Tampilkan event di kalender';
-    } else {
-      document.body.classList.remove('events-hidden');
-      btn.classList.add('events-visible');
-      btn.classList.remove('events-hidden-state');
-      btn.innerHTML = '<i class="ti ti-eye-off"></i> Sembunyikan Event';
-      btn.title = 'Sembunyikan event di kalender';
-    }
-  }
-
-  document.getElementById('toggleEventsBtn').addEventListener('click', () => {
-    eventsHidden = !eventsHidden;
-    try { localStorage.setItem(LS_KEY, eventsHidden ? '1' : '0'); } catch(e) {}
-    applyToggleState();
-    showToast(eventsHidden ? '🙈 Event disembunyikan' : '👁️ Event ditampilkan');
-  });
-
-  // Apply initial state after DOM ready
-  applyToggleState();
-})();
 </script>
 </body>
 </html>
