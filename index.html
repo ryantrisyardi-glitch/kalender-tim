@@ -988,6 +988,15 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
 
 <div class="toast" id="toast"></div>
 
+<!-- Context Menu (must be in DOM before scripts run) -->
+<div id="ctxMenu" role="menu">
+  <div class="ctx-label">Ubah Status</div>
+  <div class="ctx-item" data-status="pending"><span class="ctx-dot" style="background:#D97706"></span> In Process</div>
+  <div class="ctx-item" data-status="achieve"><span class="ctx-dot" style="background:#15803D"></span> Achieve</div>
+  <div class="ctx-item" data-status="not_achieve"><span class="ctx-dot" style="background:#B91C1C"></span> Not Achieve</div>
+  <div class="ctx-item" data-status="cancel"><span class="ctx-dot" style="background:#6B7280"></span> Cancel</div>
+</div>
+
 <script>
 /* ════════════════════════════════════════
    🔥 FIREBASE CONFIG
@@ -2811,11 +2820,14 @@ const _origRebuildFilters = rebuildFilters;
 const _origLoadEventsSnapshot = null; // handled via renderCalendar hook
 
 /* ════════════════════════════════════════
-   DRAG & DROP — urutan event per tanggal
-   Urutan disimpan di: eventOrder[dateStr] = [id, id, ...]
+   DRAG & DROP + CONTEXT MENU
+   Menggunakan event delegation dari calBody
+   agar tidak perlu re-attach setiap render
    ════════════════════════════════════════ */
+
+/* ── ORDER STORAGE ── */
 const ORDER_KEY = `cal_order_${WORKSPACE}`;
-let eventOrder = {}; // { "2026-06-01": ["id1","id2", ...], ... }
+let eventOrder = {};
 
 function loadOrder() {
   try { eventOrder = JSON.parse(localStorage.getItem(ORDER_KEY)||'{}'); } catch(e){ eventOrder={}; }
@@ -2830,11 +2842,9 @@ async function loadOrderFromFirebase() {
   if (!useFirebase || !db) return;
   try {
     const doc = await db.collection('cal_order').doc(WORKSPACE).get();
-    if (doc.exists) eventOrder = doc.data() || {};
+    if (doc.exists) { eventOrder = doc.data() || {}; renderCalendar(); }
   } catch(e){}
 }
-
-/* Sort events for a date according to saved order */
 function sortedEventsForDate(ds, evs) {
   const order = eventOrder[ds];
   if (!order || !order.length) return evs;
@@ -2844,97 +2854,101 @@ function sortedEventsForDate(ds, evs) {
   return sorted;
 }
 
-let dragSrcId = null, dragSrcDate = null;
+/* ── DRAG STATE ── */
+let dragSrcId = null;
 
-function setupDragDrop() {
+/* ── EVENT DELEGATION: semua drag & contextmenu dari satu listener di document ── */
+document.addEventListener('dragstart', e => {
   if (!canWrite) return;
-  document.querySelectorAll('.chip[data-id][draggable]').forEach(chip => {
-    chip.addEventListener('dragstart', e => {
-      dragSrcId   = chip.dataset.id;
-      dragSrcDate = chip.closest('.dc')?.dataset.date;
-      chip.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', chip.dataset.id);
-    });
-    chip.addEventListener('dragend', () => {
-      chip.classList.remove('dragging');
-      document.querySelectorAll('.drag-over-above,.drag-over-below,.drag-target').forEach(el=>{
-        el.classList.remove('drag-over-above','drag-over-below','drag-target');
-      });
-      dragSrcId=null; dragSrcDate=null;
-    });
-    chip.addEventListener('dragover', e => {
-      if (!dragSrcId || chip.dataset.id === dragSrcId) return;
-      e.preventDefault(); e.dataTransfer.dropEffect='move';
-      const rect = chip.getBoundingClientRect();
-      const mid  = rect.top + rect.height/2;
-      chip.classList.remove('drag-over-above','drag-over-below');
-      chip.classList.add(e.clientY < mid ? 'drag-over-above' : 'drag-over-below');
-      chip.closest('.dc-events')?.classList.add('drag-target');
-    });
-    chip.addEventListener('dragleave', () => {
-      chip.classList.remove('drag-over-above','drag-over-below');
-    });
-    chip.addEventListener('drop', e => {
-      e.preventDefault();
-      if (!dragSrcId || chip.dataset.id === dragSrcId) return;
-      const dateStr = chip.closest('.dc')?.dataset.date;
-      if (!dateStr) return;
+  const chip = e.target.closest('.chip[data-id][draggable]');
+  if (!chip) return;
+  dragSrcId = chip.dataset.id;
+  // Harus set data agar drop event terpicu di browser
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', dragSrcId);
+  // Visual delay agar browser sempat ambil snapshot
+  setTimeout(() => chip.classList.add('dragging'), 0);
+});
 
-      // Build current order for this date
-      const container = chip.closest('.dc-events');
-      const chips = [...container.querySelectorAll('.chip[data-id]')];
-      let ids = chips.map(ch=>ch.dataset.id);
+document.addEventListener('dragend', e => {
+  const chip = e.target.closest('.chip[data-id]');
+  if (chip) chip.classList.remove('dragging');
+  document.querySelectorAll('.drag-over-above,.drag-over-below,.drag-target')
+    .forEach(el => el.classList.remove('drag-over-above','drag-over-below','drag-target'));
+  dragSrcId = null;
+});
 
-      // Remove src from list, insert before/after target
-      ids = ids.filter(id=>id!==dragSrcId);
-      const targetIdx = ids.indexOf(chip.dataset.id);
-      const rect = chip.getBoundingClientRect();
-      const insertAfter = e.clientY >= rect.top + rect.height/2;
-      ids.splice(insertAfter ? targetIdx+1 : targetIdx, 0, dragSrcId);
-
-      eventOrder[dateStr] = ids;
-      saveOrder();
-      renderCalendar();
-      if (selectedDate) renderPanel(selectedDate);
+document.addEventListener('dragover', e => {
+  if (!dragSrcId) return;
+  const chip = e.target.closest('.chip[data-id]');
+  const area = e.target.closest('.dc-events');
+  if (chip && chip.dataset.id !== dragSrcId) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const rect = chip.getBoundingClientRect();
+    const isAbove = e.clientY < rect.top + rect.height / 2;
+    // Clear siblings first
+    chip.closest('.dc-events')?.querySelectorAll('.chip').forEach(c => {
+      c.classList.remove('drag-over-above','drag-over-below');
     });
-  });
+    chip.classList.add(isAbove ? 'drag-over-above' : 'drag-over-below');
+  } else if (area) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    area.classList.add('drag-target');
+  }
+});
 
-  // Also allow drop onto empty dc-events area
-  document.querySelectorAll('.dc-events').forEach(area => {
-    area.addEventListener('dragover', e=>{ e.preventDefault(); area.classList.add('drag-target'); });
-    area.addEventListener('dragleave', ()=> area.classList.remove('drag-target'));
-    area.addEventListener('drop', e=>{ area.classList.remove('drag-target'); });
-  });
-}
+document.addEventListener('dragleave', e => {
+  const chip = e.target.closest('.chip[data-id]');
+  if (chip) chip.classList.remove('drag-over-above','drag-over-below');
+});
 
-/* ════════════════════════════════════════
-   RIGHT-CLICK CONTEXT MENU — ubah status
-   ════════════════════════════════════════ */
+document.addEventListener('drop', e => {
+  if (!dragSrcId) return;
+  const chip = e.target.closest('.chip[data-id]');
+  if (!chip || chip.dataset.id === dragSrcId) return;
+  e.preventDefault();
+
+  const dateStr = chip.closest('.dc')?.dataset.date;
+  if (!dateStr) return;
+
+  // Baca urutan chip saat ini dari DOM
+  const container = chip.closest('.dc-events');
+  if (!container) return;
+  let ids = [...container.querySelectorAll('.chip[data-id]')].map(ch => ch.dataset.id);
+
+  // Hapus src, sisipkan di posisi baru
+  ids = ids.filter(id => id !== dragSrcId);
+  const targetIdx = ids.indexOf(chip.dataset.id);
+  const rect = chip.getBoundingClientRect();
+  const insertAfter = e.clientY >= rect.top + rect.height / 2;
+  ids.splice(insertAfter ? targetIdx + 1 : targetIdx, 0, dragSrcId);
+
+  eventOrder[dateStr] = ids;
+  saveOrder();
+  renderCalendar();
+  if (selectedDate) renderPanel(selectedDate);
+});
+
+/* ── CONTEXT MENU ── */
 const ctxMenu = document.getElementById('ctxMenu');
 let ctxTargetId = null;
 
 function openCtxMenu(x, y, eventId) {
-  if (!canWrite) return;
   ctxTargetId = eventId;
-  const ev = events.find(e=>e.id===eventId);
+  const ev = events.find(e => e.id === eventId);
   if (!ev) return;
-
-  // Mark active status
-  ctxMenu.querySelectorAll('.ctx-item').forEach(item=>{
-    item.classList.toggle('active-status', item.dataset.status === (ev.status||'pending'));
+  ctxMenu.querySelectorAll('.ctx-item').forEach(item => {
+    item.classList.toggle('active-status', item.dataset.status === (ev.status || 'pending'));
   });
-
-  // Position
-  ctxMenu.style.left = x+'px';
-  ctxMenu.style.top  = y+'px';
+  ctxMenu.style.left = x + 'px';
+  ctxMenu.style.top  = y + 'px';
   ctxMenu.classList.add('open');
-
-  // Ensure it stays in viewport
-  requestAnimationFrame(()=>{
+  requestAnimationFrame(() => {
     const r = ctxMenu.getBoundingClientRect();
-    if (r.right > window.innerWidth) ctxMenu.style.left = (window.innerWidth - r.width - 8)+'px';
-    if (r.bottom > window.innerHeight) ctxMenu.style.top = (y - r.height - 4)+'px';
+    if (r.right  > window.innerWidth)  ctxMenu.style.left = (window.innerWidth  - r.width  - 8) + 'px';
+    if (r.bottom > window.innerHeight) ctxMenu.style.top  = (y - r.height - 4) + 'px';
   });
 }
 function closeCtxMenu() {
@@ -2942,51 +2956,47 @@ function closeCtxMenu() {
   ctxTargetId = null;
 }
 
-ctxMenu.querySelectorAll('.ctx-item').forEach(item=>{
-  item.addEventListener('click', async ()=>{
-    if (!ctxTargetId) return;
-    const newStatus = item.dataset.status;
-    const ev = events.find(e=>e.id===ctxTargetId);
-    if (!ev || ev.status === newStatus) { closeCtxMenu(); return; }
-    // Save
-    if (useFirebase) {
-      await db.collection(EVENTS_COLL).doc(ctxTargetId).update({status: newStatus});
-    } else {
-      events = events.map(e=>e.id===ctxTargetId?{...e,status:newStatus}:e);
-      localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
-      rebuildFilters(); renderCalendar();
-      if (selectedDate) renderPanel(selectedDate);
-    }
-    const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process',cancel:'Cancel'};
-    showToast(`✅ Status diubah ke: ${SM[newStatus]}`);
-    closeCtxMenu();
-  });
+// Klik kanan pada chip — delegasi dari document
+document.addEventListener('contextmenu', e => {
+  const chip = e.target.closest('.chip[data-id]');
+  if (!chip || !canWrite) return;
+  e.preventDefault();
+  openCtxMenu(e.clientX, e.clientY, chip.dataset.id);
 });
 
-document.addEventListener('click', ()=> closeCtxMenu());
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeCtxMenu(); });
-ctxMenu.addEventListener('contextmenu', e=>e.preventDefault());
+// Pilih status dari context menu
+ctxMenu.addEventListener('click', async e => {
+  const item = e.target.closest('.ctx-item');
+  if (!item || !ctxTargetId) return;
+  const newStatus = item.dataset.status;
+  const ev = events.find(e => e.id === ctxTargetId);
+  if (!ev) { closeCtxMenu(); return; }
+  closeCtxMenu();
+  if (ev.status === newStatus) return;
+  if (useFirebase) {
+    await db.collection(EVENTS_COLL).doc(ev.id).update({ status: newStatus });
+  } else {
+    events = events.map(e => e.id === ev.id ? { ...e, status: newStatus } : e);
+    localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
+    rebuildFilters(); renderCalendar();
+    if (selectedDate) renderPanel(selectedDate);
+  }
+  const SM = { achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel' };
+  showToast(`✅ Status → ${SM[newStatus]}`);
+});
 
-/* Patch renderCalendar to wire up drag+contextmenu after render */
-const _origRenderCalendar = renderCalendar;
-renderCalendar = async function() {
-  await _origRenderCalendar.apply(this, arguments);
-  setupDragDrop();
-};
+// Tutup menu saat klik di luar atau Escape
+document.addEventListener('click', e => {
+  if (!ctxMenu.contains(e.target)) closeCtxMenu();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCtxMenu(); });
+ctxMenu.addEventListener('contextmenu', e => e.preventDefault());
 
 /* Load order on init */
 loadOrder();
-loadOrderFromFirebase().then(()=>{ if(Object.keys(eventOrder).length) renderCalendar(); });
+loadOrderFromFirebase();
 </script>
 
-<!-- Context Menu -->
-<div id="ctxMenu" role="menu">
-  <div class="ctx-label">Ubah Status</div>
-  <div class="ctx-item" data-status="pending"><span class="ctx-dot" style="background:#D97706"></span> In Process</div>
-  <div class="ctx-item" data-status="achieve"><span class="ctx-dot" style="background:#15803D"></span> Achieve</div>
-  <div class="ctx-item" data-status="not_achieve"><span class="ctx-dot" style="background:#B91C1C"></span> Not Achieve</div>
-  <div class="ctx-item" data-status="cancel"><span class="ctx-dot" style="background:#6B7280"></span> Cancel</div>
-</div>
 
 </body>
 </html>
