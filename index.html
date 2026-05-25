@@ -87,7 +87,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .dc.is-sun{background:var(--sun-bg)}.dc.is-sun .day-num{color:var(--sun-num)!important}
 .dc.is-libnas{background:var(--libnas-bg)}.dc.is-libnas::before{background:var(--libnas-side);opacity:1}.dc.is-libnas .day-num{color:var(--libnas-num)!important;font-weight:800}
 .dc.is-cutib{background:var(--cutib-bg)}.dc.is-cutib::before{background:var(--cutib-side);opacity:1}.dc.is-cutib .day-num{color:var(--cutib-num)!important;font-weight:800}
-.dc.other{opacity:.25;pointer-events:none}
+.dc.other{pointer-events:none}.dc.other .day-num{opacity:.25}.dc.other .dc-events{border-top:none}
 .dc.today{outline:2px solid #3B82F6;outline-offset:-2px}
 .dc.today .day-num{background:#3B82F6!important;color:#fff!important;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800}
 .dc.selected{outline:2px solid var(--ink);outline-offset:-2px}
@@ -255,8 +255,8 @@ body.read-only .write-only{opacity:.35;pointer-events:none;cursor:not-allowed}
 body.read-only .readonly-badge{display:inline-flex}
 
 /* ── EVENT HIDDEN / VISIBILITY TOGGLE ── */
-/* Chip di kalender: event tersembunyi ditampilkan dengan strikethrough+redup ke editor */
-.chip.is-hidden-event{opacity:.45;text-decoration:line-through;filter:grayscale(.6)}
+/* Chip di kalender: event tersembunyi ditampilkan dengan italic+redup ke editor */
+.chip.is-hidden-event{opacity:.45;font-style:italic;filter:grayscale(.6)}
 /* Ikon kunci kecil di chip */
 .chip.is-hidden-event::before{content:'🔒 ';font-size:.65em}
 /* Ecard & panel item tersembunyi: hanya tampil ke editor dengan efek redup */
@@ -1518,15 +1518,20 @@ async function renderCalendar() {
     if(ds===selectedDate&&c.cur) cls+=' selected';
 
     const holHtml=(hol&&c.cur)?`<div class="hol-label" title="${escHtml(hol.name)}">${escHtml(hol.name)}</div>`:'';
-    const evs=c.cur?getEventsForDate(ds):[];
+    // Tampilkan event di tanggal bulan lain (other) dengan warna muted/tidak dominan
+    const evs=getEventsForDate(ds);
     const MAX=5; /* FIX #1 */
     let chipsHtml=evs.slice(0,MAX).map(e=>{
       const t=getTypeById(e.type);
       const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':'';
       const hiddenCls=e.hidden?' is-hidden-event':'';
+      if(!c.cur){
+        // Chip other-month: warna sama tapi opacity sangat rendah & italic, tidak clickable
+        return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none" title="${escHtml(picsLabel(e))}">${escHtml(picsLabel(e))}</span>`;
+      }
       return `<span class="chip${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${checkIcon}${escHtml(picsLabel(e))}</span>`;
     }).join('');
-    if(evs.length>MAX) chipsHtml+=`<span class="chip-more">+${evs.length-MAX} lainnya</span>`;
+    if(c.cur&&evs.length>MAX) chipsHtml+=`<span class="chip-more">+${evs.length-MAX} lainnya</span>`;
 
     html+=`<div class="${cls}" data-date="${ds}">
       <div class="dc-head">
