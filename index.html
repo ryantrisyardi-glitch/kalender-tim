@@ -25,6 +25,7 @@
   --s-achieve-bg:#DCFCE7;--s-achieve-tx:#15803D;
   --s-not-bg:#FEE2E2;--s-not-tx:#B91C1C;
   --s-pending-bg:#FEF3C7;--s-pending-tx:#92400E;
+  --s-cancel-bg:#F3F4F6;--s-cancel-tx:#6B7280;
   --r-sm:5px;--r-md:10px;--r-lg:14px;--r-xl:20px;
   --panel-w:320px;
 }
@@ -138,6 +139,26 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .s-achieve{background:var(--s-achieve-bg);color:var(--s-achieve-tx)}
 .s-not_achieve{background:var(--s-not-bg);color:var(--s-not-tx)}
 .s-pending{background:var(--s-pending-bg);color:var(--s-pending-tx)}
+.s-cancel{background:var(--s-cancel-bg);color:var(--s-cancel-tx)}
+
+/* ── DRAG & DROP ── */
+.chip[draggable]{cursor:grab}
+.chip[draggable]:active{cursor:grabbing}
+.chip.drag-over-above{box-shadow:inset 0 3px 0 0 rgba(255,255,255,.9)}
+.chip.drag-over-below{box-shadow:inset 0 -3px 0 0 rgba(255,255,255,.9)}
+.chip.dragging{opacity:.35;transform:scale(.97)}
+.dc-events.drag-target{background:rgba(59,130,246,.06);border-radius:0 0 var(--r-lg) var(--r-lg)}
+
+/* ── CONTEXT MENU ── */
+#ctxMenu{position:fixed;z-index:9999;background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);box-shadow:0 8px 32px rgba(28,25,23,.18);padding:5px;min-width:190px;display:none;animation:fadeIn .1s ease}
+@keyframes fadeIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+#ctxMenu.open{display:block}
+.ctx-label{font-size:.63rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-lt);padding:5px 10px 3px}
+.ctx-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-md);cursor:pointer;font-size:.8rem;font-weight:600;color:var(--ink-md);transition:background .1s,color .1s;white-space:nowrap}
+.ctx-item:hover{background:var(--bg-dk);color:var(--ink)}
+.ctx-item.active-status{color:var(--ink);background:var(--bg-dk)}
+.ctx-item .ctx-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ctx-sep{height:1px;background:var(--rule);margin:4px 2px}
 .pics-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 /* FIX #1: note in ecard — vivid highlight */
 .ecard-note{font-size:.71rem;color:#1C1917;margin-top:6px;line-height:1.5;padding:6px 9px;background:#FEF9C3;border-radius:var(--r-sm);border-left:3px solid #EAB308;font-weight:500}
@@ -360,6 +381,7 @@ body.dark{
   --s-achieve-bg:#14372A;--s-achieve-tx:#86EFAC;
   --s-not-bg:#3B1515;--s-not-tx:#FCA5A5;
   --s-pending-bg:#2D2410;--s-pending-tx:#FDE68A;
+  --s-cancel-bg:#1F2937;--s-cancel-tx:#9CA3AF;
 }
 body.dark .dh{color:#8C8580}
 body.dark .dh.sun{color:#FCA5A5}
@@ -723,6 +745,7 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
         <option value="achieve">Achieve</option>
         <option value="not_achieve">Not Achieve</option>
         <option value="pending">In Process</option>
+        <option value="cancel">Cancel</option>
       </select>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -821,6 +844,7 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
         <option value="pending">In Process</option>
         <option value="achieve">Achieve</option>
         <option value="not_achieve">Not Achieve</option>
+        <option value="cancel">Cancel</option>
       </select>
     </div>
     <div class="fg">
@@ -1520,18 +1544,19 @@ async function renderCalendar() {
     const holHtml=(hol&&c.cur)?`<div class="hol-label" title="${escHtml(hol.name)}">${escHtml(hol.name)}</div>`:'';
     // Tampilkan event di tanggal bulan lain (other) dengan warna muted/tidak dominan
     const evs=getEventsForDate(ds);
+    const evsSorted=c.cur?sortedEventsForDate(ds,evs):evs;
     const MAX=5; /* FIX #1 */
-    let chipsHtml=evs.slice(0,MAX).map(e=>{
+    let chipsHtml=evsSorted.slice(0,MAX).map(e=>{
       const t=getTypeById(e.type);
-      const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':'';
+      const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':e.status==='cancel'?'✕ ':'';
       const hiddenCls=e.hidden?' is-hidden-event':'';
       if(!c.cur){
         // Chip other-month: warna sama tapi opacity sangat rendah & italic, tidak clickable
         return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none" title="${escHtml(picsLabel(e))}">${escHtml(picsLabel(e))}</span>`;
       }
-      return `<span class="chip${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" title="${escHtml(picsLabel(e))}">${checkIcon}${escHtml(picsLabel(e))}</span>`;
+      return `<span class="chip${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true" title="${escHtml(picsLabel(e))}">${checkIcon}${escHtml(picsLabel(e))}</span>`;
     }).join('');
-    if(c.cur&&evs.length>MAX) chipsHtml+=`<span class="chip-more">+${evs.length-MAX} lainnya</span>`;
+    if(c.cur&&evsSorted.length>MAX) chipsHtml+=`<span class="chip-more">+${evsSorted.length-MAX} lainnya</span>`;
 
     html+=`<div class="${cls}" data-date="${ds}">
       <div class="dc-head">
@@ -1553,6 +1578,10 @@ async function renderCalendar() {
   });
   document.querySelectorAll('.chip[data-id]').forEach(el=>{
     el.addEventListener('click',ev=>{ev.stopPropagation();openDetail(el.dataset.id);});
+    el.addEventListener('contextmenu',ev=>{
+      ev.preventDefault(); ev.stopPropagation();
+      if(canWrite) openCtxMenu(ev.clientX, ev.clientY, el.dataset.id);
+    });
   });
   document.querySelectorAll('.dc:not(.other)').forEach(el=>{
     el.addEventListener('click',ev=>{
@@ -1606,14 +1635,14 @@ function renderPanel(ds) {
   const body=document.getElementById('panelBody');
   if(!evs.length){body.innerHTML=`<div class="panel-empty"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`;return;}
 
-  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process'};
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process',cancel:'Cancel'};
   body.innerHTML=evs.map(e=>{
     const t=getTypeById(e.type);
     const pics=e.pics||[];
     const dl=e.dateEnd&&e.dateEnd!==e.dateStart?`${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}`:fmtDate(e.dateStart);
     const spIcon=e.status==='achieve'?'✓':e.status==='not_achieve'?'✗':'';
-    const spColor=e.status==='achieve'?'var(--s-achieve-tx)':e.status==='not_achieve'?'var(--s-not-tx)':'var(--s-pending-tx)';
-    const spBg=e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':'var(--s-pending-bg)';
+    const spColor=e.status==='achieve'?'var(--s-achieve-tx)':e.status==='not_achieve'?'var(--s-not-tx)':e.status==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
+    const spBg=e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':e.status==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
     const sp=e.status?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[e.status]}</span>`:'';
     const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:10px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
     const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;margin-left:4px">🔒 Tersembunyi</span>`:'';
@@ -1651,7 +1680,7 @@ function renderEventList(year,month) {
   const grid=document.getElementById('eventGrid');
   if(!filtered.length){grid.innerHTML=`<p style="color:var(--ink-lt);font-size:.82rem;grid-column:1/-1">Tidak ada event bulan ini.</p>`;return;}
 
-  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process'};
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process',cancel:'Cancel'};
   grid.innerHTML=filtered.map(e=>{
     const t=getTypeById(e.type), pics=e.pics||[];
     const dl=e.dateEnd?`${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}`:fmtDate(e.dateStart);
@@ -1799,7 +1828,7 @@ function openDetail(id) {
   viewingId=id;
   const t=getTypeById(ev.type);
   const dl=ev.dateEnd?`${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`:fmtDate(ev.dateStart);
-  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process'};
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process',cancel:'Cancel'};
   const sp=ev.status?`<span class="status-pill s-${ev.status}">${SM[ev.status]}</span>`:'';
   const pics=ev.pics||[];
   const lt=t.lt||hexToLight(t.chip);
@@ -2124,7 +2153,7 @@ function doExport() {
 }
 
 function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
-  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process'};
+  const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process',cancel:'Cancel'};
   const sFill={achieve:'D1FAE5',not_achieve:'FEE2E2',pending:'FEF9C3'};
   const sTx  ={achieve:'166534',not_achieve:'991B1B',pending:'92400E'};
 
@@ -2220,14 +2249,15 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
 
   /* ── SHEET 3: Rekap per PIC ── */
   const allPICsForSheet = [...new Set(eventsToExport.flatMap(e=>e.pics||[]).filter(Boolean))].sort();
-  const picSummaryHdr = ['PIC','Jumlah Event','Achieve','Not Achieve','In Process','Jenis Event (ringkasan)'];
+  const picSummaryHdr = ['PIC','Jumlah Event','Achieve','Not Achieve','In Process','Cancel','Jenis Event (ringkasan)'];
   const picSummaryData = allPICsForSheet.map(pic => {
     const pe = eventsToExport.filter(e=>(e.pics||[]).includes(pic));
     const achieve = pe.filter(e=>e.status==='achieve').length;
     const notA = pe.filter(e=>e.status==='not_achieve').length;
     const pend = pe.filter(e=>e.status==='pending').length;
+    const canc = pe.filter(e=>e.status==='cancel').length;
     const types = [...new Set(pe.map(e=>getTypeById(e.type).label))].join(', ');
-    return [pic, pe.length, achieve, notA, pend, types];
+    return [pic, pe.length, achieve, notA, pend, canc, types];
   });
   const ws3 = XLSX.utils.aoa_to_sheet([picSummaryHdr, ...picSummaryData]);
   ws3['!cols'] = [{wch:24},{wch:14},{wch:10},{wch:12},{wch:10},{wch:36}];
@@ -2243,13 +2273,14 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
   XLSX.utils.book_append_sheet(wb, ws3, 'Rekap per PIC');
 
   /* ── SHEET 4: Rekap per Jenis Event ── */
-  const typeHdr = ['Jenis Event','Jumlah Event','Achieve','Not Achieve','In Process'];
+  const typeHdr = ['Jenis Event','Jumlah Event','Achieve','Not Achieve','In Process','Cancel'];
   const typeData = eventTypes.map(t => {
     const te = eventsToExport.filter(e=>e.type===t.id);
     const achieve = te.filter(e=>e.status==='achieve').length;
     const notA = te.filter(e=>e.status==='not_achieve').length;
     const pend = te.filter(e=>e.status==='pending').length;
-    return [t.label, te.length, achieve, notA, pend];
+    const canc = te.filter(e=>e.status==='cancel').length;
+    return [t.label, te.length, achieve, notA, pend, canc];
   }).filter(r=>r[1]>0);
   const ws4 = XLSX.utils.aoa_to_sheet([typeHdr, ...typeData]);
   ws4['!cols'] = [{wch:24},{wch:14},{wch:10},{wch:12},{wch:10}];
@@ -2660,8 +2691,8 @@ function renderReport() {
       const dl   = e.dateEnd && e.dateEnd !== e.dateStart
         ? `${fmtDateReport(e.dateStart)} – ${fmtDateReport(e.dateEnd)}`
         : fmtDateReport(e.dateStart);
-      const statusTx  = e.status==='achieve'?'var(--s-achieve-tx)':e.status==='not_achieve'?'var(--s-not-tx)':'var(--s-pending-tx)';
-      const statusBg  = e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':'var(--s-pending-bg)';
+      const statusTx  = e.status==='achieve'?'var(--s-achieve-tx)':e.status==='not_achieve'?'var(--s-not-tx)':e.status==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
+      const statusBg  = e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':e.status==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
       const statusTxt = SM[e.status] || e.status || '–';
       // Darken chip color for accent bar
       const accentColor = hexDarken(t.chip, 0.28);
@@ -2778,6 +2809,184 @@ document.getElementById('rptExportExcelBtn').addEventListener('click', () => {
 const _origRebuildFilters = rebuildFilters;
 // patch: after events reload, if on report tab, re-render
 const _origLoadEventsSnapshot = null; // handled via renderCalendar hook
+
+/* ════════════════════════════════════════
+   DRAG & DROP — urutan event per tanggal
+   Urutan disimpan di: eventOrder[dateStr] = [id, id, ...]
+   ════════════════════════════════════════ */
+const ORDER_KEY = `cal_order_${WORKSPACE}`;
+let eventOrder = {}; // { "2026-06-01": ["id1","id2", ...], ... }
+
+function loadOrder() {
+  try { eventOrder = JSON.parse(localStorage.getItem(ORDER_KEY)||'{}'); } catch(e){ eventOrder={}; }
+}
+function saveOrder() {
+  localStorage.setItem(ORDER_KEY, JSON.stringify(eventOrder));
+  if (useFirebase && db) {
+    db.collection('cal_order').doc(WORKSPACE).set(eventOrder).catch(()=>{});
+  }
+}
+async function loadOrderFromFirebase() {
+  if (!useFirebase || !db) return;
+  try {
+    const doc = await db.collection('cal_order').doc(WORKSPACE).get();
+    if (doc.exists) eventOrder = doc.data() || {};
+  } catch(e){}
+}
+
+/* Sort events for a date according to saved order */
+function sortedEventsForDate(ds, evs) {
+  const order = eventOrder[ds];
+  if (!order || !order.length) return evs;
+  const sorted = [];
+  order.forEach(id => { const e = evs.find(x=>x.id===id); if(e) sorted.push(e); });
+  evs.forEach(e => { if(!sorted.find(x=>x.id===e.id)) sorted.push(e); });
+  return sorted;
+}
+
+let dragSrcId = null, dragSrcDate = null;
+
+function setupDragDrop() {
+  if (!canWrite) return;
+  document.querySelectorAll('.chip[data-id][draggable]').forEach(chip => {
+    chip.addEventListener('dragstart', e => {
+      dragSrcId   = chip.dataset.id;
+      dragSrcDate = chip.closest('.dc')?.dataset.date;
+      chip.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', chip.dataset.id);
+    });
+    chip.addEventListener('dragend', () => {
+      chip.classList.remove('dragging');
+      document.querySelectorAll('.drag-over-above,.drag-over-below,.drag-target').forEach(el=>{
+        el.classList.remove('drag-over-above','drag-over-below','drag-target');
+      });
+      dragSrcId=null; dragSrcDate=null;
+    });
+    chip.addEventListener('dragover', e => {
+      if (!dragSrcId || chip.dataset.id === dragSrcId) return;
+      e.preventDefault(); e.dataTransfer.dropEffect='move';
+      const rect = chip.getBoundingClientRect();
+      const mid  = rect.top + rect.height/2;
+      chip.classList.remove('drag-over-above','drag-over-below');
+      chip.classList.add(e.clientY < mid ? 'drag-over-above' : 'drag-over-below');
+      chip.closest('.dc-events')?.classList.add('drag-target');
+    });
+    chip.addEventListener('dragleave', () => {
+      chip.classList.remove('drag-over-above','drag-over-below');
+    });
+    chip.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragSrcId || chip.dataset.id === dragSrcId) return;
+      const dateStr = chip.closest('.dc')?.dataset.date;
+      if (!dateStr) return;
+
+      // Build current order for this date
+      const container = chip.closest('.dc-events');
+      const chips = [...container.querySelectorAll('.chip[data-id]')];
+      let ids = chips.map(ch=>ch.dataset.id);
+
+      // Remove src from list, insert before/after target
+      ids = ids.filter(id=>id!==dragSrcId);
+      const targetIdx = ids.indexOf(chip.dataset.id);
+      const rect = chip.getBoundingClientRect();
+      const insertAfter = e.clientY >= rect.top + rect.height/2;
+      ids.splice(insertAfter ? targetIdx+1 : targetIdx, 0, dragSrcId);
+
+      eventOrder[dateStr] = ids;
+      saveOrder();
+      renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    });
+  });
+
+  // Also allow drop onto empty dc-events area
+  document.querySelectorAll('.dc-events').forEach(area => {
+    area.addEventListener('dragover', e=>{ e.preventDefault(); area.classList.add('drag-target'); });
+    area.addEventListener('dragleave', ()=> area.classList.remove('drag-target'));
+    area.addEventListener('drop', e=>{ area.classList.remove('drag-target'); });
+  });
+}
+
+/* ════════════════════════════════════════
+   RIGHT-CLICK CONTEXT MENU — ubah status
+   ════════════════════════════════════════ */
+const ctxMenu = document.getElementById('ctxMenu');
+let ctxTargetId = null;
+
+function openCtxMenu(x, y, eventId) {
+  if (!canWrite) return;
+  ctxTargetId = eventId;
+  const ev = events.find(e=>e.id===eventId);
+  if (!ev) return;
+
+  // Mark active status
+  ctxMenu.querySelectorAll('.ctx-item').forEach(item=>{
+    item.classList.toggle('active-status', item.dataset.status === (ev.status||'pending'));
+  });
+
+  // Position
+  ctxMenu.style.left = x+'px';
+  ctxMenu.style.top  = y+'px';
+  ctxMenu.classList.add('open');
+
+  // Ensure it stays in viewport
+  requestAnimationFrame(()=>{
+    const r = ctxMenu.getBoundingClientRect();
+    if (r.right > window.innerWidth) ctxMenu.style.left = (window.innerWidth - r.width - 8)+'px';
+    if (r.bottom > window.innerHeight) ctxMenu.style.top = (y - r.height - 4)+'px';
+  });
+}
+function closeCtxMenu() {
+  ctxMenu.classList.remove('open');
+  ctxTargetId = null;
+}
+
+ctxMenu.querySelectorAll('.ctx-item').forEach(item=>{
+  item.addEventListener('click', async ()=>{
+    if (!ctxTargetId) return;
+    const newStatus = item.dataset.status;
+    const ev = events.find(e=>e.id===ctxTargetId);
+    if (!ev || ev.status === newStatus) { closeCtxMenu(); return; }
+    // Save
+    if (useFirebase) {
+      await db.collection(EVENTS_COLL).doc(ctxTargetId).update({status: newStatus});
+    } else {
+      events = events.map(e=>e.id===ctxTargetId?{...e,status:newStatus}:e);
+      localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
+      rebuildFilters(); renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    }
+    const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process',cancel:'Cancel'};
+    showToast(`✅ Status diubah ke: ${SM[newStatus]}`);
+    closeCtxMenu();
+  });
+});
+
+document.addEventListener('click', ()=> closeCtxMenu());
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeCtxMenu(); });
+ctxMenu.addEventListener('contextmenu', e=>e.preventDefault());
+
+/* Patch renderCalendar to wire up drag+contextmenu after render */
+const _origRenderCalendar = renderCalendar;
+renderCalendar = async function() {
+  await _origRenderCalendar.apply(this, arguments);
+  setupDragDrop();
+};
+
+/* Load order on init */
+loadOrder();
+loadOrderFromFirebase().then(()=>{ if(Object.keys(eventOrder).length) renderCalendar(); });
 </script>
+
+<!-- Context Menu -->
+<div id="ctxMenu" role="menu">
+  <div class="ctx-label">Ubah Status</div>
+  <div class="ctx-item" data-status="pending"><span class="ctx-dot" style="background:#D97706"></span> In Process</div>
+  <div class="ctx-item" data-status="achieve"><span class="ctx-dot" style="background:#15803D"></span> Achieve</div>
+  <div class="ctx-item" data-status="not_achieve"><span class="ctx-dot" style="background:#B91C1C"></span> Not Achieve</div>
+  <div class="ctx-item" data-status="cancel"><span class="ctx-dot" style="background:#6B7280"></span> Cancel</div>
+</div>
+
 </body>
 </html>
