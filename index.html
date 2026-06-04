@@ -3244,20 +3244,9 @@ function openStatusNoteModal(eventId, newStatus, dateStr) {
     prevNoteEl.style.display = 'none';
   }
 
-  // Scope section: only for multi-day events
+  // Scope section: hidden — modal ini hanya untuk isian catatan tambahan
   const scopeSection = document.getElementById('snScopeSection');
-  const isMultiDay = ev.dateEnd && ev.dateEnd !== ev.dateStart;
-  if (isMultiDay) {
-    scopeSection.style.display = 'block';
-    document.getElementById('snScopeThisSub').textContent = dateStr ? `Hanya ${fmtDate(dateStr)}` : `Hanya ${fmtDate(ev.dateStart)}`;
-    document.getElementById('snScopeAllSub').textContent = `${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`;
-    // Reset to "this"
-    document.querySelector('input[name=snScope][value=this]').checked = true;
-    document.getElementById('snScopeThisLabel').classList.add('selected');
-    document.getElementById('snScopeAllLabel').classList.remove('selected');
-  } else {
-    scopeSection.style.display = 'none';
-  }
+  scopeSection.style.display = 'none';
 
   // Clear note field
   document.getElementById('snNote').value = '';
@@ -3287,11 +3276,9 @@ document.getElementById('statusNoteOverlay').addEventListener('click', e => {
 document.getElementById('snSaveBtn').addEventListener('click', async () => {
   if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return; }
   const note = document.getElementById('snNote').value;
-  const scopeEl = document.querySelector('input[name=snScope]:checked');
-  const scope = scopeEl ? scopeEl.value : 'this';
   document.getElementById('snSaveBtn').disabled = true;
   try {
-    await applyStatusUpdate(snPendingEventId, snPendingStatus, note, scope);
+    await applyStatusUpdate(snPendingEventId, snPendingStatus, note, 'all');
     document.getElementById('statusNoteOverlay').classList.remove('open');
   } catch(e) { showToast('❌ ' + e.message); }
   finally { document.getElementById('snSaveBtn').disabled = false; }
@@ -3306,9 +3293,9 @@ document.addEventListener('contextmenu', e => {
   openCtxMenu(e.clientX, e.clientY, chip.dataset.id, dateStr);
 });
 
-// Pilih status dari context menu — klik pada item (tanpa klik pensil)
+// Pilih status dari context menu — klik pada item langsung update, klik pensil buka modal catatan
 ctxMenu.addEventListener('click', async e => {
-  // If clicked on the note button, open note modal instead
+  // If clicked on the note button → open note modal
   const noteBtn = e.target.closest('.ctx-note-btn');
   if (noteBtn) {
     e.stopPropagation();
@@ -3321,25 +3308,17 @@ ctxMenu.addEventListener('click', async e => {
     return;
   }
 
+  // Klik pada item status → langsung update, scope 'all'
   const item = e.target.closest('.ctx-item');
   if (!item || !ctxTargetId) return;
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === ctxTargetId);
   if (!ev) { closeCtxMenu(); return; }
   const currentId = ctxTargetId;
-  const currentDate2 = ctxTargetDate;
   closeCtxMenu();
   if (ev.status === newStatus) return;
 
-  // Check if multi-day — ask scope
-  const isMultiDay = ev.dateEnd && ev.dateEnd !== ev.dateStart;
-  if (isMultiDay) {
-    // Show scope modal (no note)
-    openStatusNoteModal(currentId, newStatus, currentDate2);
-    return;
-  }
-
-  await applyStatusUpdate(currentId, newStatus, '', 'this');
+  await applyStatusUpdate(currentId, newStatus, '', 'all');
 });
 
 // Tutup menu saat klik di luar atau Escape
@@ -3401,23 +3380,17 @@ mobileCtxSheet.addEventListener('click', async e => {
     return;
   }
 
-  // Status item
+  // Status item → langsung update, scope 'all'
   const item = e.target.closest('.mctx-item');
   if (!item || !mobileCtxTargetId) return;
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === mobileCtxTargetId);
   if (!ev) { closeMobileCtxSheet(); return; }
   const currentId = mobileCtxTargetId;
-  const currentDate2 = mobileCtxTargetDate;
   closeMobileCtxSheet();
   if (ev.status === newStatus) return;
 
-  const isMultiDay = ev.dateEnd && ev.dateEnd !== ev.dateStart;
-  if (isMultiDay) {
-    openStatusNoteModal(currentId, newStatus, currentDate2);
-    return;
-  }
-  await applyStatusUpdate(currentId, newStatus, '', 'this');
+  await applyStatusUpdate(currentId, newStatus, '', 'all');
 });
 
 // Long press on chips for mobile context menu
