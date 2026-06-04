@@ -150,15 +150,111 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .dc-events.drag-target{background:rgba(59,130,246,.06);border-radius:0 0 var(--r-lg) var(--r-lg)}
 
 /* ── CONTEXT MENU ── */
-#ctxMenu{position:fixed;z-index:9999;background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);box-shadow:0 8px 32px rgba(28,25,23,.18);padding:5px;min-width:190px;display:none;animation:fadeIn .1s ease}
+#ctxMenu{position:fixed;z-index:9999;background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);box-shadow:0 8px 32px rgba(28,25,23,.18);padding:5px;min-width:210px;display:none;animation:fadeIn .1s ease}
 @keyframes fadeIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
 #ctxMenu.open{display:block}
 .ctx-label{font-size:.63rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-lt);padding:5px 10px 3px}
-.ctx-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-md);cursor:pointer;font-size:.8rem;font-weight:600;color:var(--ink-md);transition:background .1s,color .1s;white-space:nowrap}
+.ctx-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:var(--r-md);cursor:pointer;font-size:.8rem;font-weight:600;color:var(--ink-md);transition:background .1s,color .1s;white-space:nowrap;position:relative}
 .ctx-item:hover{background:var(--bg-dk);color:var(--ink)}
 .ctx-item.active-status{color:var(--ink);background:var(--bg-dk)}
 .ctx-item .ctx-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .ctx-sep{height:1px;background:var(--rule);margin:4px 2px}
+/* Pen icon inside ctx-item for adding note */
+.ctx-note-btn{margin-left:auto;padding:2px 5px;border-radius:var(--r-sm);background:rgba(0,0,0,.06);font-size:.7rem;color:var(--ink-lt);display:inline-flex;align-items:center;gap:2px;transition:background .12s,color .12s;flex-shrink:0;border:1px solid transparent}
+.ctx-note-btn:hover{background:var(--bg-dk);color:var(--ink);border-color:var(--rule)}
+body.dark .ctx-note-btn{background:rgba(255,255,255,.07)}
+body.dark .ctx-note-btn:hover{background:var(--bg-dk)}
+
+/* ── STATUS NOTE MODAL ── */
+#statusNoteOverlay .modal{width:420px}
+.sn-event-banner{background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.sn-event-bar{width:4px;border-radius:100px;align-self:stretch;min-height:32px;flex-shrink:0}
+.sn-event-info{flex:1;min-width:0}
+.sn-event-title{font-size:.88rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sn-event-type{font-size:.65rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-top:1px}
+.sn-status-badge{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:100px;margin-bottom:.6rem}
+.sn-scope-section{background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:10px 14px;margin-bottom:.9rem}
+.sn-scope-title{font-size:.63rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:7px}
+.sn-scope-options{display:flex;flex-direction:column;gap:5px}
+.sn-scope-opt{display:flex;align-items:flex-start;gap:9px;padding:7px 10px;border-radius:var(--r-sm);cursor:pointer;border:1.5px solid var(--rule);background:var(--surface);transition:border-color .12s,background .12s}
+.sn-scope-opt:hover{border-color:var(--ink-lt);background:var(--bg)}
+.sn-scope-opt input[type=radio]{margin-top:1px;flex-shrink:0;accent-color:var(--ink);cursor:pointer}
+.sn-scope-opt.selected{border-color:var(--ink);background:var(--bg-dk)}
+.sn-scope-opt-label{font-size:.8rem;font-weight:600;color:var(--ink);line-height:1.3}
+.sn-scope-opt-sub{font-size:.68rem;color:var(--ink-lt);margin-top:1px}
+
+/* ── STATUS NOTE additional note section ── */
+.sn-note-section{margin-bottom:.9rem}
+.sn-prev-note{font-size:.72rem;background:#FEF9C3;border-radius:var(--r-sm);padding:7px 10px;border-left:3px solid #EAB308;color:#1C1917;margin-bottom:.6rem;font-weight:500;display:flex;gap:6px;align-items:flex-start;line-height:1.45}
+.sn-prev-note i{flex-shrink:0;margin-top:1px;color:#EAB308}
+
+/* ── MOBILE BOTTOM SHEET (context menu for touch) ── */
+#mobileCtxSheet{position:fixed;inset:0;z-index:9998;display:none}
+#mobileCtxSheet.open{display:block}
+.mobile-ctx-backdrop{position:absolute;inset:0;background:rgba(28,25,23,.45);backdrop-filter:blur(2px)}
+.mobile-ctx-panel{position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:12px 12px 24px;animation:slideUpSheet .22s ease;box-shadow:0 -8px 40px rgba(28,25,23,.2)}
+@keyframes slideUpSheet{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.mctx-drag-handle{width:36px;height:4px;border-radius:100px;background:var(--ink-lt);margin:0 auto 12px;opacity:.4}
+.mctx-event-info{padding:8px 12px 12px;border-bottom:1.5px solid var(--rule);margin-bottom:8px}
+.mctx-event-title{font-size:.95rem;font-weight:800;color:var(--ink);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mctx-event-type{font-size:.7rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.mctx-label{font-size:.63rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-lt);padding:4px 12px 3px}
+.mctx-item{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:var(--r-lg);cursor:pointer;font-size:.88rem;font-weight:600;color:var(--ink-md);transition:background .1s;margin:2px 0}
+.mctx-item:hover,.mctx-item:active{background:var(--bg-dk);color:var(--ink)}
+.mctx-item.active-status{background:var(--bg-dk);color:var(--ink)}
+.mctx-item .ctx-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.mctx-note-btn{margin-left:auto;padding:4px 9px;border-radius:var(--r-sm);background:var(--bg-dk);font-size:.72rem;color:var(--ink-lt);display:inline-flex;align-items:center;gap:3px;border:1px solid var(--rule);font-weight:600}
+.mctx-sep{height:1px;background:var(--rule);margin:6px 4px}
+body.dark .mobile-ctx-panel{background:var(--surface)}
+
+/* ── LONG PRESS INDICATOR ── */
+@keyframes longPressRing{0%{transform:scale(0.5);opacity:.8}100%{transform:scale(1.5);opacity:0}}
+.long-press-indicator{position:fixed;width:40px;height:40px;border-radius:50%;border:2.5px solid var(--ink);pointer-events:none;z-index:9997;display:none;margin-left:-20px;margin-top:-20px}
+.long-press-indicator.active{display:block;animation:longPressRing .5s ease forwards}
+
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:768px){
+  .page{padding:1rem .75rem 5rem}
+  .site-header{gap:8px;margin-bottom:1rem}
+  .brand-title{font-size:1.15rem}
+  .hdr-right{gap:5px}
+  .hdr-right .btn:not(#addEventBtn):not(#todayBtn):not(#darkModeBtn){display:none}
+  /* Show hamburger menu on mobile */
+  .mobile-menu-btn{display:inline-flex!important}
+  .main-row{flex-direction:column;gap:0}
+  .panel-col{display:none!important} /* panel handled as bottom sheet on mobile */
+  .cal-col{width:100%}
+  .dc{min-height:58px}
+  .dc-head{padding:5px 4px 2px}
+  .day-num{width:22px;height:22px;font-size:.78rem}
+  .chip{font-size:.6rem;padding:2px 5px;line-height:1.4}
+  .month-label{font-size:.95rem;min-width:140px}
+  .month-display-title{font-size:1.7rem}
+  .control-bar{flex-direction:column;align-items:stretch;gap:8px}
+  .month-nav{justify-content:center}
+  .filter-group{justify-content:center}
+  .filter-select{min-width:120px;font-size:.76rem}
+  .legend-bar{gap:8px;padding:7px 12px;font-size:.65rem}
+  .event-grid{grid-template-columns:1fr}
+  .modal{padding:1.25rem;border-radius:var(--r-xl) var(--r-xl) 0 0;position:fixed!important;bottom:0!important;left:0!important;right:0!important;top:auto!important;width:100%!important;max-width:100%!important;max-height:90vh;margin:0}
+  .overlay{align-items:flex-end!important;padding:0!important}
+  .frow{grid-template-columns:1fr}
+  .modal-foot{flex-wrap:wrap}
+  .tab-btn{font-size:.76rem;padding:8px 11px}
+  /* Report view mobile */
+  .rpt-controls{flex-direction:column;padding:0 12px;gap:8px}
+  .rpt-filter-group{flex-wrap:wrap;gap:6px}
+  .rpt-range-wrap{flex-wrap:wrap;gap:6px}
+  .rpt-table-wrap{border-radius:var(--r-lg);max-height:60vh}
+  .rpt-table td,.rpt-table th{padding:0 10px;font-size:.75rem}
+}
+@media(max-width:480px){
+  .dc{min-height:48px}
+  .chip{font-size:.55rem;padding:1px 4px}
+  .dh{font-size:.65rem;padding:10px 2px}
+  .month-display-title{font-size:1.4rem}
+  .hol-label{font-size:.58rem}
+}
 .pics-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 /* FIX #1: note in ecard — vivid highlight */
 .ecard-note{font-size:.71rem;color:#1C1917;margin-top:6px;line-height:1.5;padding:6px 9px;background:#FEF9C3;border-radius:var(--r-sm);border-left:3px solid #EAB308;font-weight:500}
@@ -605,13 +701,7 @@ body.dark .rpt-table-wrap{background:var(--surface);border-color:var(--rule)}
 body.dark .rpt-row{border-color:var(--rule)}
 body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:var(--ink-md)}
 
-@media(max-width:600px){
-  .brand-title{font-size:1.2rem}
-  .dc{min-height:70px;padding:4px 3px}
-  .month-label{font-size:.95rem;min-width:160px}
-  .frow{grid-template-columns:1fr}
-  .event-grid{grid-template-columns:1fr}
-}
+/* ── LEGACY SMALL SCREEN FALLBACK (handled by 768px block above) ── */
 </style>
 </head>
 <body>
@@ -991,11 +1081,114 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
 <!-- Context Menu (must be in DOM before scripts run) -->
 <div id="ctxMenu" role="menu">
   <div class="ctx-label">Ubah Status</div>
-  <div class="ctx-item" data-status="pending"><span class="ctx-dot" style="background:#D97706"></span> In Process</div>
-  <div class="ctx-item" data-status="achieve"><span class="ctx-dot" style="background:#15803D"></span> Achieve</div>
-  <div class="ctx-item" data-status="not_achieve"><span class="ctx-dot" style="background:#B91C1C"></span> Not Achieve</div>
-  <div class="ctx-item" data-status="cancel"><span class="ctx-dot" style="background:#6B7280"></span> Cancel</div>
+  <div class="ctx-item" data-status="pending">
+    <span class="ctx-dot" style="background:#D97706"></span>
+    <i class="ti ti-refresh" style="font-size:13px;color:#D97706"></i> In Process
+    <span class="ctx-note-btn" data-note-status="pending" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
+  </div>
+  <div class="ctx-item" data-status="achieve">
+    <span class="ctx-dot" style="background:#15803D"></span>
+    <i class="ti ti-circle-check" style="font-size:13px;color:#15803D"></i> Achieve
+    <span class="ctx-note-btn" data-note-status="achieve" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
+  </div>
+  <div class="ctx-item" data-status="not_achieve">
+    <span class="ctx-dot" style="background:#B91C1C"></span>
+    <i class="ti ti-circle-x" style="font-size:13px;color:#B91C1C"></i> Not Achieve
+    <span class="ctx-note-btn" data-note-status="not_achieve" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
+  </div>
+  <div class="ctx-item" data-status="cancel">
+    <span class="ctx-dot" style="background:#6B7280"></span>
+    <i class="ti ti-ban" style="font-size:13px;color:#6B7280"></i> Cancel
+    <span class="ctx-note-btn" data-note-status="cancel" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
+  </div>
 </div>
+
+<!-- Status + Note Modal -->
+<div class="overlay" id="statusNoteOverlay">
+  <div class="modal modal-sm" id="statusNoteModal">
+    <div class="modal-head">
+      <div class="modal-title" id="snModalTitle">Update Status &amp; Catatan</div>
+      <button class="btn btn-icon" id="closeStatusNote"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="sn-event-banner" id="snEventBanner">
+      <div class="sn-event-bar" id="snEventBar"></div>
+      <div class="sn-event-info">
+        <div class="sn-event-title" id="snEventTitle"></div>
+        <div class="sn-event-type" id="snEventType"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:.7rem">
+      <div style="font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:5px">Status baru</div>
+      <span class="sn-status-badge" id="snStatusBadge"></span>
+    </div>
+    <!-- Scope section (only shown for multi-day events) -->
+    <div class="sn-scope-section" id="snScopeSection" style="display:none">
+      <div class="sn-scope-title"><i class="ti ti-calendar-event" style="font-size:11px;vertical-align:-1px"></i> Terapkan ke</div>
+      <div class="sn-scope-options">
+        <label class="sn-scope-opt selected" id="snScopeThisLabel">
+          <input type="radio" name="snScope" value="this" checked>
+          <div>
+            <div class="sn-scope-opt-label"><i class="ti ti-calendar" style="font-size:12px;vertical-align:-2px"></i> Tanggal ini saja</div>
+            <div class="sn-scope-opt-sub" id="snScopeThisSub"></div>
+          </div>
+        </label>
+        <label class="sn-scope-opt" id="snScopeAllLabel">
+          <input type="radio" name="snScope" value="all">
+          <div>
+            <div class="sn-scope-opt-label"><i class="ti ti-calendar-week" style="font-size:12px;vertical-align:-2px"></i> Semua tanggal event</div>
+            <div class="sn-scope-opt-sub" id="snScopeAllSub"></div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <!-- Additional note section -->
+    <div class="sn-note-section">
+      <div id="snPrevNote" style="display:none" class="sn-prev-note"><i class="ti ti-notes"></i><span id="snPrevNoteText"></span></div>
+      <label class="fl">Catatan Tambahan <span style="font-weight:400;color:var(--ink-lt);text-transform:none;letter-spacing:0">(opsional)</span></label>
+      <textarea class="fc" id="snNote" placeholder="Tambah keterangan untuk update status ini..." style="height:80px;resize:vertical"></textarea>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="snCancelBtn">Batal</button>
+      <button class="btn btn-primary" id="snSaveBtn"><i class="ti ti-check"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Bottom Sheet Context Menu -->
+<div id="mobileCtxSheet">
+  <div class="mobile-ctx-backdrop" id="mobileCtxBackdrop"></div>
+  <div class="mobile-ctx-panel">
+    <div class="mctx-drag-handle"></div>
+    <div class="mctx-event-info">
+      <div class="mctx-event-title" id="mctxTitle"></div>
+      <div class="mctx-event-type" id="mctxType"></div>
+    </div>
+    <div class="mctx-label">Ubah Status</div>
+    <div class="mctx-item" data-status="pending">
+      <span class="ctx-dot" style="background:#D97706"></span>
+      <i class="ti ti-refresh" style="font-size:15px;color:#D97706"></i> In Process
+      <span class="mctx-note-btn" data-note-status="pending"><i class="ti ti-pencil" style="font-size:12px"></i> + Catatan</span>
+    </div>
+    <div class="mctx-item" data-status="achieve">
+      <span class="ctx-dot" style="background:#15803D"></span>
+      <i class="ti ti-circle-check" style="font-size:15px;color:#15803D"></i> Achieve
+      <span class="mctx-note-btn" data-note-status="achieve"><i class="ti ti-pencil" style="font-size:12px"></i> + Catatan</span>
+    </div>
+    <div class="mctx-item" data-status="not_achieve">
+      <span class="ctx-dot" style="background:#B91C1C"></span>
+      <i class="ti ti-circle-x" style="font-size:15px;color:#B91C1C"></i> Not Achieve
+      <span class="mctx-note-btn" data-note-status="not_achieve"><i class="ti ti-pencil" style="font-size:12px"></i> + Catatan</span>
+    </div>
+    <div class="mctx-item" data-status="cancel">
+      <span class="ctx-dot" style="background:#6B7280"></span>
+      <i class="ti ti-ban" style="font-size:15px;color:#6B7280"></i> Cancel
+      <span class="mctx-note-btn" data-note-status="cancel"><i class="ti ti-pencil" style="font-size:12px"></i> + Catatan</span>
+    </div>
+  </div>
+</div>
+
+<!-- Long press visual indicator -->
+<div class="long-press-indicator" id="longPressIndicator"></div>
 
 <script>
 /* ════════════════════════════════════════
@@ -1589,7 +1782,8 @@ async function renderCalendar() {
     el.addEventListener('click',ev=>{ev.stopPropagation();openDetail(el.dataset.id);});
     el.addEventListener('contextmenu',ev=>{
       ev.preventDefault(); ev.stopPropagation();
-      if(canWrite) openCtxMenu(ev.clientX, ev.clientY, el.dataset.id);
+      const dateStr = el.closest('.dc')?.dataset.date || null;
+      if(canWrite) openCtxMenu(ev.clientX, ev.clientY, el.dataset.id, dateStr);
     });
   });
   document.querySelectorAll('.dc:not(.other)').forEach(el=>{
@@ -1654,6 +1848,7 @@ function renderPanel(ds) {
     const spBg=e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':e.status==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
     const sp=e.status?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[e.status]}</span>`:'';
     const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:10px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
+    const statusNoteHtml=e.statusNote?`<div class="pei-note" style="background:#EDE9FE;border-left-color:#7C3AED;color:#3B1C8C;margin-top:3px"><i class="ti ti-message-circle" style="font-size:10px;vertical-align:-1px;color:#7C3AED"></i> ${escHtml(e.statusNote.split('\n').pop())}</div>`:'';
     const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;margin-left:4px">🔒 Tersembunyi</span>`:'';
     const hiddenCls=e.hidden?' is-hidden-event':'';
     return `<div class="panel-event-item${hiddenCls}" data-id="${e.id}">
@@ -1664,6 +1859,7 @@ function renderPanel(ds) {
         ${pics.length?`<div class="pei-pics">${pics.map(p=>`<span class="pic-badge">${escHtml(p)}</span>`).join('')}</div>`:''}
         <div class="pei-meta"><span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px"></i> ${dl}</span>${sp}</div>
         ${noteHtml}
+        ${statusNoteHtml}
       </div>
       <button class="pei-copy-btn write-only" onclick="event.stopPropagation(); copySingleEvent('${e.id}')" title="Copy Event"><i class="ti ti-copy"></i></button>
     </div>`;
@@ -1856,6 +2052,7 @@ function openDetail(id) {
     ${pics.length?`<div class="drow"><i class="ti ti-users drow-ico"></i><span class="drow-lbl">PIC</span><span class="drow-val"><div class="det-pics">${pics.map(p=>`<span class="det-pic-badge">${escHtml(p)}</span>`).join('')}</div></span></div>`:''}
     ${ev.status?`<div class="drow"><i class="ti ti-circle-check drow-ico"></i><span class="drow-lbl">Status</span><span class="drow-val">${sp}</span></div>`:''}
     ${ev.note?`<div class="drow"><i class="ti ti-notes drow-ico"></i><span class="drow-lbl">Catatan</span><span class="drow-val">${escHtml(ev.note)}</span></div>`:''}
+    ${ev.statusNote?`<div class="drow"><i class="ti ti-message-circle drow-ico" style="color:#7C3AED"></i><span class="drow-lbl" style="color:#7C3AED">Catatan Status</span><span class="drow-val" style="white-space:pre-line;font-size:.82rem">${escHtml(ev.statusNote)}</span></div>`:''}
   `;
 
   // Update toggle visibility button state
@@ -2181,7 +2378,7 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
   const ganttDates=[];
   for(let d=new Date(ganttStart);d<=ganttEnd;d.setDate(d.getDate()+1)) ganttDates.push(toStr(new Date(d)));
 
-  const LABEL_COLS=['No','Jenis Event','Judul / Nama Event','PIC','Status','Catatan','Tgl Mulai','Tgl Selesai'];
+  const LABEL_COLS=['No','Jenis Event','Judul / Nama Event','PIC','Status','Catatan','Catatan Status','Tgl Mulai','Tgl Selesai'];
   const nLC=LABEL_COLS.length;
 
   const monthGroups=[];
@@ -2196,14 +2393,14 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
   const dayRow=[...LABEL_COLS,...ganttDates.map(ds=>new Date(ds+'T00:00:00').getDate())];
   const dataRows=eventsToExport.map((e,idx)=>{
     const t=getTypeById(e.type);
-    const label=[idx+1,t.label,e.title,(e.pics||[]).join(', '),SM[e.status]||'',e.note||'',fmtDate(e.dateStart),fmtDate(e.dateEnd||e.dateStart)];
+    const label=[idx+1,t.label,e.title,(e.pics||[]).join(', '),SM[e.status]||'',e.note||'',e.statusNote||'',fmtDate(e.dateStart),fmtDate(e.dateEnd||e.dateStart)];
     const es=e.dateStart, ee=e.dateEnd||e.dateStart;
     return [...label,...ganttDates.map(ds=>ds>=es&&ds<=ee?'█':'')];
   });
 
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.aoa_to_sheet([titleRow,moRow,dayRow,...dataRows]);
-  ws['!cols']=[{wch:4},{wch:18},{wch:32},{wch:22},{wch:12},{wch:26},{wch:11},{wch:11},...ganttDates.map(()=>({wch:2.8}))];
+  ws['!cols']=[{wch:4},{wch:18},{wch:32},{wch:22},{wch:12},{wch:26},{wch:26},{wch:11},{wch:11},...ganttDates.map(()=>({wch:2.8}))];
   ws['!rows']=[{hpt:26},{hpt:16},{hpt:20},...dataRows.map(()=>({hpt:18}))];
 
   const merges=[{s:{r:0,c:0},e:{r:0,c:nLC+ganttDates.length-1}},{s:{r:1,c:0},e:{r:1,c:nLC-1}}];
@@ -2307,16 +2504,16 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
   XLSX.utils.book_append_sheet(wb, ws4, 'Rekap per Jenis');
 
   /* ── SHEET 5: Timeline per PIC ── */
-  const tlHdr = ['PIC','Judul Event','Jenis','Status','Catatan','Tgl Mulai','Tgl Selesai'];
+  const tlHdr = ['PIC','Judul Event','Jenis','Status','Catatan','Catatan Status','Tgl Mulai','Tgl Selesai'];
   const tlData = [];
   allPICsForSheet.forEach(pic => {
     const pe = eventsToExport.filter(e=>(e.pics||[]).includes(pic)).sort((a,b)=>a.dateStart.localeCompare(b.dateStart));
     pe.forEach(e => {
-      tlData.push([pic, e.title, getTypeById(e.type).label, SM[e.status]||'', e.note||'', fmtDate(e.dateStart), fmtDate(e.dateEnd||e.dateStart)]);
+      tlData.push([pic, e.title, getTypeById(e.type).label, SM[e.status]||'', e.note||'', e.statusNote||'', fmtDate(e.dateStart), fmtDate(e.dateEnd||e.dateStart)]);
     });
   });
   const ws5 = XLSX.utils.aoa_to_sheet([tlHdr, ...tlData]);
-  ws5['!cols'] = [{wch:22},{wch:32},{wch:18},{wch:12},{wch:28},{wch:12},{wch:12}];
+  ws5['!cols'] = [{wch:22},{wch:32},{wch:18},{wch:12},{wch:28},{wch:28},{wch:12},{wch:12}];
   ws5['!rows'] = [{hpt:22},...tlData.map(()=>({hpt:18}))];
   tlHdr.forEach((_,ci)=>{const a=XLSX.utils.encode_cell({r:0,c:ci});if(!ws5[a])ws5[a]={v:tlHdr[ci],t:'s'};ws5[a].s={font:{bold:true,sz:10,color:{rgb:'F5F0E8'}},fill:{fgColor:{rgb:'1C1917'}},alignment:{horizontal:'center',vertical:'center'}};});
   let prevPic='';
@@ -2688,11 +2885,12 @@ function renderReport() {
       <th style="width:160px">PIC<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
       <th style="width:110px">Status<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
       <th>Keterangan<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
+      <th>Catatan Status<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
     </tr></thead><tbody>`;
 
   Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mo, evs]) => {
     const [y,m] = mo.split('-');
-    html += `<tr class="rpt-month-hdr"><td colspan="6">${MONTHS_ID[parseInt(m)-1].toUpperCase()} ${y}</td></tr>`;
+    html += `<tr class="rpt-month-hdr"><td colspan="7">${MONTHS_ID[parseInt(m)-1].toUpperCase()} ${y}</td></tr>`;
 
     evs.forEach(e => {
       const t    = getTypeById(e.type);
@@ -2713,6 +2911,7 @@ function renderReport() {
         <td><div class="rpt-pic-list">${pics.map(p=>`<span class="rpt-pic-badge">${escHtml(p)}</span>`).join('')}</div></td>
         <td>${e.status?`<span class="rpt-status" style="background:${statusBg};color:${statusTx}">${statusTxt}</span>`:'–'}</td>
         <td class="rpt-note">${escHtml(e.note||'')}</td>
+        <td class="rpt-note" style="max-width:260px;white-space:pre-line;font-size:.72rem;color:#5B21B6">${escHtml(e.statusNote||'')}</td>
       </tr>`;
     });
   });
@@ -2777,7 +2976,7 @@ document.getElementById('rptExportExcelBtn').addEventListener('click', () => {
   const fmtMonth = s => { if(!s) return ''; const [y,m]=s.split('-'); return `${MONTHS_ID[parseInt(m)-1]} ${y}`; };
   const rangeLabel = rFrom===rTo ? fmtMonth(rFrom) : `${fmtMonth(rFrom)}-${fmtMonth(rTo)}`;
 
-  const headers = ['Tanggal Mulai','Tanggal Selesai','Jenis Event','Nama / Judul','PIC','Status','Keterangan'];
+  const headers = ['Tanggal Mulai','Tanggal Selesai','Jenis Event','Nama / Judul','PIC','Status','Keterangan','Catatan Status'];
   const rows = filtered.map(e => {
     const t = getTypeById(e.type);
     return [
@@ -2787,13 +2986,14 @@ document.getElementById('rptExportExcelBtn').addEventListener('click', () => {
       e.title,
       (e.pics||[]).join(', '),
       SM[e.status] || '',
-      e.note || ''
+      e.note || '',
+      e.statusNote || ''
     ];
   });
 
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws['!cols'] = [{wch:13},{wch:13},{wch:20},{wch:36},{wch:26},{wch:12},{wch:40}];
+  ws['!cols'] = [{wch:13},{wch:13},{wch:20},{wch:36},{wch:26},{wch:12},{wch:40},{wch:40}];
   ws['!rows'] = [{hpt:22}, ...rows.map(()=>({hpt:18}))];
 
   // Style header row (using xlsx-js-style)
@@ -2934,9 +3134,11 @@ document.addEventListener('drop', e => {
 /* ── CONTEXT MENU ── */
 const ctxMenu = document.getElementById('ctxMenu');
 let ctxTargetId = null;
+let ctxTargetDate = null; // the date cell where right-click was performed
 
-function openCtxMenu(x, y, eventId) {
+function openCtxMenu(x, y, eventId, dateStr) {
   ctxTargetId = eventId;
+  ctxTargetDate = dateStr || null;
   const ev = events.find(e => e.id === eventId);
   if (!ev) return;
   ctxMenu.querySelectorAll('.ctx-item').forEach(item => {
@@ -2954,43 +3156,312 @@ function openCtxMenu(x, y, eventId) {
 function closeCtxMenu() {
   ctxMenu.classList.remove('open');
   ctxTargetId = null;
+  ctxTargetDate = null;
 }
+
+/* ── APPLY STATUS UPDATE (with optional note, scope) ── */
+async function applyStatusUpdate(eventId, newStatus, additionalNote, scope) {
+  const ev = events.find(e => e.id === eventId);
+  if (!ev) return;
+  // Build update payload
+  const updateData = { status: newStatus };
+  if (additionalNote && additionalNote.trim()) {
+    // Append additional note separate from original note
+    const existingNote = ev.note || '';
+    const timestamp = new Date().toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const SM2 = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel'};
+    const statusLabel = SM2[newStatus] || newStatus;
+    const addedNote = `[${statusLabel} — ${timestamp}] ${additionalNote.trim()}`;
+    updateData.statusNote = existingNote
+      ? existingNote + '\n' + addedNote
+      : addedNote;
+    // Keep original note intact, statusNote is the addendum field
+    updateData.note = existingNote;
+    updateData.statusNote = (ev.statusNote ? ev.statusNote + '\n' : '') + addedNote;
+  }
+
+  const SM = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel'};
+
+  if (useFirebase) {
+    if (scope === 'all' && ev.dateEnd && ev.dateStart !== ev.dateEnd) {
+      // Update this single document (represents the whole range)
+      await db.collection(EVENTS_COLL).doc(ev.id).update(updateData);
+    } else {
+      await db.collection(EVENTS_COLL).doc(ev.id).update(updateData);
+    }
+  } else {
+    events = events.map(e => e.id === ev.id ? { ...e, ...updateData } : e);
+    localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
+    rebuildFilters(); renderCalendar();
+    if (selectedDate) renderPanel(selectedDate);
+  }
+  showToast(`✅ Status → ${SM[newStatus]}`);
+}
+
+/* ── STATUS NOTE MODAL ── */
+let snPendingEventId = null;
+let snPendingStatus  = null;
+let snPendingDate    = null;
+
+function openStatusNoteModal(eventId, newStatus, dateStr) {
+  const ev = events.find(e => e.id === eventId);
+  if (!ev) return;
+  const t = getTypeById(ev.type);
+  snPendingEventId = eventId;
+  snPendingStatus  = newStatus;
+  snPendingDate    = dateStr || null;
+
+  const SM = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel'};
+  const statusColors = {
+    achieve: {bg:'var(--s-achieve-bg)',tx:'var(--s-achieve-tx)'},
+    not_achieve: {bg:'var(--s-not-bg)',tx:'var(--s-not-tx)'},
+    pending: {bg:'var(--s-pending-bg)',tx:'var(--s-pending-tx)'},
+    cancel: {bg:'var(--s-cancel-bg)',tx:'var(--s-cancel-tx)'},
+  };
+  const sc = statusColors[newStatus] || statusColors.pending;
+  const statusIcons = {achieve:'✓', not_achieve:'✗', cancel:'✕', pending:'⟳'};
+
+  // Event banner
+  document.getElementById('snEventBar').style.background = t.chip;
+  document.getElementById('snEventTitle').textContent = ev.title;
+  document.getElementById('snEventType').textContent = t.label;
+  document.getElementById('snEventType').style.color = t.chip;
+
+  // Status badge
+  const badge = document.getElementById('snStatusBadge');
+  badge.style.background = sc.bg;
+  badge.style.color = sc.tx;
+  badge.innerHTML = `${statusIcons[newStatus]||''} ${SM[newStatus]}`;
+
+  // Show previous note if any
+  const prevNoteEl = document.getElementById('snPrevNote');
+  const prevNoteText = document.getElementById('snPrevNoteText');
+  const existingStatusNote = ev.statusNote || '';
+  if (existingStatusNote) {
+    prevNoteEl.style.display = 'flex';
+    prevNoteText.textContent = 'Catatan sebelumnya: ' + existingStatusNote.split('\n').pop();
+  } else {
+    prevNoteEl.style.display = 'none';
+  }
+
+  // Scope section: only for multi-day events
+  const scopeSection = document.getElementById('snScopeSection');
+  const isMultiDay = ev.dateEnd && ev.dateEnd !== ev.dateStart;
+  if (isMultiDay) {
+    scopeSection.style.display = 'block';
+    document.getElementById('snScopeThisSub').textContent = dateStr ? `Hanya ${fmtDate(dateStr)}` : `Hanya ${fmtDate(ev.dateStart)}`;
+    document.getElementById('snScopeAllSub').textContent = `${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`;
+    // Reset to "this"
+    document.querySelector('input[name=snScope][value=this]').checked = true;
+    document.getElementById('snScopeThisLabel').classList.add('selected');
+    document.getElementById('snScopeAllLabel').classList.remove('selected');
+  } else {
+    scopeSection.style.display = 'none';
+  }
+
+  // Clear note field
+  document.getElementById('snNote').value = '';
+
+  document.getElementById('statusNoteOverlay').classList.add('open');
+  setTimeout(() => document.getElementById('snNote').focus(), 100);
+}
+
+// Scope radio styling
+document.querySelectorAll('input[name=snScope]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    document.getElementById('snScopeThisLabel').classList.toggle('selected', radio.value !== 'all' || !document.querySelector('input[name=snScope][value=all]').checked);
+    document.getElementById('snScopeAllLabel').classList.toggle('selected', radio.value === 'all');
+  });
+});
+
+document.getElementById('closeStatusNote').addEventListener('click', () => {
+  document.getElementById('statusNoteOverlay').classList.remove('open');
+});
+document.getElementById('snCancelBtn').addEventListener('click', () => {
+  document.getElementById('statusNoteOverlay').classList.remove('open');
+});
+document.getElementById('statusNoteOverlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('statusNoteOverlay')) document.getElementById('statusNoteOverlay').classList.remove('open');
+});
+
+document.getElementById('snSaveBtn').addEventListener('click', async () => {
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return; }
+  const note = document.getElementById('snNote').value;
+  const scopeEl = document.querySelector('input[name=snScope]:checked');
+  const scope = scopeEl ? scopeEl.value : 'this';
+  document.getElementById('snSaveBtn').disabled = true;
+  try {
+    await applyStatusUpdate(snPendingEventId, snPendingStatus, note, scope);
+    document.getElementById('statusNoteOverlay').classList.remove('open');
+  } catch(e) { showToast('❌ ' + e.message); }
+  finally { document.getElementById('snSaveBtn').disabled = false; }
+});
 
 // Klik kanan pada chip — delegasi dari document
 document.addEventListener('contextmenu', e => {
   const chip = e.target.closest('.chip[data-id]');
   if (!chip || !canWrite) return;
   e.preventDefault();
-  openCtxMenu(e.clientX, e.clientY, chip.dataset.id);
+  const dateStr = chip.closest('.dc')?.dataset.date || null;
+  openCtxMenu(e.clientX, e.clientY, chip.dataset.id, dateStr);
 });
 
-// Pilih status dari context menu
+// Pilih status dari context menu — klik pada item (tanpa klik pensil)
 ctxMenu.addEventListener('click', async e => {
+  // If clicked on the note button, open note modal instead
+  const noteBtn = e.target.closest('.ctx-note-btn');
+  if (noteBtn) {
+    e.stopPropagation();
+    const newStatus = noteBtn.dataset.noteStatus;
+    const currentId = ctxTargetId;
+    const currentDate2 = ctxTargetDate;
+    closeCtxMenu();
+    if (!currentId || !newStatus) return;
+    openStatusNoteModal(currentId, newStatus, currentDate2);
+    return;
+  }
+
   const item = e.target.closest('.ctx-item');
   if (!item || !ctxTargetId) return;
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === ctxTargetId);
   if (!ev) { closeCtxMenu(); return; }
+  const currentId = ctxTargetId;
+  const currentDate2 = ctxTargetDate;
   closeCtxMenu();
   if (ev.status === newStatus) return;
-  if (useFirebase) {
-    await db.collection(EVENTS_COLL).doc(ev.id).update({ status: newStatus });
-  } else {
-    events = events.map(e => e.id === ev.id ? { ...e, status: newStatus } : e);
-    localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
-    rebuildFilters(); renderCalendar();
-    if (selectedDate) renderPanel(selectedDate);
+
+  // Check if multi-day — ask scope
+  const isMultiDay = ev.dateEnd && ev.dateEnd !== ev.dateStart;
+  if (isMultiDay) {
+    // Show scope modal (no note)
+    openStatusNoteModal(currentId, newStatus, currentDate2);
+    return;
   }
-  const SM = { achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel' };
-  showToast(`✅ Status → ${SM[newStatus]}`);
+
+  await applyStatusUpdate(currentId, newStatus, '', 'this');
 });
 
 // Tutup menu saat klik di luar atau Escape
 document.addEventListener('click', e => {
   if (!ctxMenu.contains(e.target)) closeCtxMenu();
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeCtxMenu(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCtxMenu(); closeMobileCtxSheet(); } });
 ctxMenu.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ════════════════════════════════════════
+   MOBILE LONG PRESS CONTEXT MENU
+   ════════════════════════════════════════ */
+const mobileCtxSheet = document.getElementById('mobileCtxSheet');
+let mobileCtxTargetId = null;
+let mobileCtxTargetDate = null;
+let longPressTimer = null;
+let longPressChip = null;
+const LONG_PRESS_DURATION = 500; // ms
+
+function openMobileCtxSheet(eventId, dateStr) {
+  if (!canWrite) return;
+  mobileCtxTargetId = eventId;
+  mobileCtxTargetDate = dateStr || null;
+  const ev = events.find(e => e.id === eventId);
+  if (!ev) return;
+  const t = getTypeById(ev.type);
+
+  document.getElementById('mctxTitle').textContent = ev.title;
+  document.getElementById('mctxType').textContent = t.label;
+  document.getElementById('mctxType').style.color = t.chip;
+
+  // Mark active status
+  mobileCtxSheet.querySelectorAll('.mctx-item').forEach(item => {
+    item.classList.toggle('active-status', item.dataset.status === (ev.status || 'pending'));
+  });
+
+  mobileCtxSheet.classList.add('open');
+}
+
+function closeMobileCtxSheet() {
+  mobileCtxSheet.classList.remove('open');
+  mobileCtxTargetId = null;
+  mobileCtxTargetDate = null;
+}
+
+document.getElementById('mobileCtxBackdrop').addEventListener('click', closeMobileCtxSheet);
+
+// Mobile bottom sheet item click
+mobileCtxSheet.addEventListener('click', async e => {
+  // Note button
+  const noteBtn = e.target.closest('.mctx-note-btn');
+  if (noteBtn) {
+    const newStatus = noteBtn.dataset.noteStatus;
+    const currentId = mobileCtxTargetId;
+    const currentDate2 = mobileCtxTargetDate;
+    closeMobileCtxSheet();
+    if (!currentId || !newStatus) return;
+    openStatusNoteModal(currentId, newStatus, currentDate2);
+    return;
+  }
+
+  // Status item
+  const item = e.target.closest('.mctx-item');
+  if (!item || !mobileCtxTargetId) return;
+  const newStatus = item.dataset.status;
+  const ev = events.find(e => e.id === mobileCtxTargetId);
+  if (!ev) { closeMobileCtxSheet(); return; }
+  const currentId = mobileCtxTargetId;
+  const currentDate2 = mobileCtxTargetDate;
+  closeMobileCtxSheet();
+  if (ev.status === newStatus) return;
+
+  const isMultiDay = ev.dateEnd && ev.dateEnd !== ev.dateStart;
+  if (isMultiDay) {
+    openStatusNoteModal(currentId, newStatus, currentDate2);
+    return;
+  }
+  await applyStatusUpdate(currentId, newStatus, '', 'this');
+});
+
+// Long press on chips for mobile context menu
+const longPressIndicator = document.getElementById('longPressIndicator');
+
+function startLongPress(chip, clientX, clientY) {
+  if (!canWrite) return;
+  longPressChip = chip;
+  longPressIndicator.style.left = clientX + 'px';
+  longPressIndicator.style.top  = clientY + 'px';
+  longPressIndicator.classList.add('active');
+  longPressTimer = setTimeout(() => {
+    const dateStr = chip.closest('.dc')?.dataset.date || null;
+    // Haptic feedback if available
+    if (navigator.vibrate) navigator.vibrate(40);
+    openMobileCtxSheet(chip.dataset.id, dateStr);
+    longPressChip = null;
+    longPressIndicator.classList.remove('active');
+  }, LONG_PRESS_DURATION);
+}
+
+function cancelLongPress() {
+  clearTimeout(longPressTimer);
+  longPressTimer = null;
+  longPressChip = null;
+  longPressIndicator.classList.remove('active');
+}
+
+document.addEventListener('touchstart', e => {
+  const chip = e.target.closest('.chip[data-id]');
+  if (!chip) return;
+  const touch = e.touches[0];
+  startLongPress(chip, touch.clientX, touch.clientY);
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+  if (longPressTimer) cancelLongPress();
+}, { passive: true });
+
+document.addEventListener('touchmove', e => {
+  if (longPressTimer) cancelLongPress();
+}, { passive: true });
+
+document.addEventListener('touchcancel', cancelLongPress, { passive: true });
 
 /* Load order on init */
 loadOrder();
