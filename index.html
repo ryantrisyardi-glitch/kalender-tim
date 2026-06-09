@@ -454,31 +454,31 @@ body.read-only .readonly-badge{display:inline-flex}
 .jump-year:focus{border-color:var(--ink-md)}
 
 /* ── CHIP: background berwarna, font putih, separator garis putus ── */
-.chip{display:flex;align-items:center;gap:0;font-size:.68rem;font-weight:600;padding:3px 7px;margin-bottom:0;overflow:visible;cursor:pointer;color:#fff;line-height:1.5;transition:opacity .12s;position:relative}
+.chip{display:block;font-size:.68rem;font-weight:600;padding:3px 7px;margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:#fff;line-height:1.6;transition:opacity .12s;position:relative}
 .chip:hover{opacity:.85}
 /* Separator antara event: garis putus-putus */
 .chip+.chip{border-top:1.5px dashed rgba(255,255,255,.3)}
 .chip-more{font-size:.58rem;color:var(--ink-lt);padding:2px 7px;display:block;cursor:pointer;line-height:1.6;border-top:1.5px dashed var(--rule)}
 
-/* ── STATUS ICON on chip (always shown) ── */
-.chip-status-icon{flex-shrink:0;width:14px;height:14px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;margin-right:4px;line-height:1}
-.chip-status-achieve{background:rgba(255,255,255,.28);color:#fff}
-.chip-status-not_achieve{background:rgba(255,255,255,.28);color:#fff}
-.chip-status-cancel{background:rgba(255,255,255,.22);color:#fff}
-.chip-status-pending{display:none}/* pending = no dot needed */
+/* ── STATUS ICON on chip (always shown, inline) ── */
+.chip-status-icon{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;font-size:7px;font-weight:900;margin-right:3px;vertical-align:middle;flex-shrink:0;line-height:1;background:rgba(255,255,255,.28);color:#fff;position:relative;top:-0.5px}
+.chip-status-pending{display:none}
+
+/* ── CANCEL ICON: lingkaran dipotong garis miring (inline SVG approach) ── */
+.chip-cancel-icon{display:inline-block;width:11px;height:11px;margin-right:3px;vertical-align:middle;position:relative;top:-0.5px;flex-shrink:0}
+.chip-cancel-icon::before{content:'';position:absolute;inset:0;border:1.5px solid rgba(255,255,255,.85);border-radius:50%}
+.chip-cancel-icon::after{content:'';position:absolute;top:50%;left:1px;right:1px;height:1.5px;background:rgba(255,255,255,.85);transform:translateY(-50%) rotate(-45deg);border-radius:1px}
 
 /* ── PIC PILL: always visible, eye-catching ── */
-.chip-pic-wrap{display:inline-flex;align-items:center;gap:3px;flex-shrink:0;margin-right:4px}
-.chip-pic-pill{background:rgba(255,255,255,.9);border-radius:100px;padding:1px 6px;font-size:.58rem;font-weight:800;letter-spacing:.01em;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.6}
+.chip-pic-pill{display:inline-block;background:rgba(255,255,255,.92);border-radius:100px;padding:0 5px;font-size:.58rem;font-weight:800;letter-spacing:.01em;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.55;vertical-align:middle;margin-right:3px;position:relative;top:-0.5px}
 /* Color of the text inside pill = event chip color (set inline) */
 
-/* ── CHIP TITLE TEXT ── */
-.chip-title-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5}
-
 /* ── CHIP COLLAPSED STATE ── */
-.chip.collapsed{padding:2px 7px}
+.chip.collapsed{white-space:nowrap}
 .chip.collapsed .chip-title-text{display:none}
-/* In collapsed state, show only status icon + PIC pill */
+
+/* ── CHIP TITLE TEXT ── */
+.chip-title-text{display:inline}
 
 /* ── CHIP TOOLTIP ── */
 .chip-tooltip{position:fixed;z-index:9990;background:var(--ink);color:#fff;font-size:.72rem;font-weight:600;padding:7px 11px;border-radius:var(--r-md);box-shadow:0 6px 24px rgba(28,25,23,.25);pointer-events:none;opacity:0;transition:opacity .15s;max-width:260px;line-height:1.5;white-space:normal}
@@ -493,11 +493,6 @@ body.read-only .readonly-badge{display:inline-flex}
 .ct-s-not_achieve{background:#450A0A;color:#FCA5A5}
 .ct-s-pending{background:#451A03;color:#FDE68A}
 .ct-s-cancel{background:#1F2937;color:#9CA3AF}
-
-/* ── CANCEL ICON: circle with slash (matches context menu) ── */
-.chip-cancel-icon::before{content:'';display:inline-block;width:9px;height:9px;border:1.5px solid rgba(255,255,255,.85);border-radius:50%;position:relative;}
-.chip-cancel-icon{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex-shrink:0;margin-right:4px}
-.chip-cancel-icon::after{content:'';position:absolute;width:9px;height:1.5px;background:rgba(255,255,255,.85);transform:rotate(-45deg);border-radius:1px}
 
 /* ── PANEL: compact ── */
 .panel-event-item{border:1px solid var(--rule);border-radius:var(--r-md);padding:7px 10px;margin-bottom:5px;cursor:pointer;transition:box-shadow .14s;display:flex;gap:8px;align-items:flex-start;position:relative}
@@ -1849,19 +1844,20 @@ async function renderCalendar() {
       const t=getTypeById(e.type);
       const hiddenCls=e.hidden?' is-hidden-event':'';
       const pics=e.pics||[];
-      // PIC pills — always show, max 2 names
+      // PIC pill — always show, max 2 names, inline before title
       const picText=pics.length?pics.slice(0,2).join(', ')+(pics.length>2?` +${pics.length-2}`:''):'';
-      const picPillHtml=picText?`<span class="chip-pic-wrap"><span class="chip-pic-pill" style="color:${t.chip}">${escHtml(picText)}</span></span>`:'';
-      // Status icon — always show (except pending)
+      const picPillHtml=picText?`<span class="chip-pic-pill" style="color:${t.chip}">${escHtml(picText)}</span>`:'';
+      // Status icon — always show inline (except pending)
       let statusIconHtml='';
-      if(e.status==='achieve') statusIconHtml=`<span class="chip-status-icon chip-status-achieve">✓</span>`;
-      else if(e.status==='not_achieve') statusIconHtml=`<span class="chip-status-icon chip-status-not_achieve">✗</span>`;
-      else if(e.status==='cancel') statusIconHtml=`<span class="chip-cancel-icon"></span>`;
+      if(e.status==='achieve')      statusIconHtml=`<span class="chip-status-icon">✓</span>`;
+      else if(e.status==='not_achieve') statusIconHtml=`<span class="chip-status-icon">✗</span>`;
+      else if(e.status==='cancel')  statusIconHtml=`<span class="chip-cancel-icon"></span>`;
       if(!c.cur){
         return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none">${escHtml(picsLabel(e))}</span>`;
       }
       const isCollapsed=(chipCollapseState[e.id]===true)?'collapsed':'';
-      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${statusIconHtml}${picPillHtml}<span class="chip-title-text">${escHtml(picsLabel(e))}</span></span>`;
+      // In collapsed: show status + PIC pill only. In expanded: show status + PIC pill + title
+      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${statusIconHtml}${picPillHtml}<span class="chip-title-text"> ${escHtml(picsLabel(e))}</span></span>`;
     }).join('');
     if(c.cur&&evsSorted.length>MAX) chipsHtml+=`<span class="chip-more">+${evsSorted.length-MAX} lainnya</span>`;
 
@@ -1961,10 +1957,10 @@ function renderPanel(ds) {
     const sp=e.status?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[e.status]}</span>`:'';
     const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:10px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
     const statusNoteContent=e.statusNote?escHtml(e.statusNote.split('\n').pop()):'';
-    const editBtnHtml=canWrite?`<button class="pei-note-edit-btn" onclick="event.stopPropagation();startEditStatusNote('${e.id}')" title="Edit catatan"><i class="ti ti-pencil" style="font-size:10px"></i> edit</button>`:'';
+    const editBtnHtml=canWrite?`<button class="pei-note-edit-btn" data-edit-note-id="${e.id}" title="Edit catatan"><i class="ti ti-pencil" style="font-size:10px"></i> edit</button>`:'';
     const statusNoteHtml=e.statusNote
-      ?`<div class="pei-note-wrap" data-note-id="${e.id}"><div class="pei-note" style="background:#EDE9FE;border-left-color:#7C3AED;color:#3B1C8C;margin-top:3px"><i class="ti ti-message-circle" style="font-size:10px;vertical-align:-1px;color:#7C3AED"></i> ${statusNoteContent}${editBtnHtml}</div></div>`
-      :(canWrite?`<div class="pei-note-wrap" data-note-id="${e.id}"><button class="pei-note-edit-btn" style="opacity:1;pointer-events:auto;position:static;transform:none;margin-top:3px;display:inline-flex" onclick="event.stopPropagation();startEditStatusNote('${e.id}')" title="Tambah catatan"><i class="ti ti-plus" style="font-size:10px"></i> + Catatan Tambahan</button></div>`:'');
+      ?`<div class="pei-note-wrap" data-note-id="${e.id}"><div class="pei-note" style="background:#EDE9FE;border-left-color:#7C3AED;color:#3B1C8C;margin-top:3px;position:relative"><i class="ti ti-message-circle" style="font-size:10px;vertical-align:-1px;color:#7C3AED"></i> ${statusNoteContent}${editBtnHtml}</div></div>`
+      :(canWrite?`<div class="pei-note-wrap" data-note-id="${e.id}"><button class="pei-note-edit-btn" data-edit-note-id="${e.id}" style="opacity:1;pointer-events:auto;position:static;transform:none;margin-top:3px;display:inline-flex" title="Tambah catatan"><i class="ti ti-plus" style="font-size:10px"></i> + Catatan Tambahan</button></div>`:'');
     const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;margin-left:4px">🔒 Tersembunyi</span>`:'';
     const hiddenCls=e.hidden?' is-hidden-event':'';
     return `<div class="panel-event-item${hiddenCls}" data-id="${e.id}">
@@ -1981,7 +1977,19 @@ function renderPanel(ds) {
     </div>`;
   }).join('');
 
-  body.querySelectorAll('.panel-event-item').forEach(el=>el.addEventListener('click',()=>openDetail(el.dataset.id)));
+  body.querySelectorAll('.panel-event-item').forEach(el=>el.addEventListener('click', ev => {
+    // Don't open detail if clicking edit-note button or inside pei-note-wrap
+    if (ev.target.closest('[data-edit-note-id]') || ev.target.closest('.pei-note-wrap')) return;
+    openDetail(el.dataset.id);
+  }));
+  // Edit note button — delegated, stopPropagation
+  body.querySelectorAll('[data-edit-note-id]').forEach(btn => {
+    btn.addEventListener('click', ev => {
+      ev.stopPropagation();
+      ev.preventDefault();
+      startEditStatusNote(btn.dataset.editNoteId);
+    });
+  });
 }
 
 /* ════════════════════════════════════════
@@ -3660,25 +3668,37 @@ function startEditStatusNote(eventId) {
   wrap.innerHTML = `
     <textarea class="pei-note-textarea" id="pnEdit_${eventId}">${escHtml(existing)}</textarea>
     <div class="pei-note-edit-actions">
-      <button class="pei-note-save" onclick="saveEditedStatusNote('${eventId}')"><i class="ti ti-check"></i> Simpan</button>
-      <button class="pei-note-cancel" onclick="cancelEditStatusNote('${eventId}')">Batal</button>
+      <button class="pei-note-save" id="pnSave_${eventId}"><i class="ti ti-check"></i> Simpan</button>
+      <button class="pei-note-cancel" id="pnCancel_${eventId}">Batal</button>
     </div>`;
+  // Attach listeners directly — no inline onclick to avoid bubbling issues
+  document.getElementById(`pnSave_${eventId}`).addEventListener('click', async ev2 => {
+    ev2.stopPropagation();
+    ev2.preventDefault();
+    const ta = document.getElementById(`pnEdit_${eventId}`);
+    if (!ta) return;
+    const newNote = ta.value.trim();
+    try {
+      if (useFirebase && db) {
+        await db.collection(EVENTS_COLL).doc(eventId).update({ statusNote: newNote });
+      } else {
+        events = events.map(e => e.id === eventId ? { ...e, statusNote: newNote } : e);
+        localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
+        rebuildFilters(); renderCalendar();
+        if (selectedDate) renderPanel(selectedDate);
+      }
+      showToast('✅ Catatan disimpan');
+      // Re-render only the wrap content, not the whole panel
+      if (selectedDate) renderPanel(selectedDate);
+    } catch(e) { showToast('❌ ' + e.message); }
+  });
+  document.getElementById(`pnCancel_${eventId}`).addEventListener('click', ev2 => {
+    ev2.stopPropagation();
+    ev2.preventDefault();
+    if (selectedDate) renderPanel(selectedDate);
+  });
   const ta = document.getElementById(`pnEdit_${eventId}`);
   if (ta) { ta.focus(); ta.selectionStart = ta.value.length; }
-}
-async function saveEditedStatusNote(eventId) {
-  const ta = document.getElementById(`pnEdit_${eventId}`);
-  if (!ta) return;
-  const newNote = ta.value.trim();
-  const prevId = editingId;
-  editingId = eventId;
-  const ev = events.find(e => e.id === eventId);
-  if (ev) await saveEvent({ ...ev, statusNote: newNote });
-  editingId = prevId;
-  showToast('✅ Catatan disimpan');
-}
-function cancelEditStatusNote(eventId) {
-  if (selectedDate) renderPanel(selectedDate);
 }
 </script>
 
