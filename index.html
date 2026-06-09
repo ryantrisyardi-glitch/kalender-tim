@@ -91,7 +91,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .dc.other{pointer-events:none}.dc.other .day-num{opacity:.25}.dc.other .dc-events{border-top:none}
 .dc.today{outline:2px solid #3B82F6;outline-offset:-2px}
 .dc.today .day-num{background:#3B82F6!important;color:#fff!important;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800}
-.dc.selected{outline:2px solid var(--ink);outline-offset:-2px}
+.dc.selected{box-shadow:inset 0 0 0 2px #8B5CF6,0 0 0 1px rgba(139,92,246,.15);background:rgba(139,92,246,.04)!important}
+.dc.selected .day-num{background:linear-gradient(135deg,#8B5CF6,#6D28D9)!important;color:#fff!important;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 2px 8px rgba(109,40,217,.35)}
 
 /* day-num header area — no colored bg strips beside the circle */
 .dc-head{padding:8px 7px 4px;display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0}
@@ -321,6 +322,18 @@ textarea.fc{resize:vertical;height:70px}
 .toast{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.8rem;font-weight:600;padding:9px 18px;border-radius:100px;z-index:999;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap}
 .toast.show{opacity:1}
 
+/* ── EDIT STATUS NOTE INLINE ── */
+.pei-note-wrap{position:relative}
+.pei-note-edit-btn{position:absolute;right:4px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.08);border:none;border-radius:var(--r-sm);cursor:pointer;padding:2px 5px;color:var(--ink-lt);font-size:.65rem;display:flex;align-items:center;gap:2px;transition:background .12s,color .12s;opacity:0;pointer-events:none}
+.pei-note-wrap:hover .pei-note-edit-btn{opacity:1;pointer-events:auto}
+.pei-note-edit-btn:hover{background:rgba(0,0,0,.15);color:var(--ink)}
+.pei-note-textarea{width:100%;font-family:var(--font);font-size:.67rem;font-weight:500;color:#1C1917;background:#FEF9C3;border:1.5px solid #EAB308;border-radius:3px;padding:5px 7px;resize:vertical;min-height:52px;outline:none;line-height:1.4}
+.pei-note-edit-actions{display:flex;gap:5px;margin-top:3px}
+.pei-note-save{font-family:var(--font);font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:var(--r-sm);border:1.5px solid #EAB308;background:#FEF9C3;color:#92400E;cursor:pointer}
+.pei-note-save:hover{background:#FDE68A}
+.pei-note-cancel{font-family:var(--font);font-size:.65rem;font-weight:700;padding:3px 9px;border-radius:var(--r-sm);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-lt);cursor:pointer}
+.pei-note-cancel:hover{background:var(--bg-dk)}
+
 /* ── CONFIG NOTICE ── */
 .cfg-notice{background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:var(--r-lg);padding:12px 16px;margin-bottom:1.25rem;font-size:.79rem;color:#78350F;display:flex;align-items:flex-start;gap:9px}
 .cfg-notice i{font-size:17px;color:#D97706;flex-shrink:0;margin-top:1px}
@@ -441,11 +454,40 @@ body.read-only .readonly-badge{display:inline-flex}
 .jump-year:focus{border-color:var(--ink-md)}
 
 /* ── CHIP: background berwarna, font putih, separator garis putus ── */
-.chip{display:block;font-size:.68rem;font-weight:600;padding:3px 7px;margin-bottom:0;white-space:normal;word-break:break-word;overflow:visible;cursor:pointer;color:#fff;line-height:1.5;transition:opacity .12s;position:relative}
+.chip{display:block;font-size:.68rem;font-weight:600;padding:3px 7px;margin-bottom:0;white-space:normal;word-break:break-word;overflow:visible;cursor:pointer;color:#fff;line-height:1.5;transition:opacity .12s,max-height .22s ease,padding .18s;position:relative}
 .chip:hover{opacity:.8}
 /* Separator antara event: garis putus-putus */
 .chip+.chip{border-top:1.5px dashed rgba(255,255,255,.3)}
 .chip-more{font-size:.58rem;color:var(--ink-lt);padding:2px 7px;display:block;cursor:pointer;line-height:1.6;border-top:1.5px dashed var(--rule)}
+
+/* ── CHIP COLLAPSED STATE: hanya tampilkan PIC ── */
+.chip.collapsed{padding:2px 7px;line-height:1.4}
+.chip.collapsed .chip-full-label{display:none}
+.chip.collapsed .chip-pic-label{display:inline-flex!important}
+.chip-pic-label{display:none;align-items:center;gap:3px;font-size:.65rem;font-weight:700;letter-spacing:.01em}
+.chip-pic-icon{font-size:9px;opacity:.85}
+.chip-full-label{display:block}
+/* Toggle collapse button */
+.chip-toggle{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.22);cursor:pointer;flex-shrink:0;margin-left:3px;font-size:8px;line-height:1;transition:background .12s,transform .18s;vertical-align:middle;position:relative;z-index:3}
+.chip-toggle:hover{background:rgba(255,255,255,.4)}
+.chip.collapsed .chip-toggle{transform:rotate(180deg)}
+
+/* ── CHIP TOOLTIP ── */
+.chip-tooltip{position:fixed;z-index:9990;background:var(--ink);color:#fff;font-size:.72rem;font-weight:600;padding:7px 11px;border-radius:var(--r-md);box-shadow:0 6px 24px rgba(28,25,23,.25);pointer-events:none;opacity:0;transition:opacity .15s;max-width:260px;line-height:1.5;white-space:normal}
+.chip-tooltip.visible{opacity:1}
+.chip-tooltip .ct-title{font-size:.78rem;font-weight:800;margin-bottom:3px;color:#fff}
+.chip-tooltip .ct-row{display:flex;align-items:center;gap:5px;font-size:.68rem;color:rgba(255,255,255,.75);margin-top:2px}
+.chip-tooltip .ct-row i{font-size:11px}
+.chip-tooltip .ct-pics{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.chip-tooltip .ct-pic{background:rgba(255,255,255,.18);border-radius:100px;padding:1px 7px;font-size:.64rem;font-weight:700}
+.chip-tooltip .ct-status{display:inline-block;padding:2px 7px;border-radius:100px;font-size:.64rem;font-weight:700;margin-top:4px}
+.ct-s-achieve{background:#14532D;color:#86EFAC}
+.ct-s-not_achieve{background:#450A0A;color:#FCA5A5}
+.ct-s-pending{background:#451A03;color:#FDE68A}
+.ct-s-cancel{background:#1F2937;color:#9CA3AF}
+
+/* ── PIC EYE-CATCHING BADGE in chip ── */
+.chip-pic-label .pic-pill{background:rgba(255,255,255,.92);border-radius:100px;padding:1px 6px;font-size:.6rem;font-weight:800;letter-spacing:.01em;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ── STATUS CHECK ICON on chip ── */
 .chip-check{display:inline-block;margin-left:3px;opacity:.85}
@@ -461,7 +503,7 @@ body.dark .pei-copy-btn:hover{background:var(--bg-dk);color:var(--ink)}
 .pei-type{font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:1px}
 .pei-title{font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:3px;line-height:1.3}
 .pei-pics{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:3px}
-.pic-badge{font-size:.63rem;font-weight:700;padding:1px 6px;border-radius:100px;background:#1C1917;color:#F5F0E8}
+.pic-badge{font-size:.63rem;font-weight:700;padding:2px 8px;border-radius:100px;background:linear-gradient(135deg,#1C1917,#3C3530);color:#F5F0E8;border:1px solid rgba(255,255,255,.08);letter-spacing:.01em}
 .pei-meta{font-size:.67rem;color:var(--ink-lt);display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .pei-note{font-size:.67rem;color:#1C1917;margin-top:4px;line-height:1.4;background:#FEF9C3;border-radius:3px;padding:4px 7px;border-left:3px solid #EAB308;font-weight:500}
 .pei-status{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:100px}
@@ -705,6 +747,9 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
 </style>
 </head>
 <body>
+<!-- CHIP TOOLTIP -->
+<div class="chip-tooltip" id="chipTooltip"></div>
+
 <script>
 // Apply saved dark mode immediately to avoid flash of wrong theme
 (function(){try{if(localStorage.getItem('cal_darkmode')==='1')document.body.classList.add('dark');}catch(e){}}());
@@ -1237,6 +1282,8 @@ let currentUser  = null;
 let canWrite     = false;  // can add/edit/delete events in this workspace
 let isSuperAdmin = false;  // can manage editors + access all workspaces
 let wsEditors    = [];     // emails allowed to write in this workspace (from Firestore)
+// Chip collapse state: { [eventId]: true/false }
+const chipCollapseState = {};
 
 try {
   if (!firebaseConfig.apiKey.includes('YOUR_')) {
@@ -1604,7 +1651,7 @@ async function copySingleEvent(id) {
     showToast('⚠️ Format tanggal salah (YYYY-MM-DD)');
     return;
   }
-  const { id: _, ...data } = ev;
+  const { id: _, status: _s, statusNote: _sn, ...data } = ev;
   data.dateStart = target;
   if (data.dateEnd) {
     const start = new Date(ev.dateStart + 'T00:00:00'), end = new Date(ev.dateEnd + 'T00:00:00');
@@ -1628,7 +1675,7 @@ async function copyAllEvents(sourceDate) {
     return;
   }
   for (const ev of dayEvs) {
-    const { id: _, ...data } = ev;
+    const { id: _, status: _s, statusNote: _sn, ...data } = ev;
     data.dateStart = target;
     if (data.dateEnd) {
       const start = new Date(ev.dateStart + 'T00:00:00'), end = new Date(ev.dateEnd + 'T00:00:00');
@@ -1752,11 +1799,17 @@ async function renderCalendar() {
       const t=getTypeById(e.type);
       const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':e.status==='cancel'?'✕ ':'';
       const hiddenCls=e.hidden?' is-hidden-event':'';
+      const pics=e.pics||[];
+      const picText=pics.length?pics.slice(0,2).join(', ')+(pics.length>2?` +${pics.length-2}`:''):'—';
+      // Color for PIC pill - derive contrast from chip color
+      const picPillStyle=`color:${t.chip}`;
+      const picLabel=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i><span class="pic-pill" style="${picPillStyle}">${escHtml(picText)}</span></span>`;
       if(!c.cur){
         // Chip other-month: warna sama tapi opacity sangat rendah & italic, tidak clickable
         return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none" title="${escHtml(picsLabel(e))}">${escHtml(picsLabel(e))}</span>`;
       }
-      return `<span class="chip${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true" title="${escHtml(picsLabel(e))}">${checkIcon}${escHtml(picsLabel(e))}</span>`;
+      const isCollapsed=(chipCollapseState[e.id]===true)?'collapsed':'';
+      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${picLabel}<span class="chip-full-label">${checkIcon}${escHtml(picsLabel(e))}</span><span class="chip-toggle" data-collapse-id="${e.id}" title="Collapse/Expand">▲</span></span>`;
     }).join('');
     if(c.cur&&evsSorted.length>MAX) chipsHtml+=`<span class="chip-more">+${evsSorted.length-MAX} lainnya</span>`;
 
@@ -1779,11 +1832,25 @@ async function renderCalendar() {
     });
   });
   document.querySelectorAll('.chip[data-id]').forEach(el=>{
-    el.addEventListener('click',ev=>{ev.stopPropagation();openDetail(el.dataset.id);});
+    el.addEventListener('click',ev=>{
+      if(ev.target.closest('.chip-toggle')) return; // handled below
+      ev.stopPropagation();openDetail(el.dataset.id);
+    });
     el.addEventListener('contextmenu',ev=>{
       ev.preventDefault(); ev.stopPropagation();
       const dateStr = el.closest('.dc')?.dataset.date || null;
       if(canWrite) openCtxMenu(ev.clientX, ev.clientY, el.dataset.id, dateStr);
+    });
+  });
+  // Collapse toggle buttons
+  document.querySelectorAll('.chip-toggle[data-collapse-id]').forEach(btn=>{
+    btn.addEventListener('click',ev=>{
+      ev.stopPropagation();
+      const id=btn.dataset.collapseId;
+      const chip=btn.closest('.chip');
+      const isNowCollapsed=!chip.classList.contains('collapsed');
+      chipCollapseState[id]=isNowCollapsed;
+      chip.classList.toggle('collapsed',isNowCollapsed);
     });
   });
   document.querySelectorAll('.dc:not(.other)').forEach(el=>{
@@ -1848,7 +1915,11 @@ function renderPanel(ds) {
     const spBg=e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':e.status==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
     const sp=e.status?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[e.status]}</span>`:'';
     const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:10px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
-    const statusNoteHtml=e.statusNote?`<div class="pei-note" style="background:#EDE9FE;border-left-color:#7C3AED;color:#3B1C8C;margin-top:3px"><i class="ti ti-message-circle" style="font-size:10px;vertical-align:-1px;color:#7C3AED"></i> ${escHtml(e.statusNote.split('\n').pop())}</div>`:'';
+    const statusNoteContent=e.statusNote?escHtml(e.statusNote.split('\n').pop()):'';
+    const editBtnHtml=canWrite?`<button class="pei-note-edit-btn" onclick="event.stopPropagation();startEditStatusNote('${e.id}')" title="Edit catatan"><i class="ti ti-pencil" style="font-size:10px"></i> edit</button>`:'';
+    const statusNoteHtml=e.statusNote
+      ?`<div class="pei-note-wrap" data-note-id="${e.id}"><div class="pei-note" style="background:#EDE9FE;border-left-color:#7C3AED;color:#3B1C8C;margin-top:3px"><i class="ti ti-message-circle" style="font-size:10px;vertical-align:-1px;color:#7C3AED"></i> ${statusNoteContent}${editBtnHtml}</div></div>`
+      :(canWrite?`<div class="pei-note-wrap" data-note-id="${e.id}"><button class="pei-note-edit-btn" style="opacity:1;pointer-events:auto;position:static;transform:none;margin-top:3px;display:inline-flex" onclick="event.stopPropagation();startEditStatusNote('${e.id}')" title="Tambah catatan"><i class="ti ti-plus" style="font-size:10px"></i> + Catatan Tambahan</button></div>`:'');
     const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;margin-left:4px">🔒 Tersembunyi</span>`:'';
     const hiddenCls=e.hidden?' is-hidden-event':'';
     return `<div class="panel-event-item${hiddenCls}" data-id="${e.id}">
@@ -3439,6 +3510,109 @@ document.addEventListener('touchcancel', cancelLongPress, { passive: true });
 /* Load order on init */
 loadOrder();
 loadOrderFromFirebase();
+
+/* ════════════════════════════════════════
+   CHIP TOOLTIP (hover 1 detik → muncul)
+   ════════════════════════════════════════ */
+const chipTooltip = document.getElementById('chipTooltip');
+let tooltipTimer = null;
+const SM_TOOLTIP = {achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process',cancel:'Cancel'};
+const STATUS_CLS = {achieve:'ct-s-achieve',not_achieve:'ct-s-not_achieve',pending:'ct-s-pending',cancel:'ct-s-cancel'};
+
+function showChipTooltip(chip, x, y) {
+  const id = chip.dataset.id;
+  const ev = events.find(e => e.id === id);
+  if (!ev) return;
+  const t = getTypeById(ev.type);
+  const pics = ev.pics || [];
+  const dl = ev.dateEnd && ev.dateEnd !== ev.dateStart
+    ? `${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`
+    : fmtDate(ev.dateStart);
+  const statusHtml = ev.status
+    ? `<div><span class="ct-status ${STATUS_CLS[ev.status]||''}">${SM_TOOLTIP[ev.status]||ev.status}</span></div>` : '';
+  const picsHtml = pics.length
+    ? `<div class="ct-pics">${pics.map(p=>`<span class="ct-pic">${escHtml(p)}</span>`).join('')}</div>` : '';
+  const noteHtml = ev.note ? `<div class="ct-row"><i class="ti ti-notes"></i>${escHtml(ev.note)}</div>` : '';
+  const statusNoteHtml = ev.statusNote
+    ? `<div class="ct-row"><i class="ti ti-message-circle" style="color:#A78BFA"></i>${escHtml(ev.statusNote.split('\n').pop())}</div>` : '';
+
+  chipTooltip.innerHTML = `
+    <div class="ct-title">${escHtml(ev.title)}</div>
+    <div class="ct-row"><i class="ti ti-tag" style="color:${t.chip}"></i><span style="color:${t.chip};font-weight:700">${escHtml(t.label)}</span></div>
+    <div class="ct-row"><i class="ti ti-calendar"></i>${dl}</div>
+    ${picsHtml}${statusHtml}${noteHtml}${statusNoteHtml}
+  `;
+
+  // Position tooltip
+  const ttW = 240, ttH = 120;
+  let tx = x + 12, ty = y + 12;
+  if (tx + ttW > window.innerWidth - 10) tx = x - ttW - 8;
+  if (ty + ttH > window.innerHeight - 10) ty = y - ttH - 8;
+  chipTooltip.style.left = tx + 'px';
+  chipTooltip.style.top  = ty + 'px';
+  chipTooltip.classList.add('visible');
+}
+function hideChipTooltip() {
+  clearTimeout(tooltipTimer);
+  tooltipTimer = null;
+  chipTooltip.classList.remove('visible');
+}
+
+document.addEventListener('mouseover', e => {
+  const chip = e.target.closest('.chip[data-id]');
+  if (!chip) return;
+  clearTimeout(tooltipTimer);
+  tooltipTimer = setTimeout(() => showChipTooltip(chip, e.clientX, e.clientY), 900);
+});
+document.addEventListener('mousemove', e => {
+  const chip = e.target.closest('.chip[data-id]');
+  if (!chip) { hideChipTooltip(); return; }
+  if (chipTooltip.classList.contains('visible')) {
+    // Update position as mouse moves
+    const ttW = 240;
+    let tx = e.clientX + 12, ty = e.clientY + 12;
+    if (tx + ttW > window.innerWidth - 10) tx = e.clientX - ttW - 8;
+    chipTooltip.style.left = tx + 'px';
+    chipTooltip.style.top  = ty + 'px';
+  }
+});
+document.addEventListener('mouseout', e => {
+  const chip = e.target.closest('.chip[data-id]');
+  if (chip) hideChipTooltip();
+});
+
+/* ════════════════════════════════════════
+   EDIT STATUS NOTE INLINE (Panel)
+   ════════════════════════════════════════ */
+function startEditStatusNote(eventId) {
+  const ev = events.find(e => e.id === eventId);
+  if (!ev || !canWrite) return;
+  const wrap = document.querySelector(`.pei-note-wrap[data-note-id="${eventId}"]`);
+  if (!wrap) return;
+  const existing = ev.statusNote || '';
+  wrap.innerHTML = `
+    <textarea class="pei-note-textarea" id="pnEdit_${eventId}">${escHtml(existing)}</textarea>
+    <div class="pei-note-edit-actions">
+      <button class="pei-note-save" onclick="saveEditedStatusNote('${eventId}')"><i class="ti ti-check"></i> Simpan</button>
+      <button class="pei-note-cancel" onclick="cancelEditStatusNote('${eventId}')">Batal</button>
+    </div>`;
+  const ta = document.getElementById(`pnEdit_${eventId}`);
+  if (ta) { ta.focus(); ta.selectionStart = ta.value.length; }
+}
+async function saveEditedStatusNote(eventId) {
+  const ta = document.getElementById(`pnEdit_${eventId}`);
+  if (!ta) return;
+  const newNote = ta.value.trim();
+  const prevId = editingId;
+  editingId = eventId;
+  const ev = events.find(e => e.id === eventId);
+  if (ev) await saveEvent({ ...ev, statusNote: newNote });
+  editingId = prevId;
+  showToast('✅ Catatan disimpan');
+}
+function cancelEditStatusNote(eventId) {
+  if (selectedDate) renderPanel(selectedDate);
+}
 </script>
 
 
