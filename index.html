@@ -91,8 +91,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .dc.other{pointer-events:none}.dc.other .day-num{opacity:.25}.dc.other .dc-events{border-top:none}
 .dc.today{outline:2px solid #3B82F6;outline-offset:-2px}
 .dc.today .day-num{background:#3B82F6!important;color:#fff!important;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800}
-.dc.selected{box-shadow:inset 0 0 0 2px #0D9488,inset 3px 0 0 0 #0D9488;background:rgba(13,148,136,.04)!important}
-.dc.selected .day-num{background:linear-gradient(135deg,#0F766E,#0D9488)!important;color:#fff!important;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 2px 10px rgba(13,148,136,.4)}
+.dc.selected{box-shadow:inset 0 0 0 2px #64748B,0 0 0 1px rgba(100,116,139,.12);background:rgba(100,116,139,.05)!important}
+.dc.selected .day-num{background:linear-gradient(135deg,#475569,#334155)!important;color:#fff!important;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-weight:800;box-shadow:0 2px 8px rgba(51,65,85,.28)}
 
 /* day-num header area — no colored bg strips beside the circle */
 .dc-head{padding:8px 7px 4px;display:flex;flex-direction:column;align-items:flex-start;flex-shrink:0}
@@ -454,31 +454,19 @@ body.read-only .readonly-badge{display:inline-flex}
 .jump-year:focus{border-color:var(--ink-md)}
 
 /* ── CHIP: background berwarna, font putih, separator garis putus ── */
-.chip{display:flex;align-items:center;gap:0;font-size:.68rem;font-weight:600;padding:3px 7px;margin-bottom:0;overflow:visible;cursor:pointer;color:#fff;line-height:1.5;transition:opacity .12s;position:relative}
-.chip:hover{opacity:.85}
+.chip{display:block;font-size:.68rem;font-weight:600;padding:3px 7px;margin-bottom:0;white-space:normal;word-break:break-word;overflow:visible;cursor:pointer;color:#fff;line-height:1.5;transition:opacity .12s,max-height .22s ease,padding .18s;position:relative}
+.chip:hover{opacity:.8}
 /* Separator antara event: garis putus-putus */
 .chip+.chip{border-top:1.5px dashed rgba(255,255,255,.3)}
 .chip-more{font-size:.58rem;color:var(--ink-lt);padding:2px 7px;display:block;cursor:pointer;line-height:1.6;border-top:1.5px dashed var(--rule)}
 
-/* ── STATUS ICON on chip (always shown) ── */
-.chip-status-icon{flex-shrink:0;width:14px;height:14px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;margin-right:4px;line-height:1}
-.chip-status-achieve{background:rgba(255,255,255,.28);color:#fff}
-.chip-status-not_achieve{background:rgba(255,255,255,.28);color:#fff}
-.chip-status-cancel{background:rgba(255,255,255,.22);color:#fff}
-.chip-status-pending{display:none}/* pending = no dot needed */
-
-/* ── PIC PILL: always visible, eye-catching ── */
-.chip-pic-wrap{display:inline-flex;align-items:center;gap:3px;flex-shrink:0;margin-right:4px}
-.chip-pic-pill{background:rgba(255,255,255,.9);border-radius:100px;padding:1px 6px;font-size:.58rem;font-weight:800;letter-spacing:.01em;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.6}
-/* Color of the text inside pill = event chip color (set inline) */
-
-/* ── CHIP TITLE TEXT ── */
-.chip-title-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.5}
-
-/* ── CHIP COLLAPSED STATE ── */
-.chip.collapsed{padding:2px 7px}
-.chip.collapsed .chip-title-text{display:none}
-/* In collapsed state, show only status icon + PIC pill */
+/* ── CHIP COLLAPSED STATE: hanya tampilkan PIC ── */
+.chip.collapsed{padding:2px 7px;line-height:1.4}
+.chip.collapsed .chip-full-label{display:none}
+/* PIC label always visible */
+.chip-pic-label{display:flex;align-items:center;gap:3px;font-size:.63rem;font-weight:800;letter-spacing:.02em;margin-bottom:1px}
+.chip-pic-icon{font-size:9px;opacity:.85}
+.chip-full-label{display:block}
 
 /* ── CHIP TOOLTIP ── */
 .chip-tooltip{position:fixed;z-index:9990;background:var(--ink);color:#fff;font-size:.72rem;font-weight:600;padding:7px 11px;border-radius:var(--r-md);box-shadow:0 6px 24px rgba(28,25,23,.25);pointer-events:none;opacity:0;transition:opacity .15s;max-width:260px;line-height:1.5;white-space:normal}
@@ -494,10 +482,11 @@ body.read-only .readonly-badge{display:inline-flex}
 .ct-s-pending{background:#451A03;color:#FDE68A}
 .ct-s-cancel{background:#1F2937;color:#9CA3AF}
 
-/* ── CANCEL ICON: circle with slash (matches context menu) ── */
-.chip-cancel-icon::before{content:'';display:inline-block;width:9px;height:9px;border:1.5px solid rgba(255,255,255,.85);border-radius:50%;position:relative;}
-.chip-cancel-icon{position:relative;display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;flex-shrink:0;margin-right:4px}
-.chip-cancel-icon::after{content:'';position:absolute;width:9px;height:1.5px;background:rgba(255,255,255,.85);transform:rotate(-45deg);border-radius:1px}
+/* ── PIC EYE-CATCHING BADGE in chip — always visible ── */
+.chip-pic-label .pic-pill{background:rgba(255,255,255,.92);border-radius:100px;padding:1px 6px;font-size:.6rem;font-weight:800;letter-spacing:.01em;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}
+
+/* ── STATUS CHECK ICON on chip ── */
+.chip-check{display:inline-block;margin-left:3px;opacity:.85}
 
 /* ── PANEL: compact ── */
 .panel-event-item{border:1px solid var(--rule);border-radius:var(--r-md);padding:7px 10px;margin-bottom:5px;cursor:pointer;transition:box-shadow .14s;display:flex;gap:8px;align-items:flex-start;position:relative}
@@ -1153,11 +1142,6 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
     <i class="ti ti-ban" style="font-size:13px;color:#6B7280"></i> Cancel
     <span class="ctx-note-btn" data-note-status="cancel" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
   </div>
-  <div class="ctx-sep"></div>
-  <div class="ctx-item" id="ctxCollapseItem">
-    <i class="ti ti-layout-rows" style="font-size:13px;color:var(--ink-lt)"></i>
-    <span id="ctxCollapseLabel">Collapse Event</span>
-  </div>
 </div>
 
 <!-- Status + Note Modal -->
@@ -1294,46 +1278,15 @@ let currentUser  = null;
 let canWrite     = false;  // can add/edit/delete events in this workspace
 let isSuperAdmin = false;  // can manage editors + access all workspaces
 let wsEditors    = [];     // emails allowed to write in this workspace (from Firestore)
-// Chip collapse state: { [eventId]: true/false } — synced online via Firestore
-const chipCollapseState = {};
-const COLLAPSE_COLL = 'cal_collapse';
-
-function loadCollapseFromFirebase() {
-  if (!useFirebase || !db) return;
-  try {
-    db.collection(COLLAPSE_COLL).doc(WORKSPACE).onSnapshot(doc => {
-      if (doc.exists) {
-        const data = doc.data() || {};
-        Object.assign(chipCollapseState, data);
-        // Re-render chips to reflect incoming state
-        document.querySelectorAll('.chip[data-id]').forEach(chip => {
-          chip.classList.toggle('collapsed', !!chipCollapseState[chip.dataset.id]);
-        });
-      }
-    });
-  } catch(e) { console.warn('collapse sync error:', e); }
+// Chip collapse state: { [eventId]: true/false } — persisted to localStorage
+const COLLAPSE_KEY = `cal_collapse_${WORKSPACE}`;
+function loadCollapseState() {
+  try { return JSON.parse(localStorage.getItem(COLLAPSE_KEY)||'{}'); } catch(e) { return {}; }
 }
-
-async function saveCollapseToFirebase() {
-  if (!useFirebase || !db) return;
-  try {
-    await db.collection(COLLAPSE_COLL).doc(WORKSPACE).set(chipCollapseState);
-  } catch(e) { console.warn('collapse save error:', e); }
+function saveCollapseState() {
+  localStorage.setItem(COLLAPSE_KEY, JSON.stringify(chipCollapseState));
 }
-
-function toggleChipCollapse(eventId, chipEl) {
-  const isNowCollapsed = !chipCollapseState[eventId];
-  chipCollapseState[eventId] = isNowCollapsed;
-  // Update all matching chips (same event can appear on multiple days for multi-day events)
-  document.querySelectorAll(`.chip[data-id="${eventId}"]`).forEach(c => {
-    c.classList.toggle('collapsed', isNowCollapsed);
-  });
-  // Save locally
-  try { localStorage.setItem(`cal_collapse_${WORKSPACE}`, JSON.stringify(chipCollapseState)); } catch(e){}
-  // Save to Firestore (debounced)
-  clearTimeout(toggleChipCollapse._timer);
-  toggleChipCollapse._timer = setTimeout(saveCollapseToFirebase, 800);
-}
+const chipCollapseState = loadCollapseState();
 
 try {
   if (!firebaseConfig.apiKey.includes('YOUR_')) {
@@ -1847,21 +1800,19 @@ async function renderCalendar() {
     const MAX=5; /* FIX #1 */
     let chipsHtml=evsSorted.slice(0,MAX).map(e=>{
       const t=getTypeById(e.type);
+      const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':e.status==='cancel'?'✕ ':'';
       const hiddenCls=e.hidden?' is-hidden-event':'';
       const pics=e.pics||[];
-      // PIC pills — always show, max 2 names
-      const picText=pics.length?pics.slice(0,2).join(', ')+(pics.length>2?` +${pics.length-2}`:''):'';
-      const picPillHtml=picText?`<span class="chip-pic-wrap"><span class="chip-pic-pill" style="color:${t.chip}">${escHtml(picText)}</span></span>`:'';
-      // Status icon — always show (except pending)
-      let statusIconHtml='';
-      if(e.status==='achieve') statusIconHtml=`<span class="chip-status-icon chip-status-achieve">✓</span>`;
-      else if(e.status==='not_achieve') statusIconHtml=`<span class="chip-status-icon chip-status-not_achieve">✗</span>`;
-      else if(e.status==='cancel') statusIconHtml=`<span class="chip-cancel-icon"></span>`;
+      const picText=pics.length?pics.slice(0,2).join(', ')+(pics.length>2?` +${pics.length-2}`:''):'—';
+      // Color for PIC pill - derive contrast from chip color
+      const picPillStyle=`color:${t.chip}`;
+      const picLabel=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i><span class="pic-pill" style="${picPillStyle}">${escHtml(picText)}</span></span>`;
       if(!c.cur){
-        return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none">${escHtml(picsLabel(e))}</span>`;
+        // Chip other-month: warna sama tapi opacity sangat rendah & italic, tidak clickable
+        return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none" title="${escHtml(picsLabel(e))}">${escHtml(picsLabel(e))}</span>`;
       }
       const isCollapsed=(chipCollapseState[e.id]===true)?'collapsed':'';
-      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${statusIconHtml}${picPillHtml}<span class="chip-title-text">${escHtml(picsLabel(e))}</span></span>`;
+      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true" title="Klik untuk detail · Klik kanan untuk collapse/expand">${picLabel}<span class="chip-full-label">${checkIcon}${escHtml(picsLabel(e))}</span></span>`;
     }).join('');
     if(c.cur&&evsSorted.length>MAX) chipsHtml+=`<span class="chip-more">+${evsSorted.length-MAX} lainnya</span>`;
 
@@ -1889,13 +1840,12 @@ async function renderCalendar() {
     });
     el.addEventListener('contextmenu',ev=>{
       ev.preventDefault(); ev.stopPropagation();
-      const dateStr = el.closest('.dc')?.dataset.date || null;
-      if(canWrite) {
-        openCtxMenu(ev.clientX, ev.clientY, el.dataset.id, dateStr);
-      } else {
-        // View-only: right-click = collapse/expand
-        toggleChipCollapse(el.dataset.id, el);
-      }
+      // Right-click on chip: toggle collapse/expand
+      const id = el.dataset.id;
+      const isNowCollapsed = !el.classList.contains('collapsed');
+      chipCollapseState[id] = isNowCollapsed;
+      el.classList.toggle('collapsed', isNowCollapsed);
+      saveCollapseState();
     });
   });
   document.querySelectorAll('.dc:not(.other)').forEach(el=>{
@@ -3257,19 +3207,9 @@ function openCtxMenu(x, y, eventId, dateStr) {
   ctxTargetDate = dateStr || null;
   const ev = events.find(e => e.id === eventId);
   if (!ev) return;
-  ctxMenu.querySelectorAll('.ctx-item[data-status]').forEach(item => {
+  ctxMenu.querySelectorAll('.ctx-item').forEach(item => {
     item.classList.toggle('active-status', item.dataset.status === (ev.status || 'pending'));
   });
-  // Update collapse label
-  const collapseLabel = document.getElementById('ctxCollapseLabel');
-  const collapseIcon = document.querySelector('#ctxCollapseItem i');
-  if (chipCollapseState[eventId]) {
-    collapseLabel.textContent = 'Expand Event';
-    collapseIcon.className = 'ti ti-layout-rows';
-  } else {
-    collapseLabel.textContent = 'Collapse Event';
-    collapseIcon.className = 'ti ti-layout-rows';
-  }
   ctxMenu.style.left = x + 'px';
   ctxMenu.style.top  = y + 'px';
   ctxMenu.classList.add('open');
@@ -3410,7 +3350,12 @@ document.getElementById('snSaveBtn').addEventListener('click', async () => {
   finally { document.getElementById('snSaveBtn').disabled = false; }
 });
 
-// Context menu handled inline in chip event listeners above
+// Klik kanan pada chip — sekarang ditangani langsung di chip listener (toggle collapse)
+// Handler ini hanya fallback untuk debug; chip sudah stopPropagation
+document.addEventListener('contextmenu', e => {
+  const chip = e.target.closest('.chip[data-id]');
+  if (chip) return; // already handled
+});
 
 // Pilih status dari context menu — klik pada item langsung update, klik pensil buka modal catatan
 ctxMenu.addEventListener('click', async e => {
@@ -3427,18 +3372,8 @@ ctxMenu.addEventListener('click', async e => {
     return;
   }
 
-  // Collapse/expand item
-  const collapseItem = e.target.closest('#ctxCollapseItem');
-  if (collapseItem && ctxTargetId) {
-    const currentId = ctxTargetId;
-    closeCtxMenu();
-    const chipEl = document.querySelector(`.chip[data-id="${currentId}"]`);
-    toggleChipCollapse(currentId, chipEl);
-    return;
-  }
-
   // Klik pada item status → langsung update, scope 'all'
-  const item = e.target.closest('.ctx-item[data-status]');
+  const item = e.target.closest('.ctx-item');
   if (!item || !ctxTargetId) return;
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === ctxTargetId);
@@ -3569,15 +3504,6 @@ document.addEventListener('touchcancel', cancelLongPress, { passive: true });
 loadOrder();
 loadOrderFromFirebase();
 
-/* Load collapse state: localStorage first (instant), then Firestore real-time sync */
-(function(){
-  try {
-    const saved = localStorage.getItem(`cal_collapse_${WORKSPACE}`);
-    if (saved) Object.assign(chipCollapseState, JSON.parse(saved));
-  } catch(e){}
-})();
-loadCollapseFromFirebase();
-
 /* ════════════════════════════════════════
    CHIP TOOLTIP (hover 1 detik → muncul)
    ════════════════════════════════════════ */
@@ -3670,12 +3596,21 @@ async function saveEditedStatusNote(eventId) {
   const ta = document.getElementById(`pnEdit_${eventId}`);
   if (!ta) return;
   const newNote = ta.value.trim();
-  const prevId = editingId;
-  editingId = eventId;
   const ev = events.find(e => e.id === eventId);
-  if (ev) await saveEvent({ ...ev, statusNote: newNote });
-  editingId = prevId;
+  if (!ev) return;
+  // Save directly without changing editingId (which would trigger editor open)
+  if (useFirebase) {
+    await db.collection(EVENTS_COLL).doc(eventId).update({ statusNote: newNote });
+  } else {
+    events = events.map(e => e.id === eventId ? { ...e, statusNote: newNote } : e);
+    localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
+    rebuildFilters(); renderCalendar();
+  }
+  // Update local state immediately
+  ev.statusNote = newNote;
   showToast('✅ Catatan disimpan');
+  // Refresh panel only, do NOT open addOverlay
+  if (selectedDate) renderPanel(selectedDate);
 }
 function cancelEditStatusNote(eventId) {
   if (selectedDate) renderPanel(selectedDate);
