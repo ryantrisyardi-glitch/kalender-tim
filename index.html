@@ -470,8 +470,8 @@ body.read-only .readonly-badge{display:inline-flex}
 .chip.collapsed{padding:2px 7px;line-height:1.4}
 .chip.collapsed .chip-full-label{display:none}
 /* PIC label always visible */
-.chip-pic-label{display:flex;align-items:center;gap:3px;font-size:.63rem;font-weight:800;letter-spacing:.02em;margin-bottom:1px}
-.chip-pic-icon{font-size:9px;opacity:.85}
+.chip-pic-label{display:flex;align-items:center;flex-wrap:wrap;gap:3px;font-size:.63rem;font-weight:800;letter-spacing:.02em;margin-bottom:2px}
+.chip-pic-icon{font-size:9px;opacity:.85;flex-shrink:0}
 .chip-full-label{display:block}
 
 /* ── CHIP TOOLTIP ── */
@@ -1814,15 +1814,16 @@ async function renderCalendar() {
       const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':e.status==='cancel'?'⊗ ':'';
       const hiddenCls=e.hidden?' is-hidden-event':'';
       const pics=e.pics||[];
-      const picText=pics.length?pics.slice(0,2).join(', ')+(pics.length>2?` +${pics.length-2}`:''):'—';
-      // Color for PIC pill - derive contrast from chip color
+      // Setiap PIC tampil sebagai capsule terpisah
       const picPillStyle=`color:${t.chip}`;
-      const picLabel=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i><span class="pic-pill" style="${picPillStyle}">${escHtml(picText)}</span></span>`;
+      const picPillsHtml = pics.length
+        ? pics.map(p=>`<span class="pic-pill" style="${picPillStyle}">${escHtml(p)}</span>`).join('')
+        : `<span class="pic-pill" style="${picPillStyle}">—</span>`;
+      const picLabel=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i>${picPillsHtml}</span>`;
       if(!c.cur){
         // Chip other-month: warna sama tapi opacity sangat rendah & italic, tidak clickable
         const isCollapsedOther=(chipCollapseState[e.id]===true)?'collapsed':'';
-        const picLabelOther=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i><span class="pic-pill" style="${picPillStyle}">${escHtml(picText)}</span></span>`;
-        return `<span class="chip ${isCollapsedOther} chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none">${picLabelOther}<span class="chip-full-label">${escHtml(e.title)}</span></span>`;
+        return `<span class="chip ${isCollapsedOther} chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none">${picLabel}<span class="chip-full-label">${escHtml(e.title)}</span></span>`;
       }
       const isCollapsed=(chipCollapseState[e.id]===true)?'collapsed':'';
       // chip-full-label hanya judul (tanpa PIC, karena PIC sudah tampil di pic-label)
