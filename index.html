@@ -467,10 +467,6 @@ body.read-only .readonly-badge{display:inline-flex}
 .chip-pic-label{display:flex;align-items:center;gap:3px;font-size:.63rem;font-weight:800;letter-spacing:.02em;margin-bottom:1px}
 .chip-pic-icon{font-size:9px;opacity:.85}
 .chip-full-label{display:block}
-/* Toggle collapse button */
-.chip-toggle{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.22);cursor:pointer;flex-shrink:0;margin-left:3px;font-size:8px;line-height:1;transition:background .12s,transform .18s;vertical-align:middle;position:relative;z-index:3}
-.chip-toggle:hover{background:rgba(255,255,255,.4)}
-.chip.collapsed .chip-toggle{transform:rotate(180deg)}
 
 /* ── CHIP TOOLTIP ── */
 .chip-tooltip{position:fixed;z-index:9990;background:var(--ink);color:#fff;font-size:.72rem;font-weight:600;padding:7px 11px;border-radius:var(--r-md);box-shadow:0 6px 24px rgba(28,25,23,.25);pointer-events:none;opacity:0;transition:opacity .15s;max-width:260px;line-height:1.5;white-space:normal}
@@ -1809,7 +1805,7 @@ async function renderCalendar() {
     const MAX=5; /* FIX #1 */
     let chipsHtml=evsSorted.slice(0,MAX).map(e=>{
       const t=getTypeById(e.type);
-      const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':e.status==='cancel'?'✕ ':'';
+      const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':e.status==='cancel'?'⊗ ':'';
       const hiddenCls=e.hidden?' is-hidden-event':'';
       const pics=e.pics||[];
       const picText=pics.length?pics.slice(0,2).join(', ')+(pics.length>2?` +${pics.length-2}`:''):'—';
@@ -1818,13 +1814,14 @@ async function renderCalendar() {
       const picLabel=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i><span class="pic-pill" style="${picPillStyle}">${escHtml(picText)}</span></span>`;
       if(!c.cur){
         // Chip other-month: warna sama tapi opacity sangat rendah & italic, tidak clickable
-        return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none" title="${escHtml(picsLabel(e))}">${escHtml(picsLabel(e))}</span>`;
+        const isCollapsedOther=(chipCollapseState[e.id]===true)?'collapsed':'';
+        const picLabelOther=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i><span class="pic-pill" style="${picPillStyle}">${escHtml(picText)}</span></span>`;
+        return `<span class="chip ${isCollapsedOther} chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none">${picLabelOther}<span class="chip-full-label">${escHtml(e.title)}</span></span>`;
       }
       const isCollapsed=(chipCollapseState[e.id]===true)?'collapsed':'';
       // chip-full-label hanya judul (tanpa PIC, karena PIC sudah tampil di pic-label)
       const titleOnly = `${checkIcon}${escHtml(e.title)}`;
-      const toggleBtn = `<span class="chip-toggle" data-collapse-id="${e.id}" title="Collapse/Expand">▲</span>`;
-      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${picLabel}<span class="chip-full-label">${titleOnly}</span>${toggleBtn}</span>`;
+      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${picLabel}<span class="chip-full-label">${titleOnly}</span></span>`;
     }).join('');
     if(c.cur&&evsSorted.length>MAX) chipsHtml+=`<span class="chip-more">+${evsSorted.length-MAX} lainnya</span>`;
 
@@ -1848,25 +1845,12 @@ async function renderCalendar() {
   });
   document.querySelectorAll('.chip[data-id]').forEach(el=>{
     el.addEventListener('click',ev=>{
-      if(ev.target.closest('.chip-toggle')) return; // handled below
       ev.stopPropagation();openDetail(el.dataset.id);
     });
     el.addEventListener('contextmenu',ev=>{
       ev.preventDefault(); ev.stopPropagation();
       const dateStr = el.closest('.dc')?.dataset.date || null;
       if(canWrite) openCtxMenu(ev.clientX, ev.clientY, el.dataset.id, dateStr);
-    });
-  });
-  // Collapse toggle buttons
-  document.querySelectorAll('.chip-toggle[data-collapse-id]').forEach(btn=>{
-    btn.addEventListener('click',ev=>{
-      ev.stopPropagation();
-      const id=btn.dataset.collapseId;
-      const chip=btn.closest('.chip');
-      const isNowCollapsed=!chip.classList.contains('collapsed');
-      chipCollapseState[id]=isNowCollapsed;
-      chip.classList.toggle('collapsed',isNowCollapsed);
-      saveCollapseState();
     });
   });
   document.querySelectorAll('.dc:not(.other)').forEach(el=>{
@@ -1952,7 +1936,13 @@ function renderPanel(ds) {
     </div>`;
   }).join('');
 
-  body.querySelectorAll('.panel-event-item').forEach(el=>el.addEventListener('click',()=>openDetail(el.dataset.id)));
+  body.querySelectorAll('.panel-event-item').forEach(el=>{
+    el.addEventListener('click', ev => {
+      // Don't open detail if clicking inside note edit actions (save/cancel buttons)
+      if (ev.target.closest('.pei-note-edit-actions') || ev.target.closest('.pei-note-edit-btn') || ev.target.closest('.pei-note-wrap')) return;
+      openDetail(el.dataset.id);
+    });
+  });
 }
 
 /* ════════════════════════════════════════
