@@ -467,6 +467,10 @@ body.read-only .readonly-badge{display:inline-flex}
 .chip-pic-label{display:flex;align-items:center;gap:3px;font-size:.63rem;font-weight:800;letter-spacing:.02em;margin-bottom:1px}
 .chip-pic-icon{font-size:9px;opacity:.85}
 .chip-full-label{display:block}
+/* Toggle collapse button */
+.chip-toggle{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;background:rgba(255,255,255,.22);cursor:pointer;flex-shrink:0;margin-left:3px;font-size:8px;line-height:1;transition:background .12s,transform .18s;vertical-align:middle;position:relative;z-index:3}
+.chip-toggle:hover{background:rgba(255,255,255,.4)}
+.chip.collapsed .chip-toggle{transform:rotate(180deg)}
 
 /* ── CHIP TOOLTIP ── */
 .chip-tooltip{position:fixed;z-index:9990;background:var(--ink);color:#fff;font-size:.72rem;font-weight:600;padding:7px 11px;border-radius:var(--r-md);box-shadow:0 6px 24px rgba(28,25,23,.25);pointer-events:none;opacity:0;transition:opacity .15s;max-width:260px;line-height:1.5;white-space:normal}
@@ -1139,8 +1143,13 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
   </div>
   <div class="ctx-item" data-status="cancel">
     <span class="ctx-dot" style="background:#6B7280"></span>
-    <i class="ti ti-ban" style="font-size:13px;color:#6B7280"></i> Cancel
+    <i class="ti ti-circle-off" style="font-size:13px;color:#6B7280"></i> Cancel
     <span class="ctx-note-btn" data-note-status="cancel" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
+  </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" id="ctxCollapseItem">
+    <i class="ti ti-arrows-minimize" style="font-size:13px;color:var(--ink-lt)"></i>
+    <span id="ctxCollapseLabel">Collapse</span>
   </div>
 </div>
 
@@ -1222,7 +1231,7 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
     </div>
     <div class="mctx-item" data-status="cancel">
       <span class="ctx-dot" style="background:#6B7280"></span>
-      <i class="ti ti-ban" style="font-size:15px;color:#6B7280"></i> Cancel
+      <i class="ti ti-circle-off" style="font-size:15px;color:#6B7280"></i> Cancel
       <span class="mctx-note-btn" data-note-status="cancel"><i class="ti ti-pencil" style="font-size:12px"></i> + Catatan</span>
     </div>
   </div>
@@ -1812,7 +1821,10 @@ async function renderCalendar() {
         return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none" title="${escHtml(picsLabel(e))}">${escHtml(picsLabel(e))}</span>`;
       }
       const isCollapsed=(chipCollapseState[e.id]===true)?'collapsed':'';
-      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true" title="Klik untuk detail · Klik kanan untuk collapse/expand">${picLabel}<span class="chip-full-label">${checkIcon}${escHtml(picsLabel(e))}</span></span>`;
+      // chip-full-label hanya judul (tanpa PIC, karena PIC sudah tampil di pic-label)
+      const titleOnly = `${checkIcon}${escHtml(e.title)}`;
+      const toggleBtn = `<span class="chip-toggle" data-collapse-id="${e.id}" title="Collapse/Expand">▲</span>`;
+      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${picLabel}<span class="chip-full-label">${titleOnly}</span>${toggleBtn}</span>`;
     }).join('');
     if(c.cur&&evsSorted.length>MAX) chipsHtml+=`<span class="chip-more">+${evsSorted.length-MAX} lainnya</span>`;
 
@@ -1836,15 +1848,24 @@ async function renderCalendar() {
   });
   document.querySelectorAll('.chip[data-id]').forEach(el=>{
     el.addEventListener('click',ev=>{
+      if(ev.target.closest('.chip-toggle')) return; // handled below
       ev.stopPropagation();openDetail(el.dataset.id);
     });
     el.addEventListener('contextmenu',ev=>{
       ev.preventDefault(); ev.stopPropagation();
-      // Right-click on chip: toggle collapse/expand
-      const id = el.dataset.id;
-      const isNowCollapsed = !el.classList.contains('collapsed');
-      chipCollapseState[id] = isNowCollapsed;
-      el.classList.toggle('collapsed', isNowCollapsed);
+      const dateStr = el.closest('.dc')?.dataset.date || null;
+      if(canWrite) openCtxMenu(ev.clientX, ev.clientY, el.dataset.id, dateStr);
+    });
+  });
+  // Collapse toggle buttons
+  document.querySelectorAll('.chip-toggle[data-collapse-id]').forEach(btn=>{
+    btn.addEventListener('click',ev=>{
+      ev.stopPropagation();
+      const id=btn.dataset.collapseId;
+      const chip=btn.closest('.chip');
+      const isNowCollapsed=!chip.classList.contains('collapsed');
+      chipCollapseState[id]=isNowCollapsed;
+      chip.classList.toggle('collapsed',isNowCollapsed);
       saveCollapseState();
     });
   });
@@ -3207,9 +3228,20 @@ function openCtxMenu(x, y, eventId, dateStr) {
   ctxTargetDate = dateStr || null;
   const ev = events.find(e => e.id === eventId);
   if (!ev) return;
-  ctxMenu.querySelectorAll('.ctx-item').forEach(item => {
+  ctxMenu.querySelectorAll('.ctx-item[data-status]').forEach(item => {
     item.classList.toggle('active-status', item.dataset.status === (ev.status || 'pending'));
   });
+  // Update collapse label
+  const isCollapsed = chipCollapseState[eventId] === true;
+  const collapseLabel = document.getElementById('ctxCollapseLabel');
+  const collapseItem = document.getElementById('ctxCollapseItem');
+  if (collapseLabel) collapseLabel.textContent = isCollapsed ? 'Expand' : 'Collapse';
+  if (collapseItem) {
+    const icon = collapseItem.querySelector('i');
+    if (icon) icon.className = isCollapsed ? 'ti ti-arrows-maximize' : 'ti ti-arrows-minimize';
+    icon && (icon.style.fontSize = '13px');
+    icon && (icon.style.color = 'var(--ink-lt)');
+  }
   ctxMenu.style.left = x + 'px';
   ctxMenu.style.top  = y + 'px';
   ctxMenu.classList.add('open');
@@ -3350,11 +3382,13 @@ document.getElementById('snSaveBtn').addEventListener('click', async () => {
   finally { document.getElementById('snSaveBtn').disabled = false; }
 });
 
-// Klik kanan pada chip — sekarang ditangani langsung di chip listener (toggle collapse)
-// Handler ini hanya fallback untuk debug; chip sudah stopPropagation
+// Klik kanan pada chip — delegasi dari document
 document.addEventListener('contextmenu', e => {
   const chip = e.target.closest('.chip[data-id]');
-  if (chip) return; // already handled
+  if (!chip || !canWrite) return;
+  e.preventDefault();
+  const dateStr = chip.closest('.dc')?.dataset.date || null;
+  openCtxMenu(e.clientX, e.clientY, chip.dataset.id, dateStr);
 });
 
 // Pilih status dari context menu — klik pada item langsung update, klik pensil buka modal catatan
@@ -3372,8 +3406,22 @@ ctxMenu.addEventListener('click', async e => {
     return;
   }
 
+  // If clicked collapse/expand item
+  if (e.target.closest('#ctxCollapseItem')) {
+    const id = ctxTargetId;
+    closeCtxMenu();
+    if (!id) return;
+    const isNowCollapsed = !(chipCollapseState[id] === true);
+    chipCollapseState[id] = isNowCollapsed;
+    saveCollapseState();
+    // Update DOM directly without full re-render
+    const chip = document.querySelector(`.chip[data-id="${id}"]`);
+    if (chip) chip.classList.toggle('collapsed', isNowCollapsed);
+    return;
+  }
+
   // Klik pada item status → langsung update, scope 'all'
-  const item = e.target.closest('.ctx-item');
+  const item = e.target.closest('.ctx-item[data-status]');
   if (!item || !ctxTargetId) return;
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === ctxTargetId);
