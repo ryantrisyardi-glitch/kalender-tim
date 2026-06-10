@@ -104,9 +104,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .hol-label{font-size:.65rem;font-weight:700;line-height:1.3;margin-left:1px;white-space:normal;word-break:break-word;max-width:100%}
 .is-libnas .hol-label{color:var(--libnas-name)}.is-cutib .hol-label{color:var(--cutib-name)}
 
-/* ── CHIPS: compact, max 5 ── */
-/* .chip defined in additions below */
-.chip:hover{opacity:.8}
+/* ── CHIPS: compact, max 5 — styles defined in additions block below ── */
 
 
 /* ── RIGHT PANEL ── */
@@ -454,31 +452,27 @@ body.read-only .readonly-badge{display:inline-flex}
 .jump-year:focus{border-color:var(--ink-md)}
 
 /* ── CHIP: background berwarna, font putih, separator garis putus ── */
-.chip{display:block;font-size:.68rem;font-weight:600;padding:3px 7px;margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:#fff;line-height:1.6;transition:opacity .12s;position:relative}
-.chip:hover{opacity:.85}
-/* Separator antara event: garis putus-putus */
+/* ── CHIP ── */
+.chip{display:block;font-size:.68rem;font-weight:600;padding:2px 6px;margin-bottom:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:#fff;line-height:1.7;transition:opacity .12s;position:relative;width:100%;box-sizing:border-box}
+.chip:hover{opacity:.82}
 .chip+.chip{border-top:1.5px dashed rgba(255,255,255,.3)}
 .chip-more{font-size:.58rem;color:var(--ink-lt);padding:2px 7px;display:block;cursor:pointer;line-height:1.6;border-top:1.5px dashed var(--rule)}
 
-/* ── STATUS ICON on chip (always shown, inline) ── */
-.chip-status-icon{display:inline-flex;align-items:center;justify-content:center;width:13px;height:13px;border-radius:50%;font-size:7px;font-weight:900;margin-right:3px;vertical-align:middle;flex-shrink:0;line-height:1;background:rgba(255,255,255,.28);color:#fff;position:relative;top:-0.5px}
+/* Status icon — always inline */
+.chip-status-icon{display:inline-flex;align-items:center;justify-content:center;width:12px;height:12px;border-radius:50%;font-size:7px;font-weight:900;line-height:1;background:rgba(255,255,255,.28);color:#fff;vertical-align:middle;margin-right:2px;position:relative;top:-1px}
 .chip-status-pending{display:none}
 
-/* ── CANCEL ICON: lingkaran dipotong garis miring (inline SVG approach) ── */
-.chip-cancel-icon{display:inline-block;width:11px;height:11px;margin-right:3px;vertical-align:middle;position:relative;top:-0.5px;flex-shrink:0}
+/* Cancel icon — lingkaran + garis miring */
+.chip-cancel-icon{display:inline-block;width:10px;height:10px;vertical-align:middle;position:relative;margin-right:2px;top:-1px}
 .chip-cancel-icon::before{content:'';position:absolute;inset:0;border:1.5px solid rgba(255,255,255,.85);border-radius:50%}
 .chip-cancel-icon::after{content:'';position:absolute;top:50%;left:1px;right:1px;height:1.5px;background:rgba(255,255,255,.85);transform:translateY(-50%) rotate(-45deg);border-radius:1px}
 
-/* ── PIC PILL: always visible, eye-catching ── */
-.chip-pic-pill{display:inline-block;background:rgba(255,255,255,.92);border-radius:100px;padding:0 5px;font-size:.58rem;font-weight:800;letter-spacing:.01em;max-width:68px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.55;vertical-align:middle;margin-right:3px;position:relative;top:-0.5px}
-/* Color of the text inside pill = event chip color (set inline) */
+/* PIC pill — always visible */
+.chip-pic-pill{display:inline-block;background:rgba(255,255,255,.92);border-radius:100px;padding:0 5px;font-size:.57rem;font-weight:800;max-width:58px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.65;vertical-align:middle;margin-right:3px;position:relative;top:-1px}
 
-/* ── CHIP COLLAPSED STATE ── */
-.chip.collapsed{white-space:nowrap}
+/* Title text — inline, hidden when collapsed */
+.chip-title-text{display:inline;vertical-align:middle}
 .chip.collapsed .chip-title-text{display:none}
-
-/* ── CHIP TITLE TEXT ── */
-.chip-title-text{display:inline}
 
 /* ── CHIP TOOLTIP ── */
 .chip-tooltip{position:fixed;z-index:9990;background:var(--ink);color:#fff;font-size:.72rem;font-weight:600;padding:7px 11px;border-radius:var(--r-md);box-shadow:0 6px 24px rgba(28,25,23,.25);pointer-events:none;opacity:0;transition:opacity .15s;max-width:260px;line-height:1.5;white-space:normal}
@@ -1844,20 +1838,20 @@ async function renderCalendar() {
       const t=getTypeById(e.type);
       const hiddenCls=e.hidden?' is-hidden-event':'';
       const pics=e.pics||[];
-      // PIC pill — always show, max 2 names, inline before title
+      // PIC pill — max 2 nama, always visible
       const picText=pics.length?pics.slice(0,2).join(', ')+(pics.length>2?` +${pics.length-2}`:''):'';
       const picPillHtml=picText?`<span class="chip-pic-pill" style="color:${t.chip}">${escHtml(picText)}</span>`:'';
-      // Status icon — always show inline (except pending)
+      // Status icon inline (except pending)
       let statusIconHtml='';
-      if(e.status==='achieve')      statusIconHtml=`<span class="chip-status-icon">✓</span>`;
+      if(e.status==='achieve')          statusIconHtml=`<span class="chip-status-icon">✓</span>`;
       else if(e.status==='not_achieve') statusIconHtml=`<span class="chip-status-icon">✗</span>`;
-      else if(e.status==='cancel')  statusIconHtml=`<span class="chip-cancel-icon"></span>`;
+      else if(e.status==='cancel')      statusIconHtml=`<span class="chip-cancel-icon"></span>`;
       if(!c.cur){
-        return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none">${escHtml(picsLabel(e))}</span>`;
+        return `<span class="chip chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none">${escHtml(e.title)}</span>`;
       }
       const isCollapsed=(chipCollapseState[e.id]===true)?'collapsed':'';
-      // In collapsed: show status + PIC pill only. In expanded: show status + PIC pill + title
-      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${statusIconHtml}${picPillHtml}<span class="chip-title-text"> ${escHtml(picsLabel(e))}</span></span>`;
+      // Title text = ev.title only (PIC sudah tampil di pill)
+      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${statusIconHtml}${picPillHtml}<span class="chip-title-text">${escHtml(e.title)}</span></span>`;
     }).join('');
     if(c.cur&&evsSorted.length>MAX) chipsHtml+=`<span class="chip-more">+${evsSorted.length-MAX} lainnya</span>`;
 
@@ -1978,8 +1972,10 @@ function renderPanel(ds) {
   }).join('');
 
   body.querySelectorAll('.panel-event-item').forEach(el=>el.addEventListener('click', ev => {
-    // Don't open detail if clicking edit-note button or inside pei-note-wrap
-    if (ev.target.closest('[data-edit-note-id]') || ev.target.closest('.pei-note-wrap')) return;
+    // Jangan buka detail jika klik dari tombol copy, edit-note, atau area catatan
+    if (ev.target.closest('.pei-copy-btn') ||
+        ev.target.closest('[data-edit-note-id]') ||
+        ev.target.closest('.pei-note-wrap')) return;
     openDetail(el.dataset.id);
   }));
   // Edit note button — delegated, stopPropagation
@@ -3680,16 +3676,16 @@ function startEditStatusNote(eventId) {
     const newNote = ta.value.trim();
     try {
       if (useFirebase && db) {
+        // Firestore onSnapshot akan otomatis trigger renderCalendar + renderPanel
         await db.collection(EVENTS_COLL).doc(eventId).update({ statusNote: newNote });
       } else {
         events = events.map(e => e.id === eventId ? { ...e, statusNote: newNote } : e);
         localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
-        rebuildFilters(); renderCalendar();
+        rebuildFilters();
+        renderCalendar();
         if (selectedDate) renderPanel(selectedDate);
       }
       showToast('✅ Catatan disimpan');
-      // Re-render only the wrap content, not the whole panel
-      if (selectedDate) renderPanel(selectedDate);
     } catch(e) { showToast('❌ ' + e.message); }
   });
   document.getElementById(`pnCancel_${eventId}`).addEventListener('click', ev2 => {
