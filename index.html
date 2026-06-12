@@ -169,8 +169,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 /* Pen icon inside ctx-item for adding note */
 .ctx-note-btn{margin-left:auto;padding:2px 5px;border-radius:var(--r-sm);background:rgba(0,0,0,.06);font-size:.7rem;color:var(--ink-lt);display:inline-flex;align-items:center;gap:2px;transition:background .12s,color .12s;flex-shrink:0;border:1px solid transparent}
 .ctx-note-btn:hover{background:var(--bg-dk);color:var(--ink);border-color:var(--rule)}
-body.dark .ctx-note-btn{background:rgba(255,255,255,.07)}
-body.dark .ctx-note-btn:hover{background:var(--bg-dk)}
+
 
 /* ── STATUS NOTE MODAL ── */
 #statusNoteOverlay .modal{width:420px}
@@ -212,7 +211,7 @@ body.dark .ctx-note-btn:hover{background:var(--bg-dk)}
 .mctx-item .ctx-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .mctx-note-btn{margin-left:auto;padding:4px 9px;border-radius:var(--r-sm);background:var(--bg-dk);font-size:.72rem;color:var(--ink-lt);display:inline-flex;align-items:center;gap:3px;border:1px solid var(--rule);font-weight:600}
 .mctx-sep{height:1px;background:var(--rule);margin:6px 4px}
-body.dark .mobile-ctx-panel{background:var(--surface)}
+
 
 /* ── LONG PRESS INDICATOR ── */
 @keyframes longPressRing{0%{transform:scale(0.5);opacity:.8}100%{transform:scale(1.5);opacity:0}}
@@ -221,47 +220,75 @@ body.dark .mobile-ctx-panel{background:var(--surface)}
 
 /* ── MOBILE RESPONSIVE ── */
 @media(max-width:768px){
-  .page{padding:1rem .75rem 5rem}
-  .site-header{gap:8px;margin-bottom:1rem}
-  .brand-title{font-size:1.15rem}
-  .hdr-right{gap:5px}
-  .hdr-right .btn:not(#addEventBtn):not(#todayBtn):not(#darkModeBtn){display:none}
+  .page{padding:.75rem .6rem 5rem}
+  .site-header{gap:6px;margin-bottom:.85rem;flex-wrap:nowrap;align-items:flex-start}
+  .brand-title{font-size:1rem}
+  .brand-sub{font-size:.6rem}
+  .hdr-right{gap:4px;flex-wrap:nowrap}
+  /* Hide non-essential buttons on mobile, show only key ones */
+  .hdr-right .btn:not(#addEventBtn):not(#todayBtn):not(#exportExcelBtn){display:none}
+  #exportExcelBtn{display:none} /* hide excel on mobile too, save space */
   /* Show hamburger menu on mobile */
   .mobile-menu-btn{display:inline-flex!important}
   .main-row{flex-direction:column;gap:0}
   .panel-col{display:none!important} /* panel handled as bottom sheet on mobile */
   .cal-col{width:100%}
-  .dc{min-height:58px}
-  .dc-head{padding:5px 4px 2px}
-  .day-num{width:22px;height:22px;font-size:.78rem}
-  .chip{font-size:.6rem;padding:2px 5px;line-height:1.4}
-  .month-label{font-size:.95rem;min-width:140px}
-  .month-display-title{font-size:1.7rem}
-  .control-bar{flex-direction:column;align-items:stretch;gap:8px}
+  /* Smaller cells on mobile */
+  .dc{min-height:56px}
+  .dc-head{padding:4px 3px 2px}
+  .day-num{width:21px;height:21px;font-size:.74rem}
+  .chip{font-size:.58rem;padding:2px 4px;line-height:1.4}
+  .month-label{font-size:.9rem;min-width:120px}
+  .month-display-title{font-size:1.6rem}
+  /* Control bar stacks vertically */
+  .control-bar{flex-direction:column;align-items:stretch;gap:6px}
   .month-nav{justify-content:center}
-  .filter-group{justify-content:center}
-  .filter-select{min-width:120px;font-size:.76rem}
-  .legend-bar{gap:8px;padding:7px 12px;font-size:.65rem}
+  .filter-group{justify-content:center;gap:6px}
+  .filter-select{min-width:110px;font-size:.74rem;padding:6px 24px 6px 9px}
+  .legend-bar{gap:6px;padding:6px 10px;font-size:.63rem}
+  .leg-sep{display:none}
+  /* Event grid single column */
   .event-grid{grid-template-columns:1fr}
-  .modal{padding:1.25rem;border-radius:var(--r-xl) var(--r-xl) 0 0;position:fixed!important;bottom:0!important;left:0!important;right:0!important;top:auto!important;width:100%!important;max-width:100%!important;max-height:90vh;margin:0}
+  /* Modals slide up from bottom */
+  .modal{padding:1.25rem;border-radius:var(--r-xl) var(--r-xl) 0 0;position:fixed!important;bottom:0!important;left:0!important;right:0!important;top:auto!important;width:100%!important;max-width:100%!important;max-height:90vh;margin:0;overflow-y:auto}
   .overlay{align-items:flex-end!important;padding:0!important}
   .frow{grid-template-columns:1fr}
   .modal-foot{flex-wrap:wrap}
-  .tab-btn{font-size:.76rem;padding:8px 11px}
+  .tab-btn{font-size:.75rem;padding:8px 10px}
   /* Report view mobile */
   .rpt-controls{flex-direction:column;padding:0 12px;gap:8px}
   .rpt-filter-group{flex-wrap:wrap;gap:6px}
   .rpt-range-wrap{flex-wrap:wrap;gap:6px}
   .rpt-table-wrap{border-radius:var(--r-lg);max-height:60vh}
   .rpt-table td,.rpt-table th{padding:0 10px;font-size:.75rem}
+  /* Auth chip compact */
+  .auth-chip span:first-of-type{max-width:80px!important}
+  /* Jump nav compact */
+  .jump-month{font-size:.78rem;padding:5px 20px 5px 7px}
+  .jump-year{font-size:.78rem;padding:5px 6px;width:60px}
+  /* Panel copy btn */
+  #panelCopyAllBtn{display:none!important}
 }
 @media(max-width:480px){
-  .dc{min-height:48px}
-  .chip{font-size:.55rem;padding:1px 4px}
-  .dh{font-size:.65rem;padding:10px 2px}
-  .month-display-title{font-size:1.4rem}
-  .hol-label{font-size:.58rem}
+  .dc{min-height:44px}
+  .chip{font-size:.53rem;padding:1px 3px}
+  .dh{font-size:.62rem;padding:9px 1px}
+  .month-display-title{font-size:1.3rem}
+  .hol-label{font-size:.54rem}
+  .brand-title{font-size:.92rem}
+  .btn{font-size:.68rem;padding:6px 9px}
+  #addEventBtn span,.btn-label{display:none} /* icon-only on tiny screens */
+  .filter-select{min-width:95px;font-size:.7rem}
 }
+
+/* ── MOBILE PANEL BOTTOM SHEET ── */
+#mobilePanelSheet{position:fixed;inset:0;z-index:500;display:none;pointer-events:none}
+#mobilePanelSheet.open{display:block;pointer-events:auto}
+.mpanel-backdrop{position:absolute;inset:0;background:rgba(28,25,23,.45);backdrop-filter:blur(2px)}
+.mpanel-wrap{position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-radius:var(--r-xl) var(--r-xl) 0 0;max-height:82vh;display:flex;flex-direction:column;animation:slideUpSheet .22s ease;box-shadow:0 -8px 40px rgba(28,25,23,.2)}
+.mpanel-handle{width:36px;height:4px;border-radius:100px;background:var(--ink-lt);margin:10px auto 0;opacity:.4;flex-shrink:0}
+.mpanel-head{padding:10px 14px 10px;border-bottom:1.5px solid var(--rule);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;flex-shrink:0}
+.mpanel-body{padding:10px 12px;flex:1;overflow-y:auto;min-height:0;padding-bottom:env(safe-area-inset-bottom,12px)}
 .pics-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 /* FIX #1: note in ecard — vivid highlight */
 .ecard-note{font-size:.71rem;color:#1C1917;margin-top:6px;line-height:1.5;padding:6px 9px;background:#FEF9C3;border-radius:var(--r-sm);border-left:3px solid #EAB308;font-weight:500}
@@ -381,9 +408,7 @@ code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;font-size:.76r
   background: rgba(255,255,255,.06);
   border-radius: 3px;
 }
-body.dark .col-resize-handle:hover {
-  background: rgba(255,255,255,.1);
-}
+
 
 .write-only{transition:opacity .2s}
 body.read-only .write-only{opacity:.35;pointer-events:none;cursor:not-allowed}
@@ -498,7 +523,7 @@ body.read-only .readonly-badge{display:inline-flex}
 .panel-event-item{border:1px solid var(--rule);border-radius:var(--r-md);padding:7px 10px;margin-bottom:5px;cursor:pointer;transition:box-shadow .14s;display:flex;gap:8px;align-items:flex-start;position:relative}
 .pei-copy-btn{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--ink-lt);cursor:pointer;padding:4px;border-radius:var(--r-sm);transition:background .12s,color .12s;display:flex;align-items:center;justify-content:center;z-index:2}
 .pei-copy-btn:hover{background:var(--bg-dk);color:var(--ink)}
-body.dark .pei-copy-btn:hover{background:var(--bg-dk);color:var(--ink)}
+
 .panel-event-item:hover{box-shadow:0 2px 10px rgba(28,25,23,.09)}
 .pei-bar{width:3px;border-radius:100px;flex-shrink:0;align-self:stretch;min-height:28px}
 .pei-body{flex:1;min-width:0}
@@ -510,55 +535,7 @@ body.dark .pei-copy-btn:hover{background:var(--bg-dk);color:var(--ink)}
 .pei-note{font-size:.67rem;color:#1C1917;margin-top:4px;line-height:1.4;background:#FEF9C3;border-radius:3px;padding:4px 7px;border-left:3px solid #EAB308;font-weight:500}
 .pei-status{font-size:.62rem;font-weight:700;padding:1px 6px;border-radius:100px}
 
-/* ── DARK MODE ── */
-body.dark{
-  --bg:#0F0E0C;--bg-dk:#1A1916;--surface:#1E1C1A;
-  --ink:#F0ECE6;--ink-md:#C5BDB4;--ink-lt:#6B635C;--rule:#2E2B28;
-  --libnas-bg:#2D1515;--libnas-side:#7F1D1D;--libnas-num:#FCA5A5;--libnas-name:#FCA5A5;
-  --cutib-bg:#2D2010;--cutib-side:#78350F;--cutib-num:#FCD34D;--cutib-name:#FCD34D;
-  --sun-bg:#1E1515;--sun-num:#FCA5A5;
-  --sat-bg:#141A24;--sat-num:#93C5FD;
-  --s-achieve-bg:#14372A;--s-achieve-tx:#86EFAC;
-  --s-not-bg:#3B1515;--s-not-tx:#FCA5A5;
-  --s-pending-bg:#2D2410;--s-pending-tx:#FDE68A;
-  --s-cancel-bg:#1F2937;--s-cancel-tx:#9CA3AF;
-}
-body.dark .dh{color:#8C8580}
-body.dark .dh.sun{color:#FCA5A5}
-body.dark .dh.sat{color:#93C5FD}
-body.dark .dc:hover{background:#252320}
-body.dark .dc-events{border-top-color:var(--rule)}
-body.dark .cal-shell{box-shadow:none}
-body.dark .cal-hdr-sticky-wrap{background:var(--bg-dk);border-color:var(--rule);box-shadow:0 2px 8px rgba(0,0,0,.4)}
-body.dark .cal-body{border-color:var(--rule)}
-body.dark .btn{background:var(--surface);color:var(--ink-md);border-color:var(--rule)}
-body.dark .btn:hover{background:var(--bg-dk)}
-body.dark .btn-primary{background:#F0ECE6;color:#1C1917;border-color:#F0ECE6}
-body.dark .btn-primary:hover{background:#E0D9D0}
-body.dark .btn-green{background:#14372A;color:#86EFAC;border-color:#166534}
-body.dark .btn-danger{background:#3B1515;color:#FCA5A5;border-color:#7F1D1D}
-body.dark .fc{background:var(--bg-dk);border-color:var(--rule);color:var(--ink)}
-body.dark .fc:focus{background:var(--surface);border-color:var(--ink-lt)}
-body.dark .filter-select{background:var(--surface);color:var(--ink);border-color:var(--rule)}
-body.dark .jump-month,.jump-year{background:var(--surface);color:var(--ink);border-color:var(--rule)}
-body.dark .jump-year{background:var(--surface);color:var(--ink)}
-body.dark .pic-badge{background:#F0ECE6;color:#1C1917}
-body.dark .ac-list,.pic-ac-list{background:var(--surface);border-color:var(--rule)}
-body.dark .ac-item:hover,.ac-item.ac-active,.pic-ac-item:hover,.pic-ac-item.ac-active{background:var(--bg-dk)}
-body.dark .overlay{background:rgba(0,0,0,.65)}
-body.dark .modal{background:var(--surface)}
-body.dark .pic-input-wrap{background:var(--bg-dk);border-color:var(--rule)}
-body.dark .pic-input-wrap:focus-within{background:var(--surface)}
-body.dark .pic-input-field{color:var(--ink)}
-body.dark .type-row,.editor-row,.hol-row{background:var(--bg-dk)}
-body.dark .ecard{background:var(--surface)}
-body.dark .ecard:hover{box-shadow:0 4px 16px rgba(0,0,0,.4)}
-body.dark .day-panel{background:var(--surface)}
-body.dark .panel-event-item{border-color:var(--rule)}
-body.dark .panel-event-item:hover{box-shadow:0 2px 10px rgba(0,0,0,.4)}
-body.dark .legend-bar{background:var(--bg-dk)}
-body.dark .list-heading-sticky{background:var(--bg)}
-body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
+/* ── DARK MODE removed ── */
 
 
 /* ── MONTH TITLE ── */
@@ -662,7 +639,7 @@ body.dark #darkModeBtn .ti-moon::before{content:"\ecc4"}/* sun icon */
   border-bottom:1px solid var(--rule);
   border-top:2px solid var(--rule);
 }
-body.dark .rpt-month-hdr td{background:var(--bg-dk);color:var(--ink-lt)}
+
 
 /* ── ZEBRA ROWS ── */
 .rpt-row{border-bottom:1px solid var(--rule);transition:background .12s;cursor:pointer}
@@ -708,11 +685,7 @@ body.dark .rpt-month-hdr td{background:var(--bg-dk);color:var(--ink-lt)}
 .rpt-empty{text-align:center;padding:3rem;color:var(--ink-lt);font-size:.84rem}
 .rpt-empty i{font-size:32px;display:block;margin-bottom:10px;opacity:.35}
 
-body.dark .rpt-table th{background:var(--bg-dk);color:var(--ink-md);border-color:var(--rule)}
-body.dark .rpt-table th:hover{background:#252320;color:var(--ink)}
-body.dark .rpt-row:nth-child(even){background:#1A1916}
-body.dark .rpt-row:nth-child(odd){background:var(--surface)}
-body.dark .rpt-row:hover{background:#252320!important}
+
 
 /* Print-only title */
 .rpt-print-title{display:none;width:100%;padding:0;text-align:center}
@@ -740,10 +713,7 @@ body.dark .rpt-row:hover{background:#252320!important}
   .rpt-status{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 
-body.dark .tab-btn.active{background:var(--surface);border-bottom-color:var(--ink-lt)}
-body.dark .rpt-table-wrap{background:var(--surface);border-color:var(--rule)}
-body.dark .rpt-row{border-color:var(--rule)}
-body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:var(--ink-md)}
+
 
 /* ── LEGACY SMALL SCREEN FALLBACK (handled by 768px block above) ── */
 </style>
@@ -752,10 +722,7 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
 <!-- CHIP TOOLTIP -->
 <div class="chip-tooltip" id="chipTooltip"></div>
 
-<script>
-// Apply saved dark mode immediately to avoid flash of wrong theme
-(function(){try{if(localStorage.getItem('cal_darkmode')==='1')document.body.classList.add('dark');}catch(e){}}());
-</script>
+
 
 <div class="page" id="mainApp">
 
@@ -793,7 +760,7 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
     <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
     <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
     <button class="btn" id="printBtn" title="Print Kalender" onclick="window.print()"><i class="ti ti-printer"></i></button>
-    <button class="btn" id="darkModeBtn" title="Dark Mode / Light Mode"><i class="ti ti-moon"></i></button>
+
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
     <button class="btn btn-primary write-only" id="addEventBtn"><i class="ti ti-plus"></i> Tambah Event</button>
   </div>
@@ -1235,6 +1202,26 @@ body.dark .rpt-pic-badge{background:var(--bg-dk);border-color:var(--rule);color:
       <span class="ctx-dot" style="background:#6B7280"></span>
       <i class="ti ti-circle-off" style="font-size:15px;color:#6B7280"></i> Cancel
       <span class="mctx-note-btn" data-note-status="cancel"><i class="ti ti-pencil" style="font-size:12px"></i> + Catatan</span>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Panel Bottom Sheet -->
+<div id="mobilePanelSheet">
+  <div class="mpanel-backdrop" id="mobilePanelBackdrop"></div>
+  <div class="mpanel-wrap">
+    <div class="mpanel-handle"></div>
+    <div class="mpanel-head">
+      <div style="flex:1;min-width:0">
+        <div class="panel-date-label" id="mpanelDateLabel">Pilih tanggal</div>
+        <div class="panel-day-name" id="mpanelDayName"></div>
+        <div id="mpanelHolBadge"></div>
+      </div>
+      <button class="btn btn-icon btn-sm write-only" id="mpanelAddBtn" style="display:none"><i class="ti ti-plus"></i></button>
+      <button class="btn btn-icon btn-sm" id="closeMobilePanel"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mpanel-body" id="mpanelBody">
+      <div class="panel-empty"><i class="ti ti-calendar-off"></i>Belum ada event</div>
     </div>
   </div>
 </div>
@@ -1847,6 +1834,8 @@ async function renderCalendar() {
     el.addEventListener('click',ev=>{
       ev.stopPropagation();
       if(!canWrite){selectDate(el.dataset.adddate);return;}
+      // On mobile, open mobile panel instead of add overlay
+      if(window.innerWidth <= 768){selectDate(el.dataset.adddate);return;}
       openAdd(el.dataset.adddate);
     });
   });
@@ -1883,7 +1872,57 @@ function selectDate(ds) {
   selectedDate=ds;
   document.querySelectorAll('.dc').forEach(el=>el.classList.toggle('selected',el.dataset.date===ds&&!el.classList.contains('other')));
   renderPanel(ds);
+  // On mobile, open the bottom sheet panel
+  if (window.innerWidth <= 768) openMobilePanel(ds);
 }
+
+/* ── MOBILE PANEL BOTTOM SHEET ── */
+function openMobilePanel(ds) {
+  const sheet = document.getElementById('mobilePanelSheet');
+  if (!sheet) return;
+  const d = new Date(ds+'T00:00:00');
+  const DNAMES=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  document.getElementById('mpanelDateLabel').textContent = d.toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('mpanelDayName').textContent = DNAMES[d.getDay()];
+
+  const addBtn = document.getElementById('mpanelAddBtn');
+  if (addBtn) { addBtn.style.display = canWrite ? 'flex' : 'none'; addBtn.onclick = () => { closeMobilePanel(); openAdd(ds); }; }
+
+  const hol = holidays[ds];
+  const holBadge = document.getElementById('mpanelHolBadge');
+  if (hol) {
+    const bg = hol.isCutiBersama ? 'var(--cutib-bg)' : 'var(--libnas-bg)';
+    const col = hol.isCutiBersama ? 'var(--cutib-name)' : 'var(--libnas-name)';
+    holBadge.innerHTML = `<span class="panel-hol-badge" style="background:${bg};color:${col}">${escHtml(hol.name)}</span>`;
+  } else { holBadge.innerHTML = ''; }
+
+  // Reuse panelBody content
+  const src = document.getElementById('panelBody');
+  const dst = document.getElementById('mpanelBody');
+  dst.innerHTML = src ? src.innerHTML : '';
+  // Re-attach click listeners
+  dst.querySelectorAll('.panel-event-item').forEach(el => {
+    el.addEventListener('click', ev => {
+      if (ev.target.closest('.pei-note-edit-actions') || ev.target.closest('.pei-note-edit-btn') || ev.target.closest('.pei-note-wrap')) return;
+      closeMobilePanel();
+      openDetail(el.dataset.id);
+    });
+  });
+
+  sheet.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobilePanel() {
+  const sheet = document.getElementById('mobilePanelSheet');
+  if (sheet) sheet.classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const backdrop = document.getElementById('mobilePanelBackdrop');
+  if (backdrop) backdrop.addEventListener('click', closeMobilePanel);
+  const closeBtn = document.getElementById('closeMobilePanel');
+  if (closeBtn) closeBtn.addEventListener('click', closeMobilePanel);
+});
 
 function renderPanel(ds) {
   const d=new Date(ds+'T00:00:00');
@@ -1950,6 +1989,21 @@ function renderPanel(ds) {
       openDetail(el.dataset.id);
     });
   });
+
+  // Sync to mobile panel if open
+  const msheet = document.getElementById('mobilePanelSheet');
+  if (msheet && msheet.classList.contains('open')) {
+    const dst = document.getElementById('mpanelBody');
+    if (dst) {
+      dst.innerHTML = body.innerHTML;
+      dst.querySelectorAll('.panel-event-item').forEach(el => {
+        el.addEventListener('click', ev => {
+          if (ev.target.closest('.pei-note-edit-actions') || ev.target.closest('.pei-note-edit-btn') || ev.target.closest('.pei-note-wrap')) return;
+          closeMobilePanel(); openDetail(el.dataset.id);
+        });
+      });
+    }
+  }
 }
 
 /* ════════════════════════════════════════
@@ -2634,9 +2688,9 @@ document.getElementById('doExportBtn').addEventListener('click',doExport);
 document.getElementById('cancelExcelRange').addEventListener('click',()=>document.getElementById('excelRangeOverlay').classList.remove('open'));
 document.getElementById('closeExcelRange').addEventListener('click',()=>document.getElementById('excelRangeOverlay').classList.remove('open'));
 document.getElementById('excelRangeOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('excelRangeOverlay'))document.getElementById('excelRangeOverlay').classList.remove('open');});
-document.getElementById('todayBtn').addEventListener('click',()=>{currentDate=new Date();renderCalendar();});
-document.getElementById('prevBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();});
-document.getElementById('nextBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();});
+document.getElementById('todayBtn').addEventListener('click',()=>{currentDate=new Date();renderCalendar();closeMobilePanel&&closeMobilePanel();});
+document.getElementById('prevBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();closeMobilePanel&&closeMobilePanel();});
+document.getElementById('nextBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();closeMobilePanel&&closeMobilePanel();});
 
 ['closeAdd','cancelAdd'].forEach(id=>document.getElementById(id).addEventListener('click',()=>document.getElementById('addOverlay').classList.remove('open')));
 document.getElementById('closeDetail').addEventListener('click',()=>document.getElementById('detailOverlay').classList.remove('open'));
@@ -2793,12 +2847,7 @@ document.getElementById('jumpYear').addEventListener('keydown', e => {
   }
 });
 
-/* ── DARK MODE ── */
-// Dark mode already applied at page load via inline script above (no flash)
-document.getElementById('darkModeBtn').addEventListener('click', () => {
-  document.body.classList.toggle('dark');
-  localStorage.setItem('cal_darkmode', document.body.classList.contains('dark') ? '1' : '0');
-});
+/* ── DARK MODE removed ── */
 
 /* ════════════════════════════════════════
    BOOT — skip login, go straight to app
