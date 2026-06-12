@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Dashboard — Kalender Tim</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font:'Plus Jakarta Sans',sans-serif;
+  --bg:#F6F3EF;--bg-dk:#EDE8E0;--surface:#FFFFFF;
+  --ink:#1C1917;--ink-md:#57534E;--ink-lt:#A8A29E;--rule:#E7E2DA;
+  --r-sm:5px;--r-md:10px;--r-lg:14px;--r-xl:20px;
+  --accent-purple:#7C3AED;--accent-blue:#2563EB;--accent-green:#15803D;--accent-red:#B91C1C;--accent-amber:#D97706;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:100vh}
+
+/* ── LAYOUT ── */
+.page{max-width:1100px;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+
+/* ── HEADER ── */
+.admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:12px}
+.admin-brand{display:flex;align-items:center;gap:12px}
+.admin-brand-icon{width:40px;height:40px;background:var(--accent-purple);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.admin-brand-icon i{font-size:20px;color:#fff}
+.admin-title{font-size:1.2rem;font-weight:800;letter-spacing:-.03em;color:var(--ink)}
+.admin-sub{font-size:.7rem;font-weight:600;color:var(--ink-lt);letter-spacing:.05em;text-transform:uppercase}
+.hdr-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ── BUTTONS ── */
+.btn{font-family:var(--font);font-size:.8rem;font-weight:600;padding:8px 14px;border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-md);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .14s,border-color .14s;white-space:nowrap}
+.btn:hover{background:var(--bg-dk);border-color:var(--ink-lt)}
+.btn-primary{background:var(--ink);color:#fff;border-color:var(--ink)}.btn-primary:hover{background:#292524}
+.btn-danger{background:#FEE2E2;color:#B91C1C;border-color:#FCA5A5}.btn-danger:hover{border-color:#B91C1C}
+.btn-sm{padding:5px 10px;font-size:.74rem}
+.btn-purple{background:#F5F3FF;color:#5B21B6;border-color:#C4B5FD}.btn-purple:hover{border-color:#7C3AED}
+
+/* ── STATS GRID ── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:2rem}
+.stat-card{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);padding:16px 18px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%}
+.stat-card.purple::before{background:var(--accent-purple)}
+.stat-card.blue::before{background:var(--accent-blue)}
+.stat-card.green::before{background:var(--accent-green)}
+.stat-card.amber::before{background:var(--accent-amber)}
+.stat-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:6px}
+.stat-value{font-size:1.8rem;font-weight:800;color:var(--ink);letter-spacing:-.04em;line-height:1}
+.stat-sub{font-size:.72rem;color:var(--ink-lt);margin-top:4px}
+
+/* ── SECTION ── */
+.section{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden;margin-bottom:1.5rem}
+.section-head{padding:14px 18px;border-bottom:1.5px solid var(--rule);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.section-title{font-size:.85rem;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:7px}
+.section-title i{color:var(--ink-lt)}
+.section-body{padding:0}
+
+/* ── TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.data-table th{text-align:left;padding:10px 16px;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);background:var(--bg-dk);border-bottom:1.5px solid var(--rule);white-space:nowrap}
+.data-table td{padding:0 16px;height:52px;vertical-align:middle;border-bottom:1px solid var(--rule)}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:#FAF8F5}
+.data-table td.actions{white-space:nowrap;width:1%}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:.65rem;font-weight:700;padding:3px 8px;border-radius:100px;white-space:nowrap}
+.badge-public{background:#DCFCE7;color:#166534}
+.badge-private{background:#EDE9FE;color:#5B21B6}
+.badge-admin{background:#FEF3C7;color:#92400E}
+.badge-owner{background:#EFF6FF;color:#1E40AF}
+.badge-info{background:var(--bg-dk);color:var(--ink-md)}
+
+/* ── WORKSPACE NAME ── */
+.ws-name-cell{font-weight:700;color:var(--ink)}
+.ws-id{font-size:.7rem;color:var(--ink-lt);margin-top:1px;font-family:monospace}
+
+/* ── OWNER CELL ── */
+.owner-cell{display:flex;align-items:center;gap:7px}
+.owner-avatar{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;flex-shrink:0}
+
+/* ── AUDIT LOG ── */
+.log-row{padding:10px 18px;border-bottom:1px solid var(--rule);display:flex;align-items:flex-start;gap:10px;font-size:.8rem}
+.log-row:last-child{border-bottom:none}
+.log-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
+.log-icon.access{background:#EDE9FE;color:#7C3AED}
+.log-icon.create{background:#DCFCE7;color:#15803D}
+.log-icon.delete{background:#FEE2E2;color:#B91C1C}
+.log-icon.update{background:#FFF7ED;color:#D97706}
+.log-icon.system{background:var(--bg-dk);color:var(--ink-lt)}
+.log-detail{flex:1;min-width:0}
+.log-action{font-weight:700;color:var(--ink);margin-bottom:1px}
+.log-meta{font-size:.7rem;color:var(--ink-lt);display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.log-ws-badge{font-size:.64rem;font-weight:700;padding:1px 7px;border-radius:100px;background:var(--bg-dk);color:var(--ink-md)}
+.log-time{font-size:.68rem;color:var(--ink-lt);white-space:nowrap;margin-top:3px;flex-shrink:0}
+
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:3rem;color:var(--ink-lt);font-size:.85rem}
+.empty-state i{font-size:32px;display:block;margin-bottom:10px;opacity:.35}
+
+/* ── MODAL ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(28,25,23,.48);z-index:300;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)}
+.overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--r-xl);padding:1.75rem;width:500px;max-width:100%;max-height:94vh;overflow-y:auto;box-shadow:0 24px 64px rgba(28,25,23,.18);animation:slideUp .2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem}
+.modal-title{font-size:1rem;font-weight:800;color:var(--ink)}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
+.fg{margin-bottom:.9rem}
+.fl{display:block;font-size:.69rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:5px}
+.fc{width:100%;font-family:var(--font);font-size:.875rem;color:var(--ink);background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:9px 12px;outline:none;transition:border-color .14s;appearance:none}
+.fc:focus{border-color:var(--ink-md);background:#fff}
+
+/* ── ACCESS WARNING BANNER ── */
+.access-banner{background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:var(--r-lg);padding:12px 16px;margin-bottom:1.5rem;display:flex;align-items:flex-start;gap:10px;font-size:.8rem;color:#78350F}
+.access-banner i{font-size:17px;color:#D97706;flex-shrink:0;margin-top:1px}
+
+/* ── AUTH CHIP ── */
+.auth-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 10px 5px 6px;background:var(--bg-dk);border:1.5px solid var(--rule);border-radius:100px;font-size:.75rem;font-weight:600;color:var(--ink-md)}
+.auth-avatar{width:22px;height:22px;border-radius:50%;object-fit:cover}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.8rem;font-weight:600;padding:9px 18px;border-radius:100px;z-index:999;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* ── FILTER BAR ── */
+.filter-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-select{font-family:var(--font);font-size:.78rem;font-weight:500;padding:6px 24px 6px 10px;border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer;outline:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A8A29E' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+.search-input{font-family:var(--font);font-size:.78rem;padding:6px 12px;border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink);outline:none;min-width:200px}
+.search-input:focus{border-color:var(--ink-md)}
+
+/* ── LOGIN GATE ── */
+.login-gate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
+.login-box{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);padding:2.5rem 2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(28,25,23,.08)}
+
+@media(max-width:640px){
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .data-table th:nth-child(4),.data-table td:nth-child(4){display:none}
+  .page{padding:1rem .75rem 4rem}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE — tampil jika belum login / bukan superadmin -->
+<div class="login-gate" id="loginGate" style="display:none">
+  <div class="login-box">
+    <div style="font-size:36px;margin-bottom:12px">🔐</div>
+    <div style="font-size:1.1rem;font-weight:800;margin-bottom:6px">Akses Terbatas</div>
+    <div style="font-size:.82rem;color:var(--ink-lt);margin-bottom:1.5rem" id="loginGateMsg">Halaman ini hanya untuk superadmin.</div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center" id="btnAdminLogin">
+      <i class="ti ti-brand-google"></i> Masuk dengan Google
+    </button>
+    <div style="margin-top:12px"><a href="index.html" style="font-size:.75rem;color:var(--ink-lt)">← Kembali ke halaman utama</a></div>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div class="page" id="mainDashboard" style="display:none">
+
+  <!-- HEADER -->
+  <header class="admin-header">
+    <div class="admin-brand">
+      <div class="admin-brand-icon"><i class="ti ti-shield-lock"></i></div>
+      <div>
+        <div class="admin-title">Dashboard Superadmin</div>
+        <div class="admin-sub">Kalender Tim — Panel Kontrol</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <a href="index.html" class="btn btn-sm"><i class="ti ti-home"></i> Beranda</a>
+      <div id="adminAuthChip"></div>
+      <button class="btn btn-sm btn-danger" id="btnAdminSignOut"><i class="ti ti-logout"></i> Keluar</button>
+    </div>
+  </header>
+
+  <!-- ACCESS WARNING -->
+  <div class="access-banner">
+    <i class="ti ti-alert-triangle"></i>
+    <div>
+      <strong>Pengingat Etika:</strong> Anda memiliki akses penuh ke semua workspace.
+      Setiap akses Anda ke workspace pengguna lain <strong>dicatat dalam audit log</strong>
+      dan pemilik workspace akan <strong>mendapat notifikasi</strong>.
+      Gunakan akses ini hanya untuk keperluan teknis atau support.
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card purple">
+      <div class="stat-label">Total Workspace</div>
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-sub">terdaftar</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Tim Tertutup</div>
+      <div class="stat-value" id="statPrivate">—</div>
+      <div class="stat-sub">workspace private</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Semi Publik</div>
+      <div class="stat-value" id="statPublic">—</div>
+      <div class="stat-sub">workspace public</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">Log Hari Ini</div>
+      <div class="stat-value" id="statLogs">—</div>
+      <div class="stat-sub">aktivitas tercatat</div>
+    </div>
+  </div>
+
+  <!-- WORKSPACES TABLE -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title"><i class="ti ti-layout-grid"></i> Semua Workspace</div>
+      <div class="filter-bar">
+        <input type="text" class="search-input" id="wsSearch" placeholder="Cari nama / email..."/>
+        <select class="filter-select" id="wsFilterVis">
+          <option value="all">Semua Visibilitas</option>
+          <option value="private">Tim Tertutup</option>
+          <option value="public">Semi Publik</option>
+        </select>
+        <button class="btn btn-sm" id="btnRefreshWs"><i class="ti ti-refresh"></i></button>
+      </div>
+    </div>
+    <div class="section-body">
+      <div id="wsTableWrap">
+        <div class="empty-state"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i>Memuat workspace...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUDIT LOG -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title"><i class="ti ti-list-details"></i> Audit Log Terbaru</div>
+      <div class="filter-bar">
+        <select class="filter-select" id="logFilterAction">
+          <option value="all">Semua Aksi</option>
+          <option value="superadmin_access">Akses Superadmin</option>
+          <option value="workspace_created">Workspace Dibuat</option>
+          <option value="workspace_deleted">Workspace Dihapus</option>
+          <option value="visibility_changed">Visibilitas Diubah</option>
+          <option value="editor_added">Editor Ditambah</option>
+          <option value="editor_removed">Editor Dihapus</option>
+        </select>
+        <button class="btn btn-sm" id="btnRefreshLog"><i class="ti ti-refresh"></i></button>
+      </div>
+    </div>
+    <div class="section-body" id="auditLogWrap">
+      <div class="empty-state"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i>Memuat log...</div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+
+<!-- Modal: Konfirmasi Akses Workspace -->
+<div class="overlay" id="accessConfirmOverlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-alert-triangle" style="color:#D97706"></i> Konfirmasi Akses</div>
+      <button class="btn btn-sm" id="closeAccessConfirm"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="font-size:.85rem;color:var(--ink-md);line-height:1.6;margin-bottom:1rem">
+      Anda akan membuka workspace milik <strong id="confirmWsOwner"></strong>.
+      <br><br>
+      Akses ini akan <strong>dicatat dalam audit log</strong> dan pemilik workspace akan mendapat <strong>notifikasi email</strong>.
+      <br><br>
+      Masukkan alasan akses (opsional):
+    </div>
+    <div class="fg">
+      <label class="fl">Alasan Akses</label>
+      <input type="text" class="fc" id="accessReason" placeholder="contoh: membantu troubleshoot event..."/>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="cancelAccessConfirm">Batal</button>
+      <button class="btn btn-purple" id="confirmAccessBtn"><i class="ti ti-external-link"></i> Buka Workspace</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Workspace -->
+<div class="overlay" id="editWsOverlay">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head">
+      <div class="modal-title">Edit Workspace</div>
+      <button class="btn btn-sm" id="closeEditWs"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg">
+      <label class="fl">Visibilitas</label>
+      <select class="fc" id="editWsVis">
+        <option value="private">Tim Tertutup (hanya yang diundang)</option>
+        <option value="public">Semi Publik (semua bisa lihat)</option>
+      </select>
+    </div>
+    <div id="editWsInfo" style="font-size:.78rem;color:var(--ink-lt);margin-bottom:1rem;padding:8px 12px;background:var(--bg);border-radius:var(--r-md);border:1px solid var(--rule)"></div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="deleteWsBtn"><i class="ti ti-trash"></i> Hapus Workspace</button>
+      <button class="btn" id="cancelEditWs">Batal</button>
+      <button class="btn btn-primary" id="saveEditWs"><i class="ti ti-check"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<script>
+/* ════════════════════════════════════════
+   CONFIG
+   ════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBq0BwjCTIsjvKNrb_XRqCOPRdUOrUbFsc",
+  authDomain: "kalender-tim-5bc0b.firebaseapp.com",
+  projectId: "kalender-tim-5bc0b",
+  storageBucket: "kalender-tim-5bc0b.firebasestorage.app",
+  messagingSenderId: "765147074602",
+  appId: "1:765147074602:web:927d59d85438947427b353"
+};
+const SUPERADMIN_EMAIL = 'ryan.trisyardi@gmail.com';
+const BASE_URL = window.location.origin + window.location.pathname.replace('admin.html','').replace(/\/$/,'');
+const KALENDER_URL = BASE_URL + '/kalender.html';
+
+firebase.initializeApp(firebaseConfig);
+const db   = firebase.firestore();
+const auth = firebase.auth();
+
+/* ── HELPERS ── */
+function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function showToast(msg,dur=3000){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function fmtDate(ts){if(!ts)return '—';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});}
+function fmtDateShort(ts){if(!ts)return '—';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});}
+
+let allWorkspaces = [];
+let currentWsId = null; // for edit modal
+let pendingAccessWs = null; // for access confirm modal
+
+/* ── AUDIT LOG ── */
+async function writeAuditLog(data) {
+  try {
+    await db.collection('_auditLog').add({
+      ...data,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      userAgent: navigator.userAgent.substring(0,200),
+    });
+  } catch(e) { console.warn('Audit log error:', e.message); }
+}
+
+/* ── AUTH ── */
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    document.getElementById('loginGate').style.display = 'flex';
+    document.getElementById('mainDashboard').style.display = 'none';
+    return;
+  }
+  if (user.email !== SUPERADMIN_EMAIL) {
+    document.getElementById('loginGate').style.display = 'flex';
+    document.getElementById('mainDashboard').style.display = 'none';
+    document.getElementById('loginGateMsg').textContent = `Akun ${user.email} tidak memiliki akses admin. Silakan login dengan akun superadmin.`;
+    return;
+  }
+
+  // Superadmin confirmed
+  document.getElementById('loginGate').style.display = 'none';
+  document.getElementById('mainDashboard').style.display = 'block';
+
+  const initial = (user.displayName||user.email||'?')[0].toUpperCase();
+  const av = user.photoURL
+    ? `<img class="auth-avatar" src="${user.photoURL}" referrerpolicy="no-referrer"/>`
+    : `<span style="width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700">${initial}</span>`;
+  document.getElementById('adminAuthChip').innerHTML = `<div class="auth-chip">${av} ${escHtml(user.displayName||user.email)} <span style="color:#7C3AED;font-size:.65rem;font-weight:700">⚡ Superadmin</span></div>`;
+
+  loadWorkspaces();
+  loadAuditLog();
+});
+
+document.getElementById('btnAdminLogin').addEventListener('click', () => {
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => {
+    if(e.code !== 'auth/popup-closed-by-user') alert(e.message);
+  });
+});
+document.getElementById('btnAdminSignOut').addEventListener('click', () => auth.signOut());
+
+/* ════════════════════════════════════════
+   WORKSPACES
+   ════════════════════════════════════════ */
+async function loadWorkspaces() {
+  document.getElementById('wsTableWrap').innerHTML = '<div class="empty-state"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i>Memuat...</div>';
+  try {
+    const snap = await db.collection('_workspaces').orderBy('createdAt','desc').get();
+    allWorkspaces = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    updateStats();
+    renderWsTable();
+  } catch(e) {
+    document.getElementById('wsTableWrap').innerHTML = `<div class="empty-state"><i class="ti ti-alert-circle"></i>Error: ${escHtml(e.message)}</div>`;
+  }
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = allWorkspaces.length;
+  document.getElementById('statPrivate').textContent = allWorkspaces.filter(w=>w.visibility==='private').length;
+  document.getElementById('statPublic').textContent  = allWorkspaces.filter(w=>w.visibility==='public').length;
+}
+
+function renderWsTable() {
+  const search = document.getElementById('wsSearch').value.toLowerCase();
+  const visFilter = document.getElementById('wsFilterVis').value;
+
+  const filtered = allWorkspaces.filter(w => {
+    const matchVis = visFilter === 'all' || w.visibility === visFilter;
+    const matchSearch = !search ||
+      (w.workspaceId||'').toLowerCase().includes(search) ||
+      (w.ownerEmail||'').toLowerCase().includes(search) ||
+      (w.ownerName||'').toLowerCase().includes(search);
+    return matchVis && matchSearch;
+  });
+
+  if (!filtered.length) {
+    document.getElementById('wsTableWrap').innerHTML = '<div class="empty-state"><i class="ti ti-inbox"></i>Tidak ada workspace ditemukan.</div>';
+    return;
+  }
+
+  const rows = filtered.map(w => {
+    const initial = (w.ownerName||w.ownerEmail||'?')[0].toUpperCase();
+    const visBadge = w.visibility === 'public'
+      ? '<span class="badge badge-public"><i class="ti ti-world" style="font-size:10px"></i> Semi Publik</span>'
+      : '<span class="badge badge-private"><i class="ti ti-lock" style="font-size:10px"></i> Tim Tertutup</span>';
+    return `<tr>
+      <td>
+        <div class="ws-name-cell">${escHtml(w.displayName||w.workspaceId)}</div>
+        <div class="ws-id">${escHtml(w.workspaceId)}</div>
+      </td>
+      <td>
+        <div class="owner-cell">
+          <div class="owner-avatar">${initial}</div>
+          <div>
+            <div style="font-size:.8rem;font-weight:600;color:var(--ink)">${escHtml(w.ownerName||'—')}</div>
+            <div style="font-size:.7rem;color:var(--ink-lt)">${escHtml(w.ownerEmail||'—')}</div>
+          </div>
+        </div>
+      </td>
+      <td>${visBadge}</td>
+      <td style="font-size:.75rem;color:var(--ink-lt)">${fmtDateShort(w.createdAt)}</td>
+      <td class="actions">
+        <button class="btn btn-sm btn-purple" onclick="openAccessConfirm('${escHtml(w.workspaceId)}','${escHtml(w.ownerEmail||'')}','${escHtml(w.ownerName||'')}')">
+          <i class="ti ti-external-link"></i> Buka
+        </button>
+        <button class="btn btn-sm" onclick="openEditWs('${escHtml(w.workspaceId)}','${w.visibility||'private'}')" style="margin-left:4px">
+          <i class="ti ti-settings"></i>
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('wsTableWrap').innerHTML = `
+    <table class="data-table">
+      <thead><tr>
+        <th>Workspace</th><th>Pemilik</th><th>Visibilitas</th><th>Dibuat</th><th>Aksi</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+document.getElementById('wsSearch').addEventListener('input', renderWsTable);
+document.getElementById('wsFilterVis').addEventListener('change', renderWsTable);
+document.getElementById('btnRefreshWs').addEventListener('click', loadWorkspaces);
+
+/* ════════════════════════════════════════
+   ACCESS CONFIRM MODAL
+   ════════════════════════════════════════ */
+function openAccessConfirm(wsId, ownerEmail, ownerName) {
+  pendingAccessWs = { wsId, ownerEmail, ownerName };
+  document.getElementById('confirmWsOwner').textContent = `${ownerName||ownerEmail} (${wsId})`;
+  document.getElementById('accessReason').value = '';
+  document.getElementById('accessConfirmOverlay').classList.add('open');
+}
+
+document.getElementById('closeAccessConfirm').addEventListener('click', () => {
+  document.getElementById('accessConfirmOverlay').classList.remove('open');
+});
+document.getElementById('cancelAccessConfirm').addEventListener('click', () => {
+  document.getElementById('accessConfirmOverlay').classList.remove('open');
+});
+
+document.getElementById('confirmAccessBtn').addEventListener('click', async () => {
+  if (!pendingAccessWs) return;
+  const user = auth.currentUser;
+  const reason = document.getElementById('accessReason').value.trim() || '(tidak ada alasan)';
+
+  // Catat audit log
+  await writeAuditLog({
+    action: 'superadmin_access',
+    workspaceId: pendingAccessWs.wsId,
+    actorEmail: user.email,
+    actorName: user.displayName || '',
+    targetOwnerEmail: pendingAccessWs.ownerEmail,
+    detail: `Superadmin mengakses workspace "${pendingAccessWs.wsId}" milik ${pendingAccessWs.ownerEmail}. Alasan: ${reason}`,
+    reason,
+  });
+
+  // Kirim notifikasi ke owner (via Firestore _notifications)
+  try {
+    await db.collection('_notifications').add({
+      type: 'superadmin_access',
+      toEmail: pendingAccessWs.ownerEmail,
+      workspaceId: pendingAccessWs.wsId,
+      accessedBy: user.email,
+      accessedByName: user.displayName || 'Superadmin',
+      reason,
+      read: false,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch(e) { console.warn('Notifikasi gagal:', e.message); }
+
+  document.getElementById('accessConfirmOverlay').classList.remove('open');
+  window.open(`${KALENDER_URL}?workspace=${encodeURIComponent(pendingAccessWs.wsId)}`, '_blank');
+});
+
+/* ════════════════════════════════════════
+   EDIT WORKSPACE MODAL
+   ════════════════════════════════════════ */
+function openEditWs(wsId, currentVis) {
+  currentWsId = wsId;
+  const ws = allWorkspaces.find(w => w.workspaceId === wsId);
+  document.getElementById('editWsVis').value = currentVis;
+  document.getElementById('editWsInfo').innerHTML = ws
+    ? `Workspace: <strong>${escHtml(ws.displayName||wsId)}</strong><br>Pemilik: ${escHtml(ws.ownerEmail||'—')}<br>Dibuat: ${fmtDateShort(ws.createdAt)}`
+    : '';
+  document.getElementById('editWsOverlay').classList.add('open');
+}
+
+document.getElementById('closeEditWs').addEventListener('click', () => document.getElementById('editWsOverlay').classList.remove('open'));
+document.getElementById('cancelEditWs').addEventListener('click', () => document.getElementById('editWsOverlay').classList.remove('open'));
+
+document.getElementById('saveEditWs').addEventListener('click', async () => {
+  if (!currentWsId) return;
+  const newVis = document.getElementById('editWsVis').value;
+  const user = auth.currentUser;
+  const ws = allWorkspaces.find(w => w.workspaceId === currentWsId);
+  const oldVis = ws?.visibility || 'private';
+
+  try {
+    await db.collection('_workspaces').doc(currentWsId).update({ visibility: newVis, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await db.collection('_config').doc(currentWsId).set({ visibility: newVis }, { merge: true });
+
+    await writeAuditLog({
+      action: 'visibility_changed',
+      workspaceId: currentWsId,
+      actorEmail: user.email,
+      actorName: user.displayName || '',
+      detail: `Visibilitas workspace "${currentWsId}" diubah dari "${oldVis}" → "${newVis}" oleh superadmin`,
+    });
+
+    // Notifikasi ke owner
+    if (ws?.ownerEmail) {
+      await db.collection('_notifications').add({
+        type: 'visibility_changed',
+        toEmail: ws.ownerEmail,
+        workspaceId: currentWsId,
+        changedBy: user.email,
+        from: oldVis,
+        to: newVis,
+        read: false,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
+    // Update local state
+    if (ws) ws.visibility = newVis;
+    renderWsTable();
+    document.getElementById('editWsOverlay').classList.remove('open');
+    showToast('✅ Visibilitas berhasil diubah');
+  } catch(e) { showToast('❌ ' + e.message); }
+});
+
+document.getElementById('deleteWsBtn').addEventListener('click', async () => {
+  if (!currentWsId) return;
+  const ws = allWorkspaces.find(w => w.workspaceId === currentWsId);
+  if (!confirm(`Hapus workspace "${currentWsId}"?\n\nData events TIDAK akan terhapus otomatis dari Firestore, tapi workspace tidak akan terdaftar lagi.`)) return;
+
+  const user = auth.currentUser;
+  try {
+    await db.collection('_workspaces').doc(currentWsId).delete();
+
+    await writeAuditLog({
+      action: 'workspace_deleted',
+      workspaceId: currentWsId,
+      actorEmail: user.email,
+      actorName: user.displayName || '',
+      detail: `Workspace "${currentWsId}" dihapus oleh superadmin`,
+    });
+
+    allWorkspaces = allWorkspaces.filter(w => w.workspaceId !== currentWsId);
+    updateStats();
+    renderWsTable();
+    document.getElementById('editWsOverlay').classList.remove('open');
+    showToast('🗑️ Workspace dihapus dari registry');
+  } catch(e) { showToast('❌ ' + e.message); }
+});
+
+/* ════════════════════════════════════════
+   AUDIT LOG
+   ════════════════════════════════════════ */
+const LOG_ICONS = {
+  superadmin_access: { cls: 'access', icon: 'ti-eye' },
+  workspace_created: { cls: 'create', icon: 'ti-plus' },
+  workspace_deleted: { cls: 'delete', icon: 'ti-trash' },
+  visibility_changed:{ cls: 'update', icon: 'ti-settings' },
+  editor_added:      { cls: 'create', icon: 'ti-user-plus' },
+  editor_removed:    { cls: 'delete', icon: 'ti-user-minus' },
+  access_denied:     { cls: 'delete', icon: 'ti-ban' },
+};
+const LOG_LABELS = {
+  superadmin_access:  'Superadmin Akses Workspace',
+  workspace_created:  'Workspace Dibuat',
+  workspace_deleted:  'Workspace Dihapus',
+  visibility_changed: 'Visibilitas Diubah',
+  editor_added:       'Editor Ditambahkan',
+  editor_removed:     'Editor Dihapus',
+  access_denied:      'Akses Ditolak',
+};
+
+async function loadAuditLog() {
+  document.getElementById('auditLogWrap').innerHTML = '<div class="empty-state"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i>Memuat log...</div>';
+  const actionFilter = document.getElementById('logFilterAction').value;
+  try {
+    let q = db.collection('_auditLog').orderBy('timestamp','desc').limit(100);
+    const snap = await q.get();
+    let logs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    // Update stat hari ini
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayCount = logs.filter(l => l.timestamp && l.timestamp.toDate() >= today).length;
+    document.getElementById('statLogs').textContent = todayCount;
+
+    if (actionFilter !== 'all') {
+      logs = logs.filter(l => l.action === actionFilter);
+    }
+
+    if (!logs.length) {
+      document.getElementById('auditLogWrap').innerHTML = '<div class="empty-state"><i class="ti ti-clipboard-list"></i>Belum ada log aktivitas.</div>';
+      return;
+    }
+
+    const html = logs.map(l => {
+      const ic = LOG_ICONS[l.action] || { cls:'system', icon:'ti-circle' };
+      const label = LOG_LABELS[l.action] || l.action;
+      return `<div class="log-row">
+        <div class="log-icon ${ic.cls}"><i class="ti ${ic.icon}"></i></div>
+        <div class="log-detail">
+          <div class="log-action">${label}</div>
+          <div style="font-size:.78rem;color:var(--ink-md);margin-top:2px">${escHtml(l.detail||'')}</div>
+          <div class="log-meta">
+            <span><i class="ti ti-user" style="font-size:11px;vertical-align:-1px"></i> ${escHtml(l.actorEmail||'—')}</span>
+            ${l.workspaceId?`<span class="log-ws-badge">${escHtml(l.workspaceId)}</span>`:''}
+          </div>
+        </div>
+        <div class="log-time">${fmtDate(l.timestamp)}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('auditLogWrap').innerHTML = html;
+  } catch(e) {
+    document.getElementById('auditLogWrap').innerHTML = `<div class="empty-state"><i class="ti ti-alert-circle"></i>Error: ${escHtml(e.message)}</div>`;
+  }
+}
+
+document.getElementById('logFilterAction').addEventListener('change', loadAuditLog);
+document.getElementById('btnRefreshLog').addEventListener('click', loadAuditLog);
+</script>
+</body>
+</html>

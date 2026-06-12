@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Kebijakan Privasi — Kalender Tim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --font:'Plus Jakarta Sans',sans-serif;
+  --bg:#F6F3EF;--surface:#FFFFFF;
+  --ink:#1C1917;--ink-md:#57534E;--ink-lt:#A8A29E;--rule:#E7E2DA;
+  --r-md:10px;--r-lg:14px;--r-xl:20px;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1.7}
+.page{max-width:720px;margin:0 auto;padding:3rem 1.5rem 5rem}
+.back-link{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;color:var(--ink-lt);text-decoration:none;margin-bottom:2rem;padding:6px 12px;border:1.5px solid var(--rule);border-radius:100px;background:var(--surface)}
+.back-link:hover{color:var(--ink);border-color:var(--ink-lt)}
+.doc-header{margin-bottom:2.5rem}
+.doc-tag{display:inline-block;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;background:var(--ink);color:#fff;border-radius:100px;margin-bottom:14px}
+.doc-title{font-size:2rem;font-weight:800;letter-spacing:-.04em;color:var(--ink);margin-bottom:8px}
+.doc-meta{font-size:.78rem;color:var(--ink-lt)}
+.doc-meta strong{color:var(--ink-md)}
+
+/* ── IMPORTANT BANNER ── */
+.important-banner{background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:var(--r-lg);padding:16px 18px;margin-bottom:2rem;display:flex;align-items:flex-start;gap:12px}
+.important-banner i{font-size:20px;color:#D97706;flex-shrink:0;margin-top:2px}
+.important-banner-content{font-size:.85rem;color:#78350F;line-height:1.6}
+.important-banner-content strong{display:block;font-weight:800;margin-bottom:4px;font-size:.9rem}
+
+/* ── CONTENT ── */
+.section{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);padding:1.75rem;margin-bottom:1.25rem}
+.section-title{font-size:1rem;font-weight:800;color:var(--ink);margin-bottom:.9rem;display:flex;align-items:center;gap:8px}
+.section-title i{color:var(--ink-lt);font-size:18px}
+.section p{font-size:.875rem;color:var(--ink-md);margin-bottom:.75rem;line-height:1.7}
+.section p:last-child{margin-bottom:0}
+.section ul,.section ol{padding-left:1.25rem;margin-bottom:.75rem}
+.section li{font-size:.875rem;color:var(--ink-md);margin-bottom:.4rem;line-height:1.6}
+.section li:last-child{margin-bottom:0}
+.section strong{color:var(--ink);font-weight:700}
+
+/* ── DATA TABLE ── */
+.data-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:.75rem}
+.data-table th{text-align:left;padding:8px 12px;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);background:var(--bg);border-bottom:1.5px solid var(--rule)}
+.data-table td{padding:10px 12px;border-bottom:1px solid var(--rule);color:var(--ink-md);vertical-align:top}
+.data-table tr:last-child td{border-bottom:none}
+
+/* ── HIGHLIGHT BOX ── */
+.highlight-box{background:var(--bg);border-radius:var(--r-md);border:1px solid var(--rule);padding:12px 16px;margin-bottom:.75rem}
+.highlight-box p{margin:0;font-size:.82rem;color:var(--ink-md)}
+
+/* ── AUDIT BOX ── */
+.audit-box{background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:var(--r-lg);padding:14px 16px;margin-bottom:.75rem}
+.audit-box p{margin:0;font-size:.82rem;color:#166534}
+
+/* ── CONTACT ── */
+.contact-box{background:var(--ink);color:#fff;border-radius:var(--r-xl);padding:1.75rem;text-align:center}
+.contact-box .ct{font-size:1rem;font-weight:800;margin-bottom:6px}
+.contact-box .cs{font-size:.82rem;opacity:.7;margin-bottom:1rem}
+.contact-link{display:inline-flex;align-items:center;gap:6px;background:#fff;color:var(--ink);font-size:.8rem;font-weight:700;padding:8px 18px;border-radius:100px;text-decoration:none}
+.contact-link:hover{opacity:.9}
+
+/* ── TOC ── */
+.toc{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);padding:1.25rem 1.5rem;margin-bottom:1.5rem}
+.toc-title{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:.75rem}
+.toc-list{list-style:none;padding:0}
+.toc-list li{margin-bottom:.3rem}
+.toc-list a{font-size:.82rem;font-weight:600;color:var(--ink-md);text-decoration:none}
+.toc-list a:hover{color:var(--ink)}
+.toc-list a::before{content:attr(data-num)' ';font-weight:800;color:var(--ink-lt)}
+
+.footer{text-align:center;margin-top:3rem;font-size:.72rem;color:var(--ink-lt)}
+.footer a{color:var(--ink-lt);text-decoration:none;border-bottom:1px solid var(--rule)}
+.footer a:hover{color:var(--ink)}
+
+@media(max-width:600px){
+  .page{padding:2rem 1rem 4rem}
+  .doc-title{font-size:1.5rem}
+  .section{padding:1.25rem}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <a href="index.html" class="back-link"><i class="ti ti-arrow-left"></i> Kembali</a>
+
+  <div class="doc-header">
+    <div class="doc-tag">Dokumen Resmi</div>
+    <h1 class="doc-title">Kebijakan Privasi</h1>
+    <div class="doc-meta">
+      <strong>Kalender Tim</strong> &nbsp;·&nbsp;
+      Berlaku sejak: <strong>1 Januari 2025</strong> &nbsp;·&nbsp;
+      Diperbarui: <strong>Juni 2025</strong>
+    </div>
+  </div>
+
+  <div class="important-banner">
+    <i class="ti ti-alert-triangle"></i>
+    <div class="important-banner-content">
+      <strong>Yang perlu Anda ketahui sebelum menggunakan layanan ini:</strong>
+      Aplikasi Kalender Tim dikelola oleh <strong>Ryan Trisyardi</strong> secara pribadi,
+      menggunakan infrastruktur Firebase milik pengelola. Sebagai pemilik infrastruktur,
+      pengelola memiliki akses teknis ke semua data. Setiap akses pengelola ke workspace
+      Anda <strong>dicatat dalam audit log</strong> dan Anda akan <strong>mendapat
+      notifikasi</strong>. Dengan mendaftar, Anda menyatakan memahami dan menyetujui
+      kebijakan ini.
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">Daftar Isi</div>
+    <ol class="toc-list">
+      <li><a href="#s1" data-num="1.">Data yang Kami Kumpulkan</a></li>
+      <li><a href="#s2" data-num="2.">Cara Kami Menggunakan Data</a></li>
+      <li><a href="#s3" data-num="3.">Akses Pengelola (Superadmin)</a></li>
+      <li><a href="#s4" data-num="4.">Audit Log &amp; Notifikasi</a></li>
+      <li><a href="#s5" data-num="5.">Keamanan Data</a></li>
+      <li><a href="#s6" data-num="6.">Berbagi Data dengan Pihak Ketiga</a></li>
+      <li><a href="#s7" data-num="7.">Hak Pengguna</a></li>
+      <li><a href="#s8" data-num="8.">Penghapusan Akun &amp; Data</a></li>
+      <li><a href="#s9" data-num="9.">Perubahan Kebijakan</a></li>
+      <li><a href="#s10" data-num="10.">Hubungi Kami</a></li>
+    </ol>
+  </div>
+
+  <!-- 1 -->
+  <div class="section" id="s1">
+    <div class="section-title"><i class="ti ti-database"></i> 1. Data yang Kami Kumpulkan</div>
+    <p>Kami mengumpulkan data berikut saat Anda menggunakan Kalender Tim:</p>
+    <table class="data-table">
+      <thead><tr><th>Jenis Data</th><th>Contoh</th><th>Sumber</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Data Akun Google</strong></td><td>Nama, alamat email, foto profil</td><td>Google OAuth saat login</td></tr>
+        <tr><td><strong>Data Workspace</strong></td><td>Nama workspace, pengaturan visibilitas</td><td>Anda isi saat registrasi</td></tr>
+        <tr><td><strong>Data Event/Kalender</strong></td><td>Judul, tanggal, status, catatan event</td><td>Anda input ke aplikasi</td></tr>
+        <tr><td><strong>Data Editor</strong></td><td>Email editor yang Anda undang</td><td>Anda tambahkan sendiri</td></tr>
+        <tr><td><strong>Audit Log</strong></td><td>Siapa mengakses workspace kapan</td><td>Dicatat otomatis sistem</td></tr>
+        <tr><td><strong>Data Teknis</strong></td><td>Browser, waktu akses, IP (via Firebase)</td><td>Otomatis oleh Firebase</td></tr>
+      </tbody>
+    </table>
+    <p>Kami <strong>tidak mengumpulkan</strong> password — otentikasi sepenuhnya ditangani oleh Google.</p>
+  </div>
+
+  <!-- 2 -->
+  <div class="section" id="s2">
+    <div class="section-title"><i class="ti ti-purpose"></i> 2. Cara Kami Menggunakan Data</div>
+    <p>Data yang dikumpulkan digunakan semata-mata untuk:</p>
+    <ul>
+      <li>Mengoperasikan dan menampilkan kalender tim Anda</li>
+      <li>Memverifikasi identitas dan hak akses Anda ke workspace</li>
+      <li>Mengirimkan notifikasi penting terkait workspace Anda (misalnya: ada superadmin yang mengakses workspace Anda)</li>
+      <li>Mencatat audit log untuk transparansi dan keamanan</li>
+      <li>Meningkatkan stabilitas dan performa aplikasi</li>
+    </ul>
+    <p>Data Anda <strong>tidak digunakan</strong> untuk keperluan iklan, profiling, atau dijual kepada pihak ketiga.</p>
+  </div>
+
+  <!-- 3 -->
+  <div class="section" id="s3">
+    <div class="section-title"><i class="ti ti-shield-lock"></i> 3. Akses Pengelola (Superadmin)</div>
+    <p>
+      Karena aplikasi ini berjalan di atas infrastruktur Firebase milik pengelola
+      (Ryan Trisyardi), pengelola secara teknis memiliki kemampuan untuk mengakses
+      data di semua workspace.
+    </p>
+    <div class="highlight-box">
+      <p><strong>Komitmen Pengelola:</strong> Akses ke workspace pengguna <em>hanya</em> akan dilakukan untuk
+      keperluan teknis yang sah, seperti troubleshooting, pemulihan data yang diminta pengguna,
+      atau pemeliharaan sistem. Pengelola berkomitmen untuk tidak membaca atau menggunakan
+      konten workspace pengguna untuk tujuan lain.</p>
+    </div>
+    <p>
+      Setiap kali pengelola mengakses workspace Anda, sistem akan:
+    </p>
+    <ul>
+      <li>Meminta pengelola mengisi <strong>alasan akses</strong> sebelum masuk</li>
+      <li>Mencatat akses tersebut ke dalam <strong>audit log</strong> secara otomatis</li>
+      <li>Mengirimkan <strong>notifikasi</strong> ke email Anda bahwa ada akses oleh superadmin</li>
+    </ul>
+  </div>
+
+  <!-- 4 -->
+  <div class="section" id="s4">
+    <div class="section-title"><i class="ti ti-list-details"></i> 4. Audit Log &amp; Notifikasi</div>
+    <div class="audit-box">
+      <p>✅ Setiap akses superadmin ke workspace Anda <strong>selalu dicatat</strong> dan
+      Anda <strong>selalu diberitahu</strong>. Ini adalah komitmen transparansi kami kepada Anda.</p>
+    </div>
+    <p>Audit log mencatat informasi berikut:</p>
+    <ul>
+      <li>Siapa yang mengakses (nama dan email superadmin)</li>
+      <li>Workspace mana yang diakses</li>
+      <li>Kapan akses terjadi (tanggal dan waktu)</li>
+      <li>Alasan akses yang diisi oleh superadmin</li>
+    </ul>
+    <p>
+      Notifikasi dikirim melalui sistem notifikasi internal aplikasi dan dapat dilihat
+      di bagian <strong>Notifikasi</strong> di halaman kalender Anda.
+    </p>
+    <p>
+      Audit log disimpan di Firestore dan dapat dilihat oleh superadmin.
+      Di masa mendatang, kami berencana menampilkan log ini juga kepada pemilik workspace.
+    </p>
+  </div>
+
+  <!-- 5 -->
+  <div class="section" id="s5">
+    <div class="section-title"><i class="ti ti-lock"></i> 5. Keamanan Data</div>
+    <p>Langkah-langkah keamanan yang kami terapkan:</p>
+    <ul>
+      <li><strong>Otentikasi Google OAuth</strong> — kami tidak menyimpan password apapun</li>
+      <li><strong>Firebase Security Rules</strong> — akses data dikontrol di sisi server berdasarkan identitas pengguna yang terverifikasi</li>
+      <li><strong>HTTPS</strong> — semua komunikasi data dienkripsi saat transit</li>
+      <li><strong>Firestore</strong> — data disimpan di infrastruktur Google Cloud yang memenuhi standar keamanan internasional</li>
+      <li><strong>Audit Log</strong> — setiap akses tidak biasa tercatat dan dapat ditinjau</li>
+    </ul>
+    <p>
+      Meskipun demikian, tidak ada sistem yang 100% aman. Kami tidak dapat menjamin
+      keamanan absolut dari data Anda, dan penggunaan layanan ini sepenuhnya atas
+      kebijakan Anda sendiri.
+    </p>
+  </div>
+
+  <!-- 6 -->
+  <div class="section" id="s6">
+    <div class="section-title"><i class="ti ti-share"></i> 6. Berbagi Data dengan Pihak Ketiga</div>
+    <p>Kami <strong>tidak menjual, menyewakan, atau membagikan</strong> data pribadi Anda kepada pihak ketiga untuk tujuan komersial.</p>
+    <p>Data Anda disimpan menggunakan layanan pihak ketiga berikut:</p>
+    <ul>
+      <li>
+        <strong>Google Firebase / Firestore</strong> — penyimpanan database dan otentikasi.
+        Tunduk pada <a href="https://firebase.google.com/support/privacy" target="_blank">Kebijakan Privasi Google</a>.
+      </li>
+      <li>
+        <strong>GitHub Pages</strong> — hosting halaman web statis.
+        Tunduk pada <a href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement" target="_blank">Kebijakan Privasi GitHub</a>.
+      </li>
+    </ul>
+    <p>
+      Kami mungkin diwajibkan untuk mengungkapkan data jika diminta oleh hukum
+      yang berlaku atau proses hukum yang sah.
+    </p>
+  </div>
+
+  <!-- 7 -->
+  <div class="section" id="s7">
+    <div class="section-title"><i class="ti ti-user-check"></i> 7. Hak Pengguna</div>
+    <p>Sebagai pengguna, Anda memiliki hak untuk:</p>
+    <ul>
+      <li><strong>Mengakses data Anda</strong> — semua data yang Anda masukkan tersedia langsung di aplikasi</li>
+      <li><strong>Mengubah data Anda</strong> — Anda dapat mengedit atau menghapus event kapan saja</li>
+      <li><strong>Mengubah visibilitas workspace</strong> — dari tim tertutup ke semi-publik atau sebaliknya</li>
+      <li><strong>Menghapus akun dan data Anda</strong> — hubungi pengelola untuk penghapusan permanen (lihat bagian 8)</li>
+      <li><strong>Melihat log akses</strong> — Anda berhak mengetahui kapan workspace Anda diakses oleh superadmin melalui notifikasi yang dikirim ke Anda</li>
+    </ul>
+  </div>
+
+  <!-- 8 -->
+  <div class="section" id="s8">
+    <div class="section-title"><i class="ti ti-trash"></i> 8. Penghapusan Akun &amp; Data</div>
+    <p>
+      Jika Anda ingin menghapus seluruh data Anda dari sistem, hubungi pengelola
+      melalui kontak di bagian 10. Pengelola akan menghapus:
+    </p>
+    <ul>
+      <li>Seluruh data event di workspace Anda</li>
+      <li>Registrasi workspace Anda dari sistem</li>
+      <li>Data akun Anda dari Firestore</li>
+    </ul>
+    <p>
+      Penghapusan akan diproses dalam waktu <strong>7 hari kerja</strong> setelah
+      permintaan dikonfirmasi. Audit log yang melibatkan akun Anda mungkin tetap
+      disimpan untuk keperluan keamanan sistem selama maksimal 90 hari setelah penghapusan.
+    </p>
+  </div>
+
+  <!-- 9 -->
+  <div class="section" id="s9">
+    <div class="section-title"><i class="ti ti-refresh"></i> 9. Perubahan Kebijakan</div>
+    <p>
+      Kami dapat memperbarui kebijakan privasi ini dari waktu ke waktu.
+      Perubahan signifikan akan diberitahukan melalui notifikasi di aplikasi.
+      Tanggal "Diperbarui" di bagian atas dokumen ini menunjukkan kapan kebijakan
+      terakhir diubah.
+    </p>
+    <p>
+      Dengan terus menggunakan layanan setelah perubahan diterbitkan, Anda dianggap
+      menyetujui kebijakan yang diperbarui.
+    </p>
+  </div>
+
+  <!-- 10 -->
+  <div class="contact-box" id="s10">
+    <div class="ct">Ada Pertanyaan atau Permintaan?</div>
+    <div class="cs">Hubungi pengelola aplikasi secara langsung</div>
+    <a class="contact-link" href="mailto:ryan.trisyardi@gmail.com">
+      <i class="ti ti-mail" style="font-size:15px"></i>
+      ryan.trisyardi@gmail.com
+    </a>
+  </div>
+
+  <div class="footer">
+    &copy; 2025 Kalender Tim &nbsp;·&nbsp; Dikelola oleh Ryan Trisyardi &nbsp;·&nbsp;
+    <a href="index.html">Beranda</a>
+  </div>
+
+</div>
+</body>
+</html>
