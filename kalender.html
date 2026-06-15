@@ -77,13 +77,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 
 /* ── CALENDAR SHELL ── */
 .cal-shell{background:transparent;border:none;border-radius:var(--r-xl);overflow:visible;box-shadow:none}
-.cal-hdr-sticky-wrap{position:sticky;top:0;z-index:100;border-radius:var(--r-xl) var(--r-xl) 0 0;overflow:hidden;border:1.5px solid var(--rule);border-bottom:none;background:var(--bg-dk);box-shadow:0 2px 8px rgba(28,25,23,.06)}
+/* Wrapper pakai border, bukan child masing-masing — agar lebar grid header = body */
+.cal-grid-wrap{border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden}
+.cal-hdr-sticky-wrap{position:sticky;top:0;z-index:100;background:var(--bg-dk);box-shadow:0 2px 8px rgba(28,25,23,.06)}
 .cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:var(--ink);border-bottom:1.5px solid var(--rule);border-top-left-radius:var(--r-xl);border-top-right-radius:var(--r-xl)}
 /* FIX: Day headers more visible and colors adjusted for dark background */
 .dh{text-align:center;padding:13px 4px;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.8)}
 .dh.sun{color:#FCA5A5;font-weight:800}
 .dh.sat{color:#93C5FD;font-weight:800}
-.cal-body{display:grid;grid-template-columns:repeat(7,1fr);border:1.5px solid var(--rule);border-top:none;border-radius:0 0 var(--r-xl) var(--r-xl);overflow:hidden}
+.cal-body{display:grid;grid-template-columns:repeat(7,1fr);border-radius:0 0 var(--r-xl) var(--r-xl);overflow:hidden}
 
 /* ── DAY CELLS ── FIX #1: up to 5 events, auto height, tidy */
 .dc{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);min-height:clamp(80px,10vw,130px);padding:0;position:relative;background:var(--surface);overflow:visible;transition:background .12s;display:flex;flex-direction:column}
@@ -466,9 +468,25 @@ body.read-only .readonly-badge{display:inline-flex}
 .editor-row-email{flex:1;font-size:.83rem;font-weight:600;color:var(--ink);word-break:break-all}
 .editor-row-badge{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:100px;background:#DCFCE7;color:#166534;white-space:nowrap}
 .editor-row-super{background:#EDE9FE;color:#5B21B6}
+.editor-row-viewer{background:#EFF6FF;color:#1D4ED8}
 .editor-remove{background:none;border:none;cursor:pointer;color:var(--ink-lt);font-size:15px;padding:4px;border-radius:var(--r-sm);transition:background .12s,color .12s;flex-shrink:0}
 .editor-remove:hover{background:#FEE2E2;color:#B91C1C}
 .add-editor-row{display:flex;gap:8px;align-items:center}
+/* ── VIS OPT CARD (inside modal) ── */
+.vis-opt-card{border:1.5px solid var(--rule);border-radius:var(--r-lg);padding:12px 10px;cursor:pointer;transition:border-color .14s,background .14s;text-align:center}
+.vis-opt-card:hover{background:var(--bg-dk);border-color:var(--ink-lt)}
+.vis-opt-card.selected{border-color:#7C3AED;background:#F5F3FF}
+.vis-opt-card i{font-size:20px;display:block;margin-bottom:5px;color:var(--ink-lt)}
+.vis-opt-card.selected i{color:#7C3AED}
+.vis-opt-card .vis-opt-label{font-size:.78rem;font-weight:700;color:var(--ink);display:block;margin-bottom:2px}
+.vis-opt-card .vis-opt-sub{font-size:.65rem;color:var(--ink-lt)}
+/* ── MEMBER TABS ── */
+.member-tab{flex:1;font-family:var(--font);font-size:.78rem;font-weight:700;padding:8px 12px;background:var(--bg);border:none;cursor:pointer;color:var(--ink-lt);display:flex;align-items:center;justify-content:center;gap:5px;transition:background .12s,color .12s}
+.member-tab:hover{background:var(--bg-dk);color:var(--ink)}
+.member-tab.active{background:var(--surface);color:#7C3AED}
+.member-tab+.member-tab{border-left:1.5px solid var(--rule)}
+.member-tab-count{font-size:.65rem;font-weight:800;padding:1px 6px;border-radius:100px;background:var(--rule);color:var(--ink-lt)}
+.member-tab.active .member-tab-count{background:#EDE9FE;color:#7C3AED}
 
 /* ── HOLIDAY MANAGER ── */
 .hol-mgr-info{background:#FFF7ED;border:1.5px solid #FBD38D;border-radius:var(--r-md);padding:10px 14px;font-size:.78rem;color:#78350F;margin-bottom:1rem;display:flex;gap:8px;align-items:flex-start}
@@ -593,7 +611,7 @@ body.read-only .readonly-badge{display:inline-flex}
   .page{padding:.5rem!important;max-width:100%!important}
   .main-row{display:block!important}
   .cal-col{width:100%!important}
-  .cal-shell{box-shadow:none!important;border:1px solid #ccc!important}
+  .cal-grid-wrap{box-shadow:none!important;border:1px solid #ccc!important}
   .dc{min-height:100px!important;page-break-inside:avoid}
   .dc-head{padding:4px 5px 2px!important}
   .chip{font-size:.6rem!important;padding:2px 5px!important}
@@ -823,8 +841,10 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="main-row">
   <div class="cal-col">
     <div class="cal-shell">
-      <div class="cal-hdr-sticky-wrap"><div class="cal-hdr" id="calHdr"></div></div>
-      <div class="cal-body" id="calBody"></div>
+      <div class="cal-grid-wrap">
+        <div class="cal-hdr-sticky-wrap"><div class="cal-hdr" id="calHdr"></div></div>
+        <div class="cal-body" id="calBody"></div>
+      </div>
     </div>
     <div class="list-section">
       <div class="list-heading-sticky">Event bulan ini</div>
@@ -1046,27 +1066,90 @@ body.read-only .readonly-badge{display:inline-flex}
 
 <!-- ══ ACCESS MANAGER MODAL ══ -->
 <div class="overlay" id="accessManagerOverlay">
-  <div class="modal">
+  <div class="modal" style="max-width:520px">
     <div class="modal-head">
       <div class="modal-title"><i class="ti ti-shield-lock" style="color:#7C3AED"></i> Kelola Akses — <span id="accessWsLabel" style="color:#7C3AED;font-size:.9rem"></span></div>
       <button class="btn btn-icon" id="closeAccessManager"><i class="ti ti-x"></i></button>
     </div>
-    <div class="access-info">
-      <i class="ti ti-info-circle"></i>
-      <div>Tambahkan email Google anggota tim yang boleh <strong>tambah, edit, dan hapus</strong> event di workspace ini. Perubahan langsung tersimpan ke cloud tanpa perlu update file HTML.</div>
-    </div>
-    <div style="font-size:.75rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Editor saat ini</div>
-    <div class="editor-list" id="editorList">
-      <div style="color:var(--ink-lt);font-size:.82rem;padding:8px">Memuat...</div>
-    </div>
-    <div style="border-top:1.5px solid var(--rule);padding-top:1rem;margin-top:.25rem">
-      <div style="font-size:.75rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Tambah Editor Baru</div>
-      <div class="add-editor-row">
-        <input type="email" class="fc" id="newEditorEmail" placeholder="email@gmail.com" style="flex:1"/>
-        <button class="btn btn-primary btn-sm" id="addEditorBtn"><i class="ti ti-plus"></i> Tambah</button>
+
+    <!-- ── VISIBILITY TOGGLE ── -->
+    <div style="margin-bottom:1.1rem">
+      <div style="font-size:.7rem;font-weight:700;color:var(--ink-lt);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Visibilitas Workspace</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="vis-opt-card" id="visOptPrivate" data-vis="private">
+          <i class="ti ti-lock"></i>
+          <span class="vis-opt-label">Tim Tertutup</span>
+          <span class="vis-opt-sub">Hanya yang diundang bisa lihat</span>
+        </div>
+        <div class="vis-opt-card" id="visOptPublic" data-vis="public">
+          <i class="ti ti-world"></i>
+          <span class="vis-opt-label">Semi Publik</span>
+          <span class="vis-opt-sub">Semua bisa lihat, hanya undangan yang edit</span>
+        </div>
       </div>
-      <div style="font-size:.68rem;color:var(--ink-lt);margin-top:6px"><i class="ti ti-info-circle" style="font-size:11px;vertical-align:-1px"></i> Gunakan email Google persis seperti yang dipakai untuk login.</div>
+      <div id="visChangeNote" style="display:none;margin-top:6px;font-size:.72rem;padding:6px 10px;border-radius:var(--r-sm);background:#FFFBEB;color:#92400E;border:1px solid #FCD34D">
+        <i class="ti ti-alert-triangle" style="font-size:11px;vertical-align:-1px"></i>
+        Visibilitas diubah — klik <strong>Simpan Visibilitas</strong> untuk menerapkan.
+      </div>
+      <div style="margin-top:8px;display:flex;gap:6px;align-items:center">
+        <button class="btn btn-sm" id="saveVisibilityBtn" style="display:none;background:#FFFBEB;border-color:#FCD34D;color:#92400E">
+          <i class="ti ti-check"></i> Simpan Visibilitas
+        </button>
+        <span id="visStatusMsg" style="font-size:.72rem;color:var(--ink-lt)"></span>
+      </div>
     </div>
+
+    <!-- ── MEMBER TABS ── -->
+    <div style="font-size:.7rem;font-weight:700;color:var(--ink-lt);letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px">Anggota &amp; Undangan</div>
+    <div style="display:flex;gap:0;border:1.5px solid var(--rule);border-radius:var(--r-md);overflow:hidden;margin-bottom:12px">
+      <button class="member-tab active" id="tabEditors" data-tab="editors">
+        <i class="ti ti-pencil" style="font-size:13px"></i> Editor
+        <span class="member-tab-count" id="countEditors">0</span>
+      </button>
+      <button class="member-tab" id="tabViewers" data-tab="viewers">
+        <i class="ti ti-eye" style="font-size:13px"></i> Viewer
+        <span class="member-tab-count" id="countViewers">0</span>
+        <span style="font-size:.6rem;opacity:.7;margin-left:2px">(private)</span>
+      </button>
+    </div>
+
+    <!-- Editor list -->
+    <div id="panelEditors">
+      <div class="access-info" style="margin-bottom:10px">
+        <i class="ti ti-info-circle"></i>
+        <div>Editor dapat <strong>tambah, edit, dan hapus</strong> event. Berlaku untuk workspace private maupun semi-publik.</div>
+      </div>
+      <div class="editor-list" id="editorList">
+        <div style="color:var(--ink-lt);font-size:.82rem;padding:8px">Memuat...</div>
+      </div>
+      <div style="border-top:1.5px solid var(--rule);padding-top:.9rem;margin-top:.5rem">
+        <div style="font-size:.72rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px">Undang Editor Baru</div>
+        <div class="add-editor-row">
+          <input type="email" class="fc" id="newEditorEmail" placeholder="email@gmail.com" style="flex:1"/>
+          <button class="btn btn-primary btn-sm" id="addEditorBtn"><i class="ti ti-plus"></i> Undang</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Viewer list (private only) -->
+    <div id="panelViewers" style="display:none">
+      <div class="access-info" style="margin-bottom:10px;background:#EFF6FF;border-color:#93C5FD">
+        <i class="ti ti-eye" style="color:#2563EB"></i>
+        <div>Viewer hanya bisa <strong>melihat</strong> kalender. Fitur ini hanya berlaku saat workspace berstatus <strong>Tim Tertutup</strong>. Pada Semi-Publik, semua orang sudah bisa lihat.</div>
+      </div>
+      <div id="viewerListWrap" class="editor-list">
+        <div style="color:var(--ink-lt);font-size:.82rem;padding:8px">Memuat...</div>
+      </div>
+      <div style="border-top:1.5px solid var(--rule);padding-top:.9rem;margin-top:.5rem">
+        <div style="font-size:.72rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px">Undang Viewer Baru</div>
+        <div class="add-editor-row">
+          <input type="email" class="fc" id="newViewerEmail" placeholder="email@gmail.com" style="flex:1"/>
+          <button class="btn btn-sm" id="addViewerBtn" style="background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-plus"></i> Undang</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="font-size:.68rem;color:var(--ink-lt);margin-top:8px"><i class="ti ti-info-circle" style="font-size:11px;vertical-align:-1px"></i> Gunakan email Google persis seperti yang dipakai untuk login.</div>
     <div class="modal-foot">
       <button class="btn btn-primary" id="closeAccessManagerOk">Selesai</button>
     </div>
@@ -1330,6 +1413,7 @@ let currentUser  = null;
 let canWrite     = false;  // can add/edit/delete events in this workspace
 let isSuperAdmin = false;  // can manage editors + access all workspaces
 let wsEditors    = [];     // emails allowed to write in this workspace (from Firestore)
+let wsViewers    = [];     // emails allowed to view-only (private workspace)
 // Chip collapse state: { [eventId]: true/false } — persisted to localStorage
 const COLLAPSE_KEY = `cal_collapse_${WORKSPACE}`;
 function loadCollapseState() {
@@ -1376,6 +1460,7 @@ async function loadWorkspaceConfig() {
     if (doc.exists) {
       const data = doc.data();
       wsEditors = data.editors || [];
+      wsViewers = data.viewers || [];
       if (data.eventTypes && Array.isArray(data.eventTypes) && data.eventTypes.length > 0) {
         eventTypes = data.eventTypes;
         localStorage.setItem(TYPES_KEY, JSON.stringify(eventTypes));
@@ -1385,6 +1470,7 @@ async function loadWorkspaceConfig() {
       }
     } else {
       wsEditors = [];
+      wsViewers = [];
     }
   } catch(e) {
     console.warn('Could not load workspace config:', e.message);
@@ -1394,10 +1480,17 @@ async function loadWorkspaceConfig() {
 }
 
 /* ── SAVE WORKSPACE CONFIG TO FIRESTORE ── */
-async function saveWorkspaceConfig(editors) {
-  if (!useFirebase || !isSuperAdmin) return;
-  await db.collection('_config').doc(WORKSPACE).set({editors, updatedBy: currentUser.email, updatedAt: firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+async function saveWorkspaceConfig(editors, viewers) {
+  if (!useFirebase) return;
+  viewers = viewers !== undefined ? viewers : wsViewers;
+  await db.collection('_config').doc(WORKSPACE).set({
+    editors,
+    viewers,
+    updatedBy: currentUser.email,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true });
   wsEditors = editors;
+  wsViewers = viewers;
 }
 
 /* ── AUDIT LOG ── */
@@ -1534,13 +1627,16 @@ function applyAuthState(user) {
   // canWrite = superadmin OR owner OR email in workspace editors list
   canWrite = isSuperAdmin || isOwner || !!(user && wsEditors.includes(user.email));
 
+  // canView (for private) = canWrite OR email in viewers list
+  const canView = canWrite || !!(user && wsViewers.includes(user.email));
+
   // Auth gate logic for private workspaces
   if (wsVisibility === 'private') {
     if (!user) {
       showAuthGate('login');
       return;
     }
-    if (!isSuperAdmin && !isOwner && !wsEditors.includes(user.email)) {
+    if (!isSuperAdmin && !isOwner && !wsEditors.includes(user.email) && !wsViewers.includes(user.email)) {
       // Log denied access
       writeAuditLog({
         action: 'access_denied',
@@ -2469,103 +2565,200 @@ function openEditType(id){
    Manages workspace editors via Firestore _config
    ════════════════════════════════════════ */
 
+/* ════════════════════════════════════════
+   ACCESS MANAGER — Visibility + Editors + Viewers
+   ════════════════════════════════════════ */
+let pendingVis = null;
+
 function openAccessManager() {
-  if (!isSuperAdmin && !canWrite) { showToast('⚠️ Hanya pemilik atau superadmin yang dapat mengelola akses'); return; }
+  const isOwner = !!(currentUser && wsOwnerId && currentUser.email === wsOwnerId);
+  if (!isSuperAdmin && !isOwner) {
+    showToast('⚠️ Hanya pemilik atau superadmin yang dapat mengelola akses');
+    return;
+  }
   document.getElementById('accessWsLabel').textContent = WORKSPACE === 'default' ? 'Default' : WORKSPACE;
-  renderEditorList();
+  pendingVis = wsVisibility;
+  setVisCards(wsVisibility);
+  document.getElementById('visChangeNote').style.display = 'none';
+  document.getElementById('saveVisibilityBtn').style.display = 'none';
+  document.getElementById('visStatusMsg').textContent =
+    wsVisibility === 'private' ? '🔒 Saat ini: Tim Tertutup' : '🌐 Saat ini: Semi Publik';
+  loadAccessMembers();
+  switchMemberTab('editors');
   document.getElementById('accessManagerOverlay').classList.add('open');
 }
 
+async function loadAccessMembers() {
+  if (!useFirebase) return;
+  try {
+    const doc = await db.collection('_config').doc(WORKSPACE).get();
+    if (doc.exists) {
+      const data = doc.data();
+      wsEditors = data.editors || [];
+      wsViewers = data.viewers || [];
+    } else { wsEditors = []; wsViewers = []; }
+  } catch(e) { console.warn('loadAccessMembers:', e.message); }
+  renderEditorList();
+  renderViewerList();
+  updateMemberCounts();
+}
+
+function updateMemberCounts() {
+  const ec = wsEditors.filter(e => e !== SUPERADMIN_EMAIL && e !== wsOwnerId).length;
+  document.getElementById('countEditors').textContent = ec;
+  document.getElementById('countViewers').textContent = wsViewers.length;
+}
+
+function setVisCards(vis) {
+  document.getElementById('visOptPrivate').classList.toggle('selected', vis === 'private');
+  document.getElementById('visOptPublic').classList.toggle('selected',  vis === 'public');
+}
+
+document.querySelectorAll('.vis-opt-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const nv = card.dataset.vis;
+    if (nv === pendingVis) return;
+    pendingVis = nv;
+    setVisCards(nv);
+    document.getElementById('visChangeNote').style.display = 'block';
+    document.getElementById('saveVisibilityBtn').style.display = 'inline-flex';
+    document.getElementById('visStatusMsg').textContent = '';
+  });
+});
+
+document.getElementById('saveVisibilityBtn').addEventListener('click', async () => {
+  if (!pendingVis || pendingVis === wsVisibility) return;
+  const oldVis = wsVisibility;
+  const user = auth.currentUser;
+  try {
+    await db.collection('_workspaces').doc(WORKSPACE).update({
+      visibility: pendingVis,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await db.collection('_config').doc(WORKSPACE).set(
+      { visibility: pendingVis, updatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    );
+    wsVisibility = pendingVis;
+    await writeAuditLog({
+      action: 'visibility_changed', workspaceId: WORKSPACE,
+      actorEmail: user.email, actorName: user.displayName || '',
+      detail: `Visibilitas workspace "${WORKSPACE}" diubah dari "${oldVis}" → "${pendingVis}"`,
+    });
+    if (!isSuperAdmin && db) {
+      await db.collection('_notifications').add({
+        type: 'visibility_changed', toEmail: SUPERADMIN_EMAIL,
+        workspaceId: WORKSPACE, changedBy: user.email,
+        from: oldVis, to: pendingVis, read: false,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      }).catch(() => {});
+    }
+    document.getElementById('visChangeNote').style.display = 'none';
+    document.getElementById('saveVisibilityBtn').style.display = 'none';
+    document.getElementById('visStatusMsg').textContent =
+      pendingVis === 'private' ? '✅ Disimpan: Tim Tertutup' : '✅ Disimpan: Semi Publik';
+    applyAuthState(user);
+    showToast('✅ Visibilitas berhasil disimpan');
+  } catch(e) { showToast('❌ Gagal: ' + e.message); }
+});
+
+function switchMemberTab(tab) {
+  document.querySelectorAll('.member-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.getElementById('panelEditors').style.display = tab === 'editors' ? 'block' : 'none';
+  document.getElementById('panelViewers').style.display = tab === 'viewers'  ? 'block' : 'none';
+}
+document.getElementById('tabEditors').addEventListener('click', () => switchMemberTab('editors'));
+document.getElementById('tabViewers').addEventListener('click',  () => switchMemberTab('viewers'));
+
 function renderEditorList() {
   const list = document.getElementById('editorList');
-  const editors = wsEditors.filter(e => e !== SUPERADMIN_EMAIL && e !== wsOwnerId);
-
-  let html = `<div class="editor-row">
-    <div class="editor-row-email">${escHtml(SUPERADMIN_EMAIL)}</div>
-    <span class="editor-row-badge editor-row-super">⚡ Superadmin</span>
-  </div>`;
+  if (!list) return;
+  const regular = wsEditors.filter(e => e !== SUPERADMIN_EMAIL && e !== wsOwnerId);
+  let html = '<div style="display:flex;flex-direction:column;gap:6px">';
+  html += `<div class="editor-row"><div class="editor-row-email">${escHtml(SUPERADMIN_EMAIL)}</div><span class="editor-row-badge editor-row-super">⚡ Superadmin</span></div>`;
   if (wsOwnerId && wsOwnerId !== SUPERADMIN_EMAIL) {
-    html += `<div class="editor-row">
-      <div class="editor-row-email">${escHtml(wsOwnerId)}</div>
-      <span class="editor-row-badge" style="background:#FEF3C7;color:#92400E">👑 Pemilik</span>
-    </div>`;
+    html += `<div class="editor-row"><div class="editor-row-email">${escHtml(wsOwnerId)}</div><span class="editor-row-badge" style="background:#FEF3C7;color:#92400E">👑 Pemilik</span></div>`;
   }
-  if (editors.length === 0) {
-    html += `<div style="color:var(--ink-lt);font-size:.82rem;padding:8px 12px">Belum ada editor lain. Tambahkan email di bawah.</div>`;
+  if (!regular.length) {
+    html += `<div style="color:var(--ink-lt);font-size:.8rem;padding:6px 2px">Belum ada editor lain.</div>`;
   } else {
-    html += editors.map(email => `
+    html += regular.map(email => `
       <div class="editor-row">
         <div class="editor-row-email">${escHtml(email)}</div>
-        <span class="editor-row-badge">✓ Editor</span>
-        <button class="editor-remove" data-email="${escHtml(email)}" title="Hapus akses"><i class="ti ti-trash"></i></button>
+        <span class="editor-row-badge">✏️ Editor</span>
+        <button class="editor-remove" data-email="${escHtml(email)}" data-role="editor"><i class="ti ti-trash"></i></button>
       </div>`).join('');
   }
+  html += '</div>';
   list.innerHTML = html;
+  attachRemoveListeners(list);
+}
 
-  list.querySelectorAll('.editor-remove').forEach(btn => {
+function renderViewerList() {
+  const wrap = document.getElementById('viewerListWrap');
+  if (!wrap) return;
+  if (!wsViewers.length) {
+    wrap.innerHTML = '<div style="color:var(--ink-lt);font-size:.8rem;padding:6px 2px">Belum ada viewer khusus.</div>';
+    return;
+  }
+  wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:6px">' +
+    wsViewers.map(email => `
+      <div class="editor-row">
+        <div class="editor-row-email">${escHtml(email)}</div>
+        <span class="editor-row-badge editor-row-viewer">👁 Viewer</span>
+        <button class="editor-remove" data-email="${escHtml(email)}" data-role="viewer"><i class="ti ti-trash"></i></button>
+      </div>`).join('') + '</div>';
+  attachRemoveListeners(wrap);
+}
+
+function attachRemoveListeners(container) {
+  container.querySelectorAll('.editor-remove').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const email = btn.dataset.email;
-      if (!confirm(`Hapus akses editor untuk ${email}?`)) return;
-      const newEditors = wsEditors.filter(e => e !== email);
+      const { email, role } = btn.dataset;
+      if (!confirm(`Hapus akses ${role} untuk ${email}?`)) return;
       try {
-        await saveWorkspaceConfig(newEditors);
-        // Audit log
-        await writeAuditLog({
-          action: 'editor_removed',
-          workspaceId: WORKSPACE,
-          actorEmail: currentUser.email,
-          actorName: currentUser.displayName || '',
-          detail: `${email} dihapus dari editor workspace "${WORKSPACE}"`,
-        });
-        // Notifikasi ke editor yang dihapus
-        if (db) {
-          await db.collection('_notifications').add({
-            type: 'editor_removed',
-            toEmail: email,
-            workspaceId: WORKSPACE,
-            removedBy: currentUser.email,
-            read: false,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-          }).catch(()=>{});
-        }
-        renderEditorList();
-        showToast(`🗑️ Akses ${email} dihapus`);
-      } catch(e) { showToast('❌ Gagal: ' + e.message); }
+        const newEditors = role === 'editor' ? wsEditors.filter(e => e !== email) : wsEditors;
+        const newViewers = role === 'viewer' ? wsViewers.filter(e => e !== email) : wsViewers;
+        await saveWorkspaceConfig(newEditors, newViewers);
+        role === 'editor' ? renderEditorList() : renderViewerList();
+        updateMemberCounts();
+        await writeAuditLog({ action: role+'_removed', workspaceId: WORKSPACE, actorEmail: currentUser.email, actorName: currentUser.displayName||'', detail: `${email} dihapus sebagai ${role} dari "${WORKSPACE}"` });
+        if (db) await db.collection('_notifications').add({ type:'editor_removed', toEmail:email, workspaceId:WORKSPACE, removedBy:currentUser.email, role, read:false, timestamp:firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+        showToast(`🗑️ Akses ${role} ${email} dihapus`);
+      } catch(e) { showToast('❌ ' + e.message); }
     });
   });
 }
 
 document.getElementById('addEditorBtn').addEventListener('click', async () => {
   const email = document.getElementById('newEditorEmail').value.trim().toLowerCase();
-  if (!email || !email.includes('@')) { showToast('⚠️ Masukkan email yang valid'); return; }
-  if (wsEditors.includes(email)) { showToast('⚠️ Email ini sudah menjadi editor'); return; }
-  const newEditors = [...wsEditors, email];
+  if (!email || !email.includes('@')) { showToast('⚠️ Email tidak valid'); return; }
+  if (wsEditors.includes(email)) { showToast('⚠️ Sudah menjadi editor'); return; }
+  if (wsViewers.includes(email)) { showToast('⚠️ Sudah terdaftar sebagai viewer'); return; }
   try {
-    await saveWorkspaceConfig(newEditors);
-    // Audit log
-    await writeAuditLog({
-      action: 'editor_added',
-      workspaceId: WORKSPACE,
-      actorEmail: currentUser.email,
-      actorName: currentUser.displayName || '',
-      detail: `${email} ditambahkan sebagai editor workspace "${WORKSPACE}"`,
-    });
-    // Notifikasi ke editor baru
-    if (db) {
-      await db.collection('_notifications').add({
-        type: 'editor_added',
-        toEmail: email,
-        workspaceId: WORKSPACE,
-        addedBy: currentUser.email,
-        read: false,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-      }).catch(()=>{});
-    }
+    await saveWorkspaceConfig([...wsEditors, email], wsViewers);
     document.getElementById('newEditorEmail').value = '';
-    renderEditorList();
-    showToast(`✅ ${email} ditambahkan sebagai editor`);
+    renderEditorList(); updateMemberCounts();
+    await writeAuditLog({ action:'editor_added', workspaceId:WORKSPACE, actorEmail:currentUser.email, actorName:currentUser.displayName||'', detail:`${email} ditambahkan sebagai editor workspace "${WORKSPACE}"` });
+    if (db) await db.collection('_notifications').add({ type:'editor_added', toEmail:email, workspaceId:WORKSPACE, addedBy:currentUser.email, addedByName:currentUser.displayName||'', read:false, timestamp:firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+    showToast(`✅ ${email} diundang sebagai editor`);
     if (currentUser) applyAuthState(currentUser);
-  } catch(e) { showToast('❌ Gagal: ' + e.message); }
+  } catch(e) { showToast('❌ ' + e.message); }
+});
+
+document.getElementById('addViewerBtn').addEventListener('click', async () => {
+  const email = document.getElementById('newViewerEmail').value.trim().toLowerCase();
+  if (!email || !email.includes('@')) { showToast('⚠️ Email tidak valid'); return; }
+  if (wsViewers.includes(email)) { showToast('⚠️ Sudah menjadi viewer'); return; }
+  if (wsEditors.includes(email)) { showToast('⚠️ Sudah terdaftar sebagai editor'); return; }
+  try {
+    await saveWorkspaceConfig(wsEditors, [...wsViewers, email]);
+    document.getElementById('newViewerEmail').value = '';
+    renderViewerList(); updateMemberCounts();
+    await writeAuditLog({ action:'viewer_added', workspaceId:WORKSPACE, actorEmail:currentUser.email, actorName:currentUser.displayName||'', detail:`${email} ditambahkan sebagai viewer workspace "${WORKSPACE}"` });
+    if (db) await db.collection('_notifications').add({ type:'editor_added', toEmail:email, workspaceId:WORKSPACE, addedBy:currentUser.email, addedByName:currentUser.displayName||'', role:'viewer', read:false, timestamp:firebase.firestore.FieldValue.serverTimestamp() }).catch(()=>{});
+    showToast(`✅ ${email} diundang sebagai viewer`);
+  } catch(e) { showToast('❌ ' + e.message); }
 });
 
 document.getElementById('closeAccessManager').addEventListener('click', () => document.getElementById('accessManagerOverlay').classList.remove('open'));
@@ -2573,6 +2766,8 @@ document.getElementById('closeAccessManagerOk').addEventListener('click', () => 
 document.getElementById('accessManagerOverlay').addEventListener('click', e => { if (e.target === document.getElementById('accessManagerOverlay')) document.getElementById('accessManagerOverlay').classList.remove('open'); });
 document.getElementById('manageAccessBtn').addEventListener('click', openAccessManager);
 document.getElementById('newEditorEmail').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('addEditorBtn').click(); });
+document.getElementById('newViewerEmail').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('addViewerBtn').click(); });
+
 
 /* ════════════════════════════════════════
    CUSTOM HOLIDAYS — user-defined, stored in localStorage
