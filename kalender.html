@@ -620,6 +620,14 @@ body.read-only .readonly-badge{display:inline-flex}
 }
 .month-title-row{margin-bottom:0;display:none}
 
+/* ── REPORT SORT HEADER ── */
+.rpt-table th[data-sort]:hover{color:var(--ink);background:#E8E3DB;cursor:pointer}
+.rpt-table th[data-sort].sort-active{color:#5B21B6;background:#F5F3FF}
+.rpt-table th[data-sort].sort-active .col-resize-grip{color:rgba(124,58,237,.3)}
+
+/* ── REPORT PARTIAL STATUS ── */
+.rpt-partial-tag{display:inline-flex;align-items:center;gap:3px;font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:100px;background:#EDE9FE;color:#5B21B6;border:1px solid #C4B5FD;vertical-align:middle}
+
 /* ── PRINT STYLES ── */
 @media print{
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
@@ -1268,35 +1276,65 @@ body.read-only .readonly-badge{display:inline-flex}
         <div class="sn-event-type" id="snEventType"></div>
       </div>
     </div>
-    <div style="margin-bottom:.7rem">
+    <div style="margin-bottom:.75rem">
       <div style="font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:5px">Status baru</div>
       <span class="sn-status-badge" id="snStatusBadge"></span>
     </div>
-    <!-- Scope section (only shown for multi-day events) -->
+
+    <!-- Scope section — hanya untuk multi-day events -->
     <div class="sn-scope-section" id="snScopeSection" style="display:none">
-      <div class="sn-scope-title"><i class="ti ti-calendar-event" style="font-size:11px;vertical-align:-1px"></i> Terapkan ke</div>
+      <div class="sn-scope-title"><i class="ti ti-calendar-event" style="font-size:11px;vertical-align:-1px"></i> Terapkan ke tanggal</div>
       <div class="sn-scope-options">
+
+        <!-- Opsi 1: Tanggal ini saja -->
         <label class="sn-scope-opt selected" id="snScopeThisLabel">
           <input type="radio" name="snScope" value="this" checked>
-          <div>
+          <div style="flex:1;min-width:0">
             <div class="sn-scope-opt-label"><i class="ti ti-calendar" style="font-size:12px;vertical-align:-2px"></i> Tanggal ini saja</div>
             <div class="sn-scope-opt-sub" id="snScopeThisSub"></div>
           </div>
         </label>
+
+        <!-- Opsi 2: Range tanggal (pilih dari–sampai) -->
+        <label class="sn-scope-opt" id="snScopeRangeLabel">
+          <input type="radio" name="snScope" value="range">
+          <div style="flex:1;min-width:0">
+            <div class="sn-scope-opt-label"><i class="ti ti-calendar-stats" style="font-size:12px;vertical-align:-2px"></i> Pilih rentang tanggal</div>
+            <div class="sn-scope-opt-sub" id="snScopeRangeSub">Tentukan tanggal mulai &amp; selesai</div>
+          </div>
+        </label>
+        <!-- Sub-form range — muncul saat opsi range dipilih -->
+        <div id="snRangeFields" style="display:none;padding:8px 10px 4px;background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md);margin-top:4px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div>
+              <label class="fl" style="font-size:.63rem">Dari</label>
+              <input type="date" class="fc" id="snRangeFrom" style="font-size:.8rem;padding:6px 8px"/>
+            </div>
+            <div>
+              <label class="fl" style="font-size:.63rem">Sampai</label>
+              <input type="date" class="fc" id="snRangeTo" style="font-size:.8rem;padding:6px 8px"/>
+            </div>
+          </div>
+          <div id="snRangeHint" style="font-size:.65rem;color:var(--ink-lt);margin-top:5px"></div>
+        </div>
+
+        <!-- Opsi 3: Semua tanggal event -->
         <label class="sn-scope-opt" id="snScopeAllLabel">
           <input type="radio" name="snScope" value="all">
-          <div>
+          <div style="flex:1;min-width:0">
             <div class="sn-scope-opt-label"><i class="ti ti-calendar-week" style="font-size:12px;vertical-align:-2px"></i> Semua tanggal event</div>
             <div class="sn-scope-opt-sub" id="snScopeAllSub"></div>
           </div>
         </label>
+
       </div>
     </div>
+
     <!-- Additional note section -->
     <div class="sn-note-section">
       <div id="snPrevNote" style="display:none" class="sn-prev-note"><i class="ti ti-notes"></i><span id="snPrevNoteText"></span></div>
       <label class="fl">Catatan Tambahan <span style="font-weight:400;color:var(--ink-lt);text-transform:none;letter-spacing:0">(opsional)</span></label>
-      <textarea class="fc" id="snNote" placeholder="Tambah keterangan untuk update status ini..." style="height:80px;resize:vertical"></textarea>
+      <textarea class="fc" id="snNote" placeholder="Tambah keterangan untuk update status ini..." style="height:72px;resize:vertical"></textarea>
     </div>
     <div class="modal-foot">
       <button class="btn" id="snCancelBtn">Batal</button>
@@ -3420,6 +3458,10 @@ function switchTab(tab) {
    TIMELINE REPORT
    ════════════════════════════════════════ */
 
+/* Sort state untuk timeline report */
+let rptSortCol = 'date';   // 'date'|'type'|'title'|'pic'|'status'
+let rptSortDir = 'asc';    // 'asc'|'desc'
+
 /* Set default range: first event month → last event month (max 12 mo) */
 function initReportRange() {
   const now = new Date();
@@ -3481,7 +3523,7 @@ function getReportFiltered() {
 function renderReport() {
   const filtered = getReportFiltered();
   const wrap = document.getElementById('rptTableWrap');
-  const SM   = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process'};
+  const SM   = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel'};
 
   // Update print title
   const rFrom = document.getElementById('rptFrom').value;
@@ -3499,57 +3541,80 @@ function renderReport() {
     return;
   }
 
-  // Group by month
-  const groups = {};
-  filtered.forEach(e => {
-    const mo = e.dateStart.slice(0,7);
-    if (!groups[mo]) groups[mo] = [];
-    groups[mo].push(e);
+  // ── SORT ──
+  const STATUS_ORDER = {pending:0, achieve:1, not_achieve:2, cancel:3, '':4, undefined:4};
+  const sorted = [...filtered].sort((a, b) => {
+    let va, vb;
+    switch (rptSortCol) {
+      case 'type':   va = getTypeById(a.type).label; vb = getTypeById(b.type).label; break;
+      case 'title':  va = a.title||'';               vb = b.title||'';               break;
+      case 'pic':    va = (a.pics||[]).join(',');     vb = (b.pics||[]).join(',');    break;
+      case 'status': va = STATUS_ORDER[a.status]??4; vb = STATUS_ORDER[b.status]??4;
+                     return rptSortDir==='asc' ? va-vb : vb-va;
+      default:       va = a.dateStart; vb = b.dateStart; break;
+    }
+    const cmp = String(va).localeCompare(String(vb), 'id');
+    return rptSortDir === 'asc' ? cmp : -cmp;
   });
+
+  // Helper: sort icon HTML
+  const sortIcon = col => {
+    if (rptSortCol !== col) return `<i class="ti ti-arrows-sort" style="font-size:10px;opacity:.35;margin-left:4px"></i>`;
+    return rptSortDir === 'asc'
+      ? `<i class="ti ti-sort-ascending" style="font-size:10px;color:#7C3AED;margin-left:4px"></i>`
+      : `<i class="ti ti-sort-descending" style="font-size:10px;color:#7C3AED;margin-left:4px"></i>`;
+  };
+
+  // ── HEADER ──
+  const mkTh = (col, label, extraStyle='') =>
+    `<th style="${extraStyle}cursor:pointer;user-select:none" data-sort="${col}">
+       ${label}${sortIcon(col)}
+       <div class="col-resize-handle"><span class="col-resize-grip">||</span></div>
+     </th>`;
 
   let html = `<table class="rpt-table">
     <thead><tr id="rptHeaderRow">
-      <th style="width:1%;white-space:nowrap">Tanggal<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
-      <th style="width:160px">Jenis Event<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
-      <th>Nama / Judul<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
-      <th style="width:160px">PIC<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
-      <th style="width:110px">Status<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
+      ${mkTh('date',   'Tanggal',     'width:1%;white-space:nowrap;')}
+      ${mkTh('type',   'Jenis Event', 'width:160px;')}
+      ${mkTh('title',  'Nama / Judul','')}
+      ${mkTh('pic',    'PIC',         'width:160px;')}
+      ${mkTh('status', 'Status',      'width:130px;')}
       <th>Keterangan<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
       <th>Catatan Status<div class="col-resize-handle"><span class="col-resize-grip">||</span></div></th>
     </tr></thead><tbody>`;
 
-  Object.entries(groups).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([mo, evs]) => {
-    const [y,m] = mo.split('-');
-    html += `<tr class="rpt-month-hdr"><td colspan="7">${MONTHS_ID[parseInt(m)-1].toUpperCase()} ${y}</td></tr>`;
-
-    evs.forEach(e => {
-      const t    = getTypeById(e.type);
-      const pics = e.pics || [];
-      const dl   = e.dateEnd && e.dateEnd !== e.dateStart
-        ? `${fmtDateReport(e.dateStart)} – ${fmtDateReport(e.dateEnd)}`
-        : fmtDateReport(e.dateStart);
-      const statusTx  = e.status==='achieve'?'var(--s-achieve-tx)':e.status==='not_achieve'?'var(--s-not-tx)':e.status==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
-      const statusBg  = e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':e.status==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
-      const statusTxt = SM[e.status] || e.status || '–';
-      // Darken chip color for accent bar
-      const accentColor = hexDarken(t.chip, 0.28);
-
-      html += `<tr class="rpt-row" data-id="${e.id}">
-        <td class="rpt-date" style="white-space:nowrap;width:1%"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.chip};margin-right:6px;vertical-align:middle"></span>${dl}</td>
-        <td class="rpt-type-cell"><div class="rpt-type-inner"><div class="rpt-type-accent" style="background:${accentColor}"></div><div class="rpt-type-label" style="background:${t.chip}">${escHtml(t.label)}</div></div></td>
-        <td><div class="rpt-title">${escHtml(e.title)}</div></td>
-        <td><div class="rpt-pic-list">${pics.map(p=>`<span class="rpt-pic-badge">${escHtml(p)}</span>`).join('')}</div></td>
-        <td>${e.status?`<span class="rpt-status" style="background:${statusBg};color:${statusTx}">${statusTxt}</span>`:'–'}</td>
-        <td class="rpt-note">${escHtml(e.note||'')}</td>
-        <td class="rpt-note" style="max-width:260px;white-space:pre-line;font-size:.72rem;color:#5B21B6">${escHtml(e.statusNote||'')}</td>
-      </tr>`;
+  // Group by month only when sorted by date
+  if (rptSortCol === 'date') {
+    const groups = {};
+    sorted.forEach(e => {
+      const mo = e.dateStart.slice(0,7);
+      if (!groups[mo]) groups[mo] = [];
+      groups[mo].push(e);
     });
-  });
+    Object.entries(groups).sort((a,b)=> rptSortDir==='asc'? a[0].localeCompare(b[0]) : b[0].localeCompare(a[0])).forEach(([mo, evs]) => {
+      const [y,m] = mo.split('-');
+      html += `<tr class="rpt-month-hdr"><td colspan="7">${MONTHS_ID[parseInt(m)-1].toUpperCase()} ${y}</td></tr>`;
+      evs.forEach(e => { html += buildRptRow(e, SM); });
+    });
+  } else {
+    sorted.forEach(e => { html += buildRptRow(e, SM); });
+  }
 
   html += '</tbody></table>';
   wrap.innerHTML = html;
 
-  // Click to open detail
+  // Sort click on header
+  wrap.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', ev => {
+      if (ev.target.closest('.col-resize-handle')) return; // don't sort on resize handle
+      const col = th.dataset.sort;
+      if (rptSortCol === col) rptSortDir = rptSortDir === 'asc' ? 'desc' : 'asc';
+      else { rptSortCol = col; rptSortDir = 'asc'; }
+      renderReport();
+    });
+  });
+
+  // Click row → open detail
   wrap.querySelectorAll('.rpt-row[data-id]').forEach(row => {
     row.addEventListener('click', () => openDetail(row.dataset.id));
   });
@@ -3563,22 +3628,84 @@ function renderReport() {
         const th = handle.parentElement;
         const startX = e.pageX;
         const startWidth = th.offsetWidth;
-
-        const onMouseMove = (me) => {
-          const currentWidth = startWidth + (me.pageX - startX);
-          th.style.width = currentWidth + 'px';
-        };
-
+        const onMouseMove = (me) => { th.style.width = (startWidth + (me.pageX - startX)) + 'px'; };
         const onMouseUp = () => {
           document.removeEventListener('mousemove', onMouseMove);
           document.removeEventListener('mouseup', onMouseUp);
         };
-
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
       });
     });
   }
+}
+
+/* ── Helper: build single report row (with partial status display) ── */
+function buildRptRow(e, SM) {
+  const t    = getTypeById(e.type);
+  const pics = e.pics || [];
+  const dl   = e.dateEnd && e.dateEnd !== e.dateStart
+    ? `${fmtDateReport(e.dateStart)} – ${fmtDateReport(e.dateEnd)}`
+    : fmtDateReport(e.dateStart);
+
+  const globalStatus  = e.status || '';
+  const statusTx  = globalStatus==='achieve'?'var(--s-achieve-tx)':globalStatus==='not_achieve'?'var(--s-not-tx)':globalStatus==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
+  const statusBg  = globalStatus==='achieve'?'var(--s-achieve-bg)':globalStatus==='not_achieve'?'var(--s-not-bg)':globalStatus==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
+  const statusTxt = SM[globalStatus] || globalStatus || '–';
+  const accentColor = hexDarken(t.chip, 0.28);
+
+  // Partial status: apakah ada dateStatuses yang berbeda-beda?
+  const dateStatuses = e.dateStatuses || {};
+  const dsEntries = Object.entries(dateStatuses).filter(([,v]) => v && v.status);
+  const hasPartial = dsEntries.length > 0;
+
+  // Build partial status summary
+  let partialHtml = '';
+  if (hasPartial) {
+    // Group tanggal berdasarkan status
+    const byStatus = {};
+    dsEntries.forEach(([ds, v]) => {
+      if (!byStatus[v.status]) byStatus[v.status] = [];
+      byStatus[v.status].push(ds);
+    });
+    const parts = Object.entries(byStatus).map(([st, dates]) => {
+      const stTx = st==='achieve'?'var(--s-achieve-tx)':st==='not_achieve'?'var(--s-not-tx)':st==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
+      const stBg = st==='achieve'?'var(--s-achieve-bg)':st==='not_achieve'?'var(--s-not-bg)':st==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
+      // Compactkan tanggal menjadi ranges
+      const sortedDates = dates.sort();
+      const ranges = [];
+      let rStart = sortedDates[0], rEnd = sortedDates[0];
+      for (let i = 1; i <= sortedDates.length; i++) {
+        const cur = sortedDates[i];
+        const prevEnd = new Date(rEnd + 'T00:00:00');
+        prevEnd.setDate(prevEnd.getDate() + 1);
+        if (cur && toStr(prevEnd) === cur) { rEnd = cur; }
+        else {
+          ranges.push(rStart === rEnd ? fmtDate(rStart) : `${fmtDate(rStart)}–${fmtDate(rEnd)}`);
+          rStart = rEnd = cur;
+        }
+      }
+      return `<span class="rpt-status" style="background:${stBg};color:${stTx};font-size:.6rem;padding:2px 6px">${SM[st]||st}: ${ranges.join(', ')}</span>`;
+    }).join(' ');
+    partialHtml = `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;align-items:center">
+      <i class="ti ti-calendar-stats" style="font-size:10px;color:#7C3AED" title="Memiliki status parsial per tanggal"></i>
+      ${parts}
+    </div>`;
+  }
+
+  const statusCell = globalStatus
+    ? `<span class="rpt-status" style="background:${statusBg};color:${statusTx}">${statusTxt}</span>${partialHtml}`
+    : (hasPartial ? partialHtml : '–');
+
+  return `<tr class="rpt-row" data-id="${escHtml(e.id)}">
+    <td class="rpt-date" style="white-space:nowrap;width:1%"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.chip};margin-right:6px;vertical-align:middle"></span>${dl}</td>
+    <td class="rpt-type-cell"><div class="rpt-type-inner"><div class="rpt-type-accent" style="background:${accentColor}"></div><div class="rpt-type-label" style="background:${t.chip}">${escHtml(t.label)}</div></div></td>
+    <td><div class="rpt-title">${escHtml(e.title)}</div></td>
+    <td><div class="rpt-pic-list">${pics.map(p=>`<span class="rpt-pic-badge">${escHtml(p)}</span>`).join('')}</div></td>
+    <td style="vertical-align:top;padding-top:10px">${statusCell}</td>
+    <td class="rpt-note">${escHtml(e.note||'')}</td>
+    <td class="rpt-note" style="max-width:260px;white-space:pre-line;font-size:.72rem;color:#5B21B6">${escHtml(e.statusNote||'')}</td>
+  </tr>`;
 }
 
 /* Report filter listeners */
@@ -3801,8 +3928,8 @@ function closeCtxMenu() {
 }
 
 /* ── APPLY STATUS UPDATE (with optional note, scope) ── */
-/* scope: 'all' = seluruh event, 'this' = hanya 1 tanggal (dateStr), 'custom' = pilihan tanggal */
-async function applyStatusUpdate(eventId, newStatus, additionalNote, scope, dateStr) {
+/* scope: 'all' = seluruh event (status global), 'this' = hanya 1 tanggal, 'range' = rentang tertentu */
+async function applyStatusUpdate(eventId, newStatus, additionalNote, scope, dateStr, rangeFrom, rangeTo) {
   const ev = events.find(e => e.id === eventId);
   if (!ev) return;
 
@@ -3813,11 +3940,15 @@ async function applyStatusUpdate(eventId, newStatus, additionalNote, scope, date
     ? `[${statusLabel} — ${timestamp}] ${additionalNote.trim()}` : '';
 
   const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
-
   let updateData = {};
 
-  if (scope === 'this' && isMultiDay && dateStr) {
-    // Partial update: simpan di dateStatuses[dateStr]
+  if (scope === 'all' || !isMultiDay) {
+    // Update status global event
+    updateData = { status: newStatus };
+    if (addedNote) updateData.statusNote = (ev.statusNote ? ev.statusNote + '\n' : '') + addedNote;
+
+  } else if (scope === 'this' && dateStr) {
+    // Parsial: hanya 1 tanggal
     const dateStatuses = { ...(ev.dateStatuses || {}) };
     const existingEntry = dateStatuses[dateStr] || {};
     const existingNote = existingEntry.statusNote || '';
@@ -3826,12 +3957,29 @@ async function applyStatusUpdate(eventId, newStatus, additionalNote, scope, date
       statusNote: addedNote ? (existingNote ? existingNote + '\n' + addedNote : addedNote) : existingNote
     };
     updateData = { dateStatuses };
-  } else {
-    // Update seluruh event (status global)
-    updateData = { status: newStatus };
-    if (addedNote) {
-      updateData.statusNote = (ev.statusNote ? ev.statusNote + '\n' : '') + addedNote;
+
+  } else if (scope === 'range' && rangeFrom && rangeTo) {
+    // Parsial: semua tanggal dalam range rangeFrom–rangeTo
+    const dateStatuses = { ...(ev.dateStatuses || {}) };
+    const cur = new Date(rangeFrom + 'T00:00:00');
+    const end = new Date(rangeTo + 'T00:00:00');
+    // Clamp ke batas event
+    const evStart = new Date(ev.dateStart + 'T00:00:00');
+    const evEnd   = new Date(ev.dateEnd   + 'T00:00:00');
+    const loopStart = cur < evStart ? evStart : cur;
+    const loopEnd   = end > evEnd   ? evEnd   : end;
+    const d = new Date(loopStart);
+    while (d <= loopEnd) {
+      const ds2 = toStr(d);
+      const existingEntry = dateStatuses[ds2] || {};
+      const existingNote = existingEntry.statusNote || '';
+      dateStatuses[ds2] = {
+        status: newStatus,
+        statusNote: addedNote ? (existingNote ? existingNote + '\n' + addedNote : addedNote) : existingNote
+      };
+      d.setDate(d.getDate() + 1);
     }
+    updateData = { dateStatuses };
   }
 
   if (useFirebase) {
@@ -3842,7 +3990,11 @@ async function applyStatusUpdate(eventId, newStatus, additionalNote, scope, date
     rebuildFilters(); renderCalendar();
     if (selectedDate) renderPanel(selectedDate);
   }
-  showToast(`✅ Status → ${SM2[newStatus]}${scope==='this'&&dateStr?' ('+fmtDate(dateStr)+')':''}`);
+
+  const toastSuffix = scope === 'this' && dateStr ? ` (${fmtDate(dateStr)})`
+    : scope === 'range' && rangeFrom && rangeTo ? ` (${fmtDate(rangeFrom)}–${fmtDate(rangeTo)})`
+    : '';
+  showToast(`✅ Status → ${SM2[newStatus]}${toastSuffix}`);
 }
 
 /* Helper: ambil status efektif untuk tanggal tertentu */
@@ -3870,10 +4022,10 @@ function openStatusNoteModal(eventId, newStatus, dateStr) {
 
   const SM = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel'};
   const statusColors = {
-    achieve: {bg:'var(--s-achieve-bg)',tx:'var(--s-achieve-tx)'},
-    not_achieve: {bg:'var(--s-not-bg)',tx:'var(--s-not-tx)'},
-    pending: {bg:'var(--s-pending-bg)',tx:'var(--s-pending-tx)'},
-    cancel: {bg:'var(--s-cancel-bg)',tx:'var(--s-cancel-tx)'},
+    achieve:     {bg:'var(--s-achieve-bg)', tx:'var(--s-achieve-tx)'},
+    not_achieve: {bg:'var(--s-not-bg)',     tx:'var(--s-not-tx)'},
+    pending:     {bg:'var(--s-pending-bg)', tx:'var(--s-pending-tx)'},
+    cancel:      {bg:'var(--s-cancel-bg)',  tx:'var(--s-cancel-tx)'},
   };
   const sc = statusColors[newStatus] || statusColors.pending;
   const statusIcons = {achieve:'✓', not_achieve:'✗', cancel:'✕', pending:'⟳'};
@@ -3890,8 +4042,8 @@ function openStatusNoteModal(eventId, newStatus, dateStr) {
   badge.style.color = sc.tx;
   badge.innerHTML = `${statusIcons[newStatus]||''} ${SM[newStatus]}`;
 
-  // Show previous note if any (untuk tanggal ini atau global)
-  const prevNoteEl = document.getElementById('snPrevNote');
+  // Previous note (efektif untuk tanggal ini)
+  const prevNoteEl   = document.getElementById('snPrevNote');
   const prevNoteText = document.getElementById('snPrevNoteText');
   const existingStatusNote = getEffectiveStatusNote(ev, dateStr || '');
   if (existingStatusNote) {
@@ -3901,40 +4053,55 @@ function openStatusNoteModal(eventId, newStatus, dateStr) {
     prevNoteEl.style.display = 'none';
   }
 
-  // Scope section: tampilkan jika event multi-hari
+  // Scope section
   const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
   const scopeSection = document.getElementById('snScopeSection');
+
   if (isMultiDay) {
     scopeSection.style.display = 'block';
-    // Set sub-labels
-    const thisSub = document.getElementById('snScopeThisSub');
-    const allSub  = document.getElementById('snScopeAllSub');
+
+    // Sub-labels
+    const thisSub  = document.getElementById('snScopeThisSub');
+    const allSub   = document.getElementById('snScopeAllSub');
     if (thisSub) thisSub.textContent = dateStr ? fmtDate(dateStr) : 'Tanggal ini';
     if (allSub)  allSub.textContent  = `${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`;
-    // Default: 'this' jika ada dateStr, else 'all'
-    const radioThis = document.querySelector('input[name=snScope][value=this]');
-    const radioAll  = document.querySelector('input[name=snScope][value=all]');
-    if (dateStr && radioThis) radioThis.checked = true;
-    else if (radioAll) radioAll.checked = true;
-    document.getElementById('snScopeThisLabel').classList.toggle('selected', !!(dateStr));
-    document.getElementById('snScopeAllLabel').classList.toggle('selected', !dateStr);
+
+    // Pre-fill range fields dengan batas event
+    const rfrom = document.getElementById('snRangeFrom');
+    const rto   = document.getElementById('snRangeTo');
+    if (rfrom) { rfrom.min = ev.dateStart; rfrom.max = ev.dateEnd; rfrom.value = dateStr || ev.dateStart; }
+    if (rto)   { rto.min   = ev.dateStart; rto.max   = ev.dateEnd; rto.value   = dateStr || ev.dateEnd; }
+
+    // Range hint
+    const hint = document.getElementById('snRangeHint');
+    if (hint) hint.textContent = `Batas event: ${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`;
+
+    // Default: 'this'
+    const radioThis  = document.querySelector('input[name=snScope][value=this]');
+    if (radioThis) radioThis.checked = true;
+    document.getElementById('snScopeThisLabel')?.classList.add('selected');
+    document.getElementById('snScopeRangeLabel')?.classList.remove('selected');
+    document.getElementById('snScopeAllLabel')?.classList.remove('selected');
+    document.getElementById('snRangeFields').style.display = 'none';
+
   } else {
     scopeSection.style.display = 'none';
   }
 
-  // Clear note field
   document.getElementById('snNote').value = '';
-
   document.getElementById('statusNoteOverlay').classList.add('open');
-  setTimeout(() => document.getElementById('snNote').focus(), 100);
+  setTimeout(() => document.getElementById('snNote').focus(), 120);
 }
 
-// Scope radio styling
-document.querySelectorAll('input[name=snScope]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    document.getElementById('snScopeThisLabel').classList.toggle('selected', radio.value !== 'all' || !document.querySelector('input[name=snScope][value=all]').checked);
-    document.getElementById('snScopeAllLabel').classList.toggle('selected', radio.value === 'all');
-  });
+// Scope radio — toggle range sub-form + selected class
+document.addEventListener('change', e => {
+  const radio = e.target.closest('input[name=snScope]');
+  if (!radio) return;
+  document.getElementById('snScopeThisLabel')?.classList.toggle('selected',  radio.value === 'this');
+  document.getElementById('snScopeRangeLabel')?.classList.toggle('selected', radio.value === 'range');
+  document.getElementById('snScopeAllLabel')?.classList.toggle('selected',   radio.value === 'all');
+  const rangeFields = document.getElementById('snRangeFields');
+  if (rangeFields) rangeFields.style.display = radio.value === 'range' ? 'block' : 'none';
 });
 
 document.getElementById('closeStatusNote').addEventListener('click', () => {
@@ -3950,17 +4117,24 @@ document.getElementById('statusNoteOverlay').addEventListener('click', e => {
 document.getElementById('snSaveBtn').addEventListener('click', async () => {
   if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return; }
   const note = document.getElementById('snNote').value;
-  // Tentukan scope berdasarkan radio button
-  const radioAll  = document.querySelector('input[name=snScope][value=all]');
-  const radioThis = document.querySelector('input[name=snScope][value=this]');
   const scopeSection = document.getElementById('snScopeSection');
+  const activeRadio = document.querySelector('input[name=snScope]:checked');
   let scope = 'all';
-  if (scopeSection.style.display !== 'none' && radioThis && radioThis.checked) {
-    scope = 'this';
+  let rangeFrom = null, rangeTo = null;
+
+  if (scopeSection.style.display !== 'none' && activeRadio) {
+    scope = activeRadio.value; // 'this' | 'range' | 'all'
+    if (scope === 'range') {
+      rangeFrom = document.getElementById('snRangeFrom')?.value || null;
+      rangeTo   = document.getElementById('snRangeTo')?.value   || null;
+      if (!rangeFrom || !rangeTo) { showToast('⚠️ Lengkapi rentang tanggal'); return; }
+      if (rangeFrom > rangeTo)    { showToast('⚠️ Tanggal mulai harus ≤ tanggal selesai'); return; }
+    }
   }
+
   document.getElementById('snSaveBtn').disabled = true;
   try {
-    await applyStatusUpdate(snPendingEventId, snPendingStatus, note, scope, snPendingDate);
+    await applyStatusUpdate(snPendingEventId, snPendingStatus, note, scope, snPendingDate, rangeFrom, rangeTo);
     document.getElementById('statusNoteOverlay').classList.remove('open');
   } catch(e) { showToast('❌ ' + e.message); }
   finally { document.getElementById('snSaveBtn').disabled = false; }
@@ -4004,19 +4178,19 @@ ctxMenu.addEventListener('click', async e => {
     return;
   }
 
-  // Klik pada item status → langsung update, scope 'all' (atau 'this' jika ada dateStr dan multi-day)
+  // Klik pada item status → langsung update
+  // Multi-day: default parsial (tanggal diklik). Single-day: update global.
   const item = e.target.closest('.ctx-item[data-status]');
   if (!item || !ctxTargetId) return;
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === ctxTargetId);
   if (!ev) { closeCtxMenu(); return; }
-  const currentId = ctxTargetId;
+  const currentId    = ctxTargetId;
   const currentDate3 = ctxTargetDate;
   closeCtxMenu();
-  if (ev.status === newStatus && !ev.dateStatuses) return;
   const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
   const scope = (isMultiDay && currentDate3) ? 'this' : 'all';
-  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate3);
+  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate3, null, null);
 });
 
 // Tutup menu saat klik di luar atau Escape
@@ -4084,13 +4258,12 @@ mobileCtxSheet.addEventListener('click', async e => {
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === mobileCtxTargetId);
   if (!ev) { closeMobileCtxSheet(); return; }
-  const currentId = mobileCtxTargetId;
+  const currentId    = mobileCtxTargetId;
   const currentDate4 = mobileCtxTargetDate;
   closeMobileCtxSheet();
-  if (ev.status === newStatus && !ev.dateStatuses) return;
   const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
   const scope = (isMultiDay && currentDate4) ? 'this' : 'all';
-  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate4);
+  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate4, null, null);
 });
 
 // Long press on chips for mobile context menu
