@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover"/>
 <title>Kalender Tim</title>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -80,15 +80,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 /* Wrapper pakai border, bukan child masing-masing — agar lebar grid header = body */
 .cal-grid-wrap{border:1.5px solid var(--rule);border-radius:var(--r-xl);overflow:hidden}
 .cal-hdr-sticky-wrap{position:sticky;top:0;z-index:100;background:var(--bg-dk);box-shadow:0 2px 8px rgba(28,25,23,.06)}
-.cal-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:var(--ink);border-bottom:1.5px solid var(--rule);border-top-left-radius:var(--r-xl);border-top-right-radius:var(--r-xl)}
+/* FIX MOBILE GRID: header & body pakai table-layout agar kolom selalu sinkron */
+.cal-hdr{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  background:var(--ink);
+  border-bottom:1.5px solid var(--rule);
+  border-top-left-radius:var(--r-xl);
+  border-top-right-radius:var(--r-xl);
+  width:100%;
+  box-sizing:border-box;
+}
 /* FIX: Day headers more visible and colors adjusted for dark background */
-.dh{text-align:center;padding:13px 4px;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.8)}
+.dh{text-align:center;padding:13px 4px;font-size:.75rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,0.8);min-width:0;overflow:hidden}
 .dh.sun{color:#FCA5A5;font-weight:800}
 .dh.sat{color:#93C5FD;font-weight:800}
-.cal-body{display:grid;grid-template-columns:repeat(7,1fr);border-radius:0 0 var(--r-xl) var(--r-xl);overflow:hidden}
+.cal-body{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  border-radius:0 0 var(--r-xl) var(--r-xl);
+  overflow:hidden;
+  width:100%;
+  box-sizing:border-box;
+}
 
 /* ── DAY CELLS ── FIX #1: up to 5 events, auto height, tidy */
-.dc{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);min-height:clamp(80px,10vw,130px);padding:0;position:relative;background:var(--surface);overflow:visible;transition:background .12s;display:flex;flex-direction:column}
+.dc{border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);min-height:clamp(80px,10vw,130px);padding:0;position:relative;background:var(--surface);overflow:hidden;transition:background .12s;display:flex;flex-direction:column;min-width:0;box-sizing:border-box;width:100%}
 .dc::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;opacity:0}
 .dc:nth-child(7n){border-right:none}
 .dc:hover{background:#FAF8F5}
@@ -248,11 +265,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
   .main-row{flex-direction:column;gap:0}
   .panel-col{display:none!important} /* panel handled as bottom sheet on mobile */
   .cal-col{width:100%}
+  /* CRITICAL FIX: kalender grid harus penuh lebar dan kolom sinkron dengan header */
+  .cal-grid-wrap{width:100%;overflow:hidden}
+  .cal-hdr,.cal-body{
+    display:grid!important;
+    grid-template-columns:repeat(7,minmax(0,1fr))!important;
+    width:100%!important;
+    box-sizing:border-box!important;
+  }
   /* Smaller cells on mobile */
-  .dc{min-height:56px}
+  .dc{min-height:56px;overflow:hidden;min-width:0;box-sizing:border-box}
   .dc-head{padding:4px 3px 2px}
   .day-num{width:21px;height:21px;font-size:.74rem}
-  .chip{font-size:.58rem;padding:2px 4px;line-height:1.4}
+  .chip{font-size:.58rem;padding:2px 4px;line-height:1.4;word-break:break-word;white-space:normal}
   .month-label{font-size:.9rem;min-width:120px}
   .month-display-title{font-size:1.6rem}
   /* Control bar stacks vertically */
@@ -522,9 +547,12 @@ body.read-only .readonly-badge{display:inline-flex}
 .chip+.chip{border-top:1.5px dashed rgba(255,255,255,.3)}
 .chip-more{font-size:.58rem;color:var(--ink-lt);padding:2px 7px;display:block;cursor:pointer;line-height:1.6;border-top:1.5px dashed var(--rule)}
 
-/* ── CHIP COLLAPSED STATE: hanya tampilkan PIC ── */
+/* ── CHIP COLLAPSED STATE: tampilkan status + PIC ── */
 .chip.collapsed{padding:2px 7px;line-height:1.4}
 .chip.collapsed .chip-full-label{display:none}
+/* Status badge di collapsed chip */
+.chip-status-label{display:none;align-items:center;gap:3px;font-size:.6rem;font-weight:800;letter-spacing:.01em;margin-bottom:1px;opacity:.9}
+.chip.collapsed .chip-status-label{display:flex}
 /* PIC label always visible */
 .chip-pic-label{display:flex;align-items:center;flex-wrap:wrap;gap:3px;font-size:.63rem;font-weight:800;letter-spacing:.02em;margin-bottom:2px}
 .chip-pic-icon{font-size:9px;opacity:.85;flex-shrink:0}
@@ -549,6 +577,10 @@ body.read-only .readonly-badge{display:inline-flex}
 
 /* ── STATUS CHECK ICON on chip ── */
 .chip-check{display:inline-block;margin-left:3px;opacity:.85}
+
+/* ── PARTIAL STATUS BADGE: indicator di scope section ── */
+.sn-partial-info{font-size:.68rem;color:var(--ink-lt);display:flex;align-items:center;gap:5px;margin-top:6px;padding:5px 8px;background:var(--bg);border-radius:var(--r-sm);border:1px solid var(--rule)}
+.sn-partial-info i{font-size:11px;flex-shrink:0}
 
 /* ── PANEL: compact ── */
 .panel-event-item{border:1px solid var(--rule);border-radius:var(--r-md);padding:7px 10px;margin-bottom:5px;cursor:pointer;transition:box-shadow .14s;display:flex;gap:8px;align-items:flex-start;position:relative}
@@ -2111,7 +2143,9 @@ async function renderCalendar() {
     const MAX=5; /* FIX #1 */
     let chipsHtml=evsSorted.slice(0,MAX).map(e=>{
       const t=getTypeById(e.type);
-      const checkIcon=e.status==='achieve'?'✓ ':e.status==='not_achieve'?'✗ ':e.status==='cancel'?'⊗ ':'';
+      // Gunakan status efektif untuk tanggal ini (per-date status override)
+      const effectiveStatus = getEffectiveStatus(e, ds);
+      const checkIcon=effectiveStatus==='achieve'?'✓ ':effectiveStatus==='not_achieve'?'✗ ':effectiveStatus==='cancel'?'⊗ ':'';
       const hiddenCls=e.hidden?' is-hidden-event':'';
       const pics=e.pics||[];
       // Setiap PIC tampil sebagai capsule terpisah
@@ -2120,15 +2154,19 @@ async function renderCalendar() {
         ? pics.map(p=>`<span class="pic-pill" style="${picPillStyle}">${escHtml(p)}</span>`).join('')
         : `<span class="pic-pill" style="${picPillStyle}">—</span>`;
       const picLabel=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i>${picPillsHtml}</span>`;
+      // Status label untuk collapsed state
+      const SM_STATUS={achieve:'✓ Achieve',not_achieve:'✗ Not Achieve',pending:'⟳ In Process',cancel:'⊗ Cancel'};
+      const statusText=effectiveStatus?SM_STATUS[effectiveStatus]:'';
+      const statusLabel=statusText?`<span class="chip-status-label">${escHtml(statusText)}</span>`:'';
       if(!c.cur){
         // Chip other-month: warna sama tapi opacity sangat rendah & italic, tidak clickable
         const isCollapsedOther=(chipCollapseState[e.id]===true)?'collapsed':'';
-        return `<span class="chip ${isCollapsedOther} chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none">${picLabel}<span class="chip-full-label">${escHtml(e.title)}</span></span>`;
+        return `<span class="chip ${isCollapsedOther} chip-other-month${hiddenCls}" style="background:${t.chip};opacity:.25;font-style:italic;pointer-events:none">${statusLabel}${picLabel}<span class="chip-full-label">${escHtml(e.title)}</span></span>`;
       }
       const isCollapsed=(chipCollapseState[e.id]===true)?'collapsed':'';
       // chip-full-label hanya judul (tanpa PIC, karena PIC sudah tampil di pic-label)
       const titleOnly = `${checkIcon}${escHtml(e.title)}`;
-      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${picLabel}<span class="chip-full-label">${titleOnly}</span></span>`;
+      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${statusLabel}${picLabel}<span class="chip-full-label">${titleOnly}</span></span>`;
     }).join('');
     if(c.cur&&evsSorted.length>MAX) chipsHtml+=`<span class="chip-more">+${evsSorted.length-MAX} lainnya</span>`;
 
@@ -2269,14 +2307,19 @@ function renderPanel(ds) {
     const t=getTypeById(e.type);
     const pics=e.pics||[];
     const dl=e.dateEnd&&e.dateEnd!==e.dateStart?`${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}`:fmtDate(e.dateStart);
-    const spIcon=e.status==='achieve'?'✓':e.status==='not_achieve'?'✗':'';
-    const spColor=e.status==='achieve'?'var(--s-achieve-tx)':e.status==='not_achieve'?'var(--s-not-tx)':e.status==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
-    const spBg=e.status==='achieve'?'var(--s-achieve-bg)':e.status==='not_achieve'?'var(--s-not-bg)':e.status==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
-    const sp=e.status?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[e.status]}</span>`:'';
+    // Gunakan effective status untuk tanggal ini
+    const effStatus = getEffectiveStatus(e, ds);
+    const effStatusNote = getEffectiveStatusNote(e, ds);
+    const hasDateOverride = e.dateStatuses && e.dateStatuses[ds] && e.dateStatuses[ds].status;
+    const spIcon=effStatus==='achieve'?'✓':effStatus==='not_achieve'?'✗':'';
+    const spColor=effStatus==='achieve'?'var(--s-achieve-tx)':effStatus==='not_achieve'?'var(--s-not-tx)':effStatus==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
+    const spBg=effStatus==='achieve'?'var(--s-achieve-bg)':effStatus==='not_achieve'?'var(--s-not-bg)':effStatus==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
+    const partialBadge=hasDateOverride?`<span style="font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:100px;background:#EDE9FE;color:#5B21B6;margin-left:3px" title="Status parsial untuk tanggal ini">📅 parsial</span>`:'';
+    const sp=effStatus?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[effStatus]}</span>${partialBadge}`:'';
     const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:10px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
-    const statusNoteContent=e.statusNote?escHtml(e.statusNote.split('\n').pop()):'';
+    const statusNoteContent=effStatusNote?escHtml(effStatusNote.split('\n').pop()):'';
     const editBtnHtml=canWrite?`<button class="pei-note-edit-btn" onclick="event.stopPropagation();startEditStatusNote('${e.id}')" title="Edit catatan"><i class="ti ti-pencil" style="font-size:10px"></i> edit</button>`:'';
-    const statusNoteHtml=e.statusNote
+    const statusNoteHtml=effStatusNote
       ?`<div class="pei-note-wrap" data-note-id="${e.id}"><div class="pei-note" style="background:#EDE9FE;border-left-color:#7C3AED;color:#3B1C8C;margin-top:3px"><i class="ti ti-message-circle" style="font-size:10px;vertical-align:-1px;color:#7C3AED"></i> ${statusNoteContent}${editBtnHtml}</div></div>`
       :(canWrite?`<div class="pei-note-wrap" data-note-id="${e.id}"><button class="pei-note-edit-btn" style="opacity:1;pointer-events:auto;position:static;transform:none;margin-top:3px;display:inline-flex" onclick="event.stopPropagation();startEditStatusNote('${e.id}')" title="Tambah catatan"><i class="ti ti-plus" style="font-size:10px"></i> + Catatan Tambahan</button></div>`:'');
     const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;margin-left:4px">🔒 Tersembunyi</span>`:'';
@@ -3758,42 +3801,58 @@ function closeCtxMenu() {
 }
 
 /* ── APPLY STATUS UPDATE (with optional note, scope) ── */
-async function applyStatusUpdate(eventId, newStatus, additionalNote, scope) {
+/* scope: 'all' = seluruh event, 'this' = hanya 1 tanggal (dateStr), 'custom' = pilihan tanggal */
+async function applyStatusUpdate(eventId, newStatus, additionalNote, scope, dateStr) {
   const ev = events.find(e => e.id === eventId);
   if (!ev) return;
-  // Build update payload
-  const updateData = { status: newStatus };
-  if (additionalNote && additionalNote.trim()) {
-    // Append additional note separate from original note
-    const existingNote = ev.note || '';
-    const timestamp = new Date().toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
-    const SM2 = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel'};
-    const statusLabel = SM2[newStatus] || newStatus;
-    const addedNote = `[${statusLabel} — ${timestamp}] ${additionalNote.trim()}`;
-    updateData.statusNote = existingNote
-      ? existingNote + '\n' + addedNote
-      : addedNote;
-    // Keep original note intact, statusNote is the addendum field
-    updateData.note = existingNote;
-    updateData.statusNote = (ev.statusNote ? ev.statusNote + '\n' : '') + addedNote;
+
+  const SM2 = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel'};
+  const statusLabel = SM2[newStatus] || newStatus;
+  const timestamp = new Date().toLocaleDateString('id-ID', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const addedNote = additionalNote && additionalNote.trim()
+    ? `[${statusLabel} — ${timestamp}] ${additionalNote.trim()}` : '';
+
+  const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
+
+  let updateData = {};
+
+  if (scope === 'this' && isMultiDay && dateStr) {
+    // Partial update: simpan di dateStatuses[dateStr]
+    const dateStatuses = { ...(ev.dateStatuses || {}) };
+    const existingEntry = dateStatuses[dateStr] || {};
+    const existingNote = existingEntry.statusNote || '';
+    dateStatuses[dateStr] = {
+      status: newStatus,
+      statusNote: addedNote ? (existingNote ? existingNote + '\n' + addedNote : addedNote) : existingNote
+    };
+    updateData = { dateStatuses };
+  } else {
+    // Update seluruh event (status global)
+    updateData = { status: newStatus };
+    if (addedNote) {
+      updateData.statusNote = (ev.statusNote ? ev.statusNote + '\n' : '') + addedNote;
+    }
   }
 
-  const SM = {achieve:'Achieve', not_achieve:'Not Achieve', pending:'In Process', cancel:'Cancel'};
-
   if (useFirebase) {
-    if (scope === 'all' && ev.dateEnd && ev.dateStart !== ev.dateEnd) {
-      // Update this single document (represents the whole range)
-      await db.collection(EVENTS_COLL).doc(ev.id).update(updateData);
-    } else {
-      await db.collection(EVENTS_COLL).doc(ev.id).update(updateData);
-    }
+    await db.collection(EVENTS_COLL).doc(ev.id).update(updateData);
   } else {
     events = events.map(e => e.id === ev.id ? { ...e, ...updateData } : e);
     localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
     rebuildFilters(); renderCalendar();
     if (selectedDate) renderPanel(selectedDate);
   }
-  showToast(`✅ Status → ${SM[newStatus]}`);
+  showToast(`✅ Status → ${SM2[newStatus]}${scope==='this'&&dateStr?' ('+fmtDate(dateStr)+')':''}`);
+}
+
+/* Helper: ambil status efektif untuk tanggal tertentu */
+function getEffectiveStatus(ev, dateStr) {
+  if (ev.dateStatuses && ev.dateStatuses[dateStr]) return ev.dateStatuses[dateStr].status;
+  return ev.status || null;
+}
+function getEffectiveStatusNote(ev, dateStr) {
+  if (ev.dateStatuses && ev.dateStatuses[dateStr]) return ev.dateStatuses[dateStr].statusNote || '';
+  return ev.statusNote || '';
 }
 
 /* ── STATUS NOTE MODAL ── */
@@ -3831,10 +3890,10 @@ function openStatusNoteModal(eventId, newStatus, dateStr) {
   badge.style.color = sc.tx;
   badge.innerHTML = `${statusIcons[newStatus]||''} ${SM[newStatus]}`;
 
-  // Show previous note if any
+  // Show previous note if any (untuk tanggal ini atau global)
   const prevNoteEl = document.getElementById('snPrevNote');
   const prevNoteText = document.getElementById('snPrevNoteText');
-  const existingStatusNote = ev.statusNote || '';
+  const existingStatusNote = getEffectiveStatusNote(ev, dateStr || '');
   if (existingStatusNote) {
     prevNoteEl.style.display = 'flex';
     prevNoteText.textContent = 'Catatan sebelumnya: ' + existingStatusNote.split('\n').pop();
@@ -3842,9 +3901,26 @@ function openStatusNoteModal(eventId, newStatus, dateStr) {
     prevNoteEl.style.display = 'none';
   }
 
-  // Scope section: hidden — modal ini hanya untuk isian catatan tambahan
+  // Scope section: tampilkan jika event multi-hari
+  const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
   const scopeSection = document.getElementById('snScopeSection');
-  scopeSection.style.display = 'none';
+  if (isMultiDay) {
+    scopeSection.style.display = 'block';
+    // Set sub-labels
+    const thisSub = document.getElementById('snScopeThisSub');
+    const allSub  = document.getElementById('snScopeAllSub');
+    if (thisSub) thisSub.textContent = dateStr ? fmtDate(dateStr) : 'Tanggal ini';
+    if (allSub)  allSub.textContent  = `${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`;
+    // Default: 'this' jika ada dateStr, else 'all'
+    const radioThis = document.querySelector('input[name=snScope][value=this]');
+    const radioAll  = document.querySelector('input[name=snScope][value=all]');
+    if (dateStr && radioThis) radioThis.checked = true;
+    else if (radioAll) radioAll.checked = true;
+    document.getElementById('snScopeThisLabel').classList.toggle('selected', !!(dateStr));
+    document.getElementById('snScopeAllLabel').classList.toggle('selected', !dateStr);
+  } else {
+    scopeSection.style.display = 'none';
+  }
 
   // Clear note field
   document.getElementById('snNote').value = '';
@@ -3874,9 +3950,17 @@ document.getElementById('statusNoteOverlay').addEventListener('click', e => {
 document.getElementById('snSaveBtn').addEventListener('click', async () => {
   if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return; }
   const note = document.getElementById('snNote').value;
+  // Tentukan scope berdasarkan radio button
+  const radioAll  = document.querySelector('input[name=snScope][value=all]');
+  const radioThis = document.querySelector('input[name=snScope][value=this]');
+  const scopeSection = document.getElementById('snScopeSection');
+  let scope = 'all';
+  if (scopeSection.style.display !== 'none' && radioThis && radioThis.checked) {
+    scope = 'this';
+  }
   document.getElementById('snSaveBtn').disabled = true;
   try {
-    await applyStatusUpdate(snPendingEventId, snPendingStatus, note, 'all');
+    await applyStatusUpdate(snPendingEventId, snPendingStatus, note, scope, snPendingDate);
     document.getElementById('statusNoteOverlay').classList.remove('open');
   } catch(e) { showToast('❌ ' + e.message); }
   finally { document.getElementById('snSaveBtn').disabled = false; }
@@ -3920,17 +4004,19 @@ ctxMenu.addEventListener('click', async e => {
     return;
   }
 
-  // Klik pada item status → langsung update, scope 'all'
+  // Klik pada item status → langsung update, scope 'all' (atau 'this' jika ada dateStr dan multi-day)
   const item = e.target.closest('.ctx-item[data-status]');
   if (!item || !ctxTargetId) return;
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === ctxTargetId);
   if (!ev) { closeCtxMenu(); return; }
   const currentId = ctxTargetId;
+  const currentDate3 = ctxTargetDate;
   closeCtxMenu();
-  if (ev.status === newStatus) return;
-
-  await applyStatusUpdate(currentId, newStatus, '', 'all');
+  if (ev.status === newStatus && !ev.dateStatuses) return;
+  const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
+  const scope = (isMultiDay && currentDate3) ? 'this' : 'all';
+  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate3);
 });
 
 // Tutup menu saat klik di luar atau Escape
@@ -3992,17 +4078,19 @@ mobileCtxSheet.addEventListener('click', async e => {
     return;
   }
 
-  // Status item → langsung update, scope 'all'
+  // Status item → langsung update, scope berdasarkan multi-day
   const item = e.target.closest('.mctx-item');
   if (!item || !mobileCtxTargetId) return;
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === mobileCtxTargetId);
   if (!ev) { closeMobileCtxSheet(); return; }
   const currentId = mobileCtxTargetId;
+  const currentDate4 = mobileCtxTargetDate;
   closeMobileCtxSheet();
-  if (ev.status === newStatus) return;
-
-  await applyStatusUpdate(currentId, newStatus, '', 'all');
+  if (ev.status === newStatus && !ev.dateStatuses) return;
+  const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
+  const scope = (isMultiDay && currentDate4) ? 'this' : 'all';
+  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate4);
 });
 
 // Long press on chips for mobile context menu
