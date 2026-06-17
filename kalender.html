@@ -3654,17 +3654,20 @@ function buildRptRow(e, SM) {
   const statusTxt = SM[globalStatus] || globalStatus || '–';
   const accentColor = hexDarken(t.chip, 0.28);
 
-  // Partial status: apakah ada dateStatuses yang berbeda-beda?
+  // Partial status: tampilkan HANYA jika ada tanggal yang statusnya BERBEDA dari status global
   const dateStatuses = e.dateStatuses || {};
-  const dsEntries = Object.entries(dateStatuses).filter(([,v]) => v && v.status);
-  const hasPartial = dsEntries.length > 0;
+  const dsEntries = Object.entries(dateStatuses).filter(([, v]) => v && v.status);
+  // Saring: hanya tanggal yang statusnya berbeda dari global (atau tidak ada global)
+  const diffEntries = dsEntries.filter(([, v]) => v.status !== globalStatus);
+  const hasPartial = diffEntries.length > 0;
+  const hasSamePartial = dsEntries.length > 0 && diffEntries.length === 0; // semua parsial = global
 
-  // Build partial status summary
+  // Build partial status summary — hanya untuk yang berbeda dari global
   let partialHtml = '';
   if (hasPartial) {
     // Group tanggal berdasarkan status
     const byStatus = {};
-    dsEntries.forEach(([ds, v]) => {
+    diffEntries.forEach(([ds, v]) => {
       if (!byStatus[v.status]) byStatus[v.status] = [];
       byStatus[v.status].push(ds);
     });
@@ -3672,7 +3675,7 @@ function buildRptRow(e, SM) {
       const stTx = st==='achieve'?'var(--s-achieve-tx)':st==='not_achieve'?'var(--s-not-tx)':st==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
       const stBg = st==='achieve'?'var(--s-achieve-bg)':st==='not_achieve'?'var(--s-not-bg)':st==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
       // Compactkan tanggal menjadi ranges
-      const sortedDates = dates.sort();
+      const sortedDates = [...dates].sort();
       const ranges = [];
       let rStart = sortedDates[0], rEnd = sortedDates[0];
       for (let i = 1; i <= sortedDates.length; i++) {
@@ -3688,14 +3691,23 @@ function buildRptRow(e, SM) {
       return `<span class="rpt-status" style="background:${stBg};color:${stTx};font-size:.6rem;padding:2px 6px">${SM[st]||st}: ${ranges.join(', ')}</span>`;
     }).join(' ');
     partialHtml = `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;align-items:center">
-      <i class="ti ti-calendar-stats" style="font-size:10px;color:#7C3AED" title="Memiliki status parsial per tanggal"></i>
+      <i class="ti ti-calendar-stats" style="font-size:10px;color:#7C3AED" title="Ada status berbeda di tanggal tertentu"></i>
       ${parts}
     </div>`;
   }
 
-  const statusCell = globalStatus
-    ? `<span class="rpt-status" style="background:${statusBg};color:${statusTx}">${statusTxt}</span>${partialHtml}`
-    : (hasPartial ? partialHtml : '–');
+  // Status cell: global badge + parsial (hanya jika ada yang berbeda)
+  // Jika tidak ada global tapi ada parsial, tampilkan parsial saja
+  let statusCell;
+  if (globalStatus) {
+    statusCell = `<span class="rpt-status" style="background:${statusBg};color:${statusTx}">${statusTxt}</span>`;
+    if (hasPartial) statusCell += partialHtml;
+    // Jika hasSamePartial: tidak tambah apa-apa (sudah ada global)
+  } else if (hasPartial) {
+    statusCell = partialHtml;
+  } else {
+    statusCell = '–';
+  }
 
   return `<tr class="rpt-row" data-id="${escHtml(e.id)}">
     <td class="rpt-date" style="white-space:nowrap;width:1%"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.chip};margin-right:6px;vertical-align:middle"></span>${dl}</td>
@@ -4178,8 +4190,8 @@ ctxMenu.addEventListener('click', async e => {
     return;
   }
 
-  // Klik pada item status → langsung update
-  // Multi-day: default parsial (tanggal diklik). Single-day: update global.
+  // Klik pada item status
+  // Multi-day: buka modal scope picker. Single-day: langsung update.
   const item = e.target.closest('.ctx-item[data-status]');
   if (!item || !ctxTargetId) return;
   const newStatus = item.dataset.status;
@@ -4189,8 +4201,13 @@ ctxMenu.addEventListener('click', async e => {
   const currentDate3 = ctxTargetDate;
   closeCtxMenu();
   const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
-  const scope = (isMultiDay && currentDate3) ? 'this' : 'all';
-  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate3, null, null);
+  if (isMultiDay) {
+    // Buka modal dengan scope picker (tanggal ini / range / semua)
+    openStatusNoteModal(currentId, newStatus, currentDate3);
+  } else {
+    // Single-day: langsung update tanpa modal
+    await applyStatusUpdate(currentId, newStatus, '', 'all', null, null, null);
+  }
 });
 
 // Tutup menu saat klik di luar atau Escape
@@ -4252,7 +4269,7 @@ mobileCtxSheet.addEventListener('click', async e => {
     return;
   }
 
-  // Status item → langsung update, scope berdasarkan multi-day
+  // Status item — multi-day buka modal scope, single-day langsung update
   const item = e.target.closest('.mctx-item');
   if (!item || !mobileCtxTargetId) return;
   const newStatus = item.dataset.status;
@@ -4262,8 +4279,11 @@ mobileCtxSheet.addEventListener('click', async e => {
   const currentDate4 = mobileCtxTargetDate;
   closeMobileCtxSheet();
   const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
-  const scope = (isMultiDay && currentDate4) ? 'this' : 'all';
-  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate4, null, null);
+  if (isMultiDay) {
+    openStatusNoteModal(currentId, newStatus, currentDate4);
+  } else {
+    await applyStatusUpdate(currentId, newStatus, '', 'all', null, null, null);
+  }
 });
 
 // Long press on chips for mobile context menu
