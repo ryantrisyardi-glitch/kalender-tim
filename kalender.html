@@ -186,6 +186,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .ctx-item .ctx-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .ctx-sep{height:1px;background:var(--rule);margin:4px 2px}
 /* Pen icon inside ctx-item for adding note */
+.ctx-row{display:flex;align-items:center;gap:0}
+.ctx-row .ctx-item{flex:1;border-radius:0}
+.ctx-row .ctx-note-btn{flex-shrink:0;border:none;background:transparent;cursor:pointer;padding:6px 8px;color:var(--ink-lt);display:flex;align-items:center;border-radius:var(--r-sm);transition:background .12s,color .12s}
+.ctx-row .ctx-note-btn:hover{background:var(--bg-dk);color:#7C3AED}
 .ctx-note-btn{margin-left:auto;padding:2px 5px;border-radius:var(--r-sm);background:rgba(0,0,0,.06);font-size:.7rem;color:var(--ink-lt);display:inline-flex;align-items:center;gap:2px;transition:background .12s,color .12s;flex-shrink:0;border:1px solid transparent}
 .ctx-note-btn:hover{background:var(--bg-dk);color:var(--ink);border-color:var(--rule)}
 
@@ -1235,25 +1239,33 @@ body.read-only .readonly-badge{display:inline-flex}
 <!-- Context Menu (must be in DOM before scripts run) -->
 <div id="ctxMenu" role="menu">
   <div class="ctx-label">Ubah Status</div>
-  <div class="ctx-item" data-status="pending">
-    <span class="ctx-dot" style="background:#D97706"></span>
-    <i class="ti ti-refresh" style="font-size:13px;color:#D97706"></i> In Process
-    <span class="ctx-note-btn" data-note-status="pending" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
+  <div class="ctx-row">
+    <div class="ctx-item" data-status="pending">
+      <span class="ctx-dot" style="background:#D97706"></span>
+      <i class="ti ti-refresh" style="font-size:13px;color:#D97706"></i> In Process
+    </div>
+    <button class="ctx-note-btn" data-note-status="pending" title="Pilih tanggal &amp; catatan"><i class="ti ti-pencil" style="font-size:11px"></i></button>
   </div>
-  <div class="ctx-item" data-status="achieve">
-    <span class="ctx-dot" style="background:#15803D"></span>
-    <i class="ti ti-circle-check" style="font-size:13px;color:#15803D"></i> Achieve
-    <span class="ctx-note-btn" data-note-status="achieve" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
+  <div class="ctx-row">
+    <div class="ctx-item" data-status="achieve">
+      <span class="ctx-dot" style="background:#15803D"></span>
+      <i class="ti ti-circle-check" style="font-size:13px;color:#15803D"></i> Achieve
+    </div>
+    <button class="ctx-note-btn" data-note-status="achieve" title="Pilih tanggal &amp; catatan"><i class="ti ti-pencil" style="font-size:11px"></i></button>
   </div>
-  <div class="ctx-item" data-status="not_achieve">
-    <span class="ctx-dot" style="background:#B91C1C"></span>
-    <i class="ti ti-circle-x" style="font-size:13px;color:#B91C1C"></i> Not Achieve
-    <span class="ctx-note-btn" data-note-status="not_achieve" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
+  <div class="ctx-row">
+    <div class="ctx-item" data-status="not_achieve">
+      <span class="ctx-dot" style="background:#B91C1C"></span>
+      <i class="ti ti-circle-x" style="font-size:13px;color:#B91C1C"></i> Not Achieve
+    </div>
+    <button class="ctx-note-btn" data-note-status="not_achieve" title="Pilih tanggal &amp; catatan"><i class="ti ti-pencil" style="font-size:11px"></i></button>
   </div>
-  <div class="ctx-item" data-status="cancel">
-    <span class="ctx-dot" style="background:#6B7280"></span>
-    <i class="ti ti-circle-off" style="font-size:13px;color:#6B7280"></i> Cancel
-    <span class="ctx-note-btn" data-note-status="cancel" title="Update status + tambah catatan"><i class="ti ti-pencil" style="font-size:11px"></i></span>
+  <div class="ctx-row">
+    <div class="ctx-item" data-status="cancel">
+      <span class="ctx-dot" style="background:#6B7280"></span>
+      <i class="ti ti-circle-off" style="font-size:13px;color:#6B7280"></i> Cancel
+    </div>
+    <button class="ctx-note-btn" data-note-status="cancel" title="Pilih tanggal &amp; catatan"><i class="ti ti-pencil" style="font-size:11px"></i></button>
   </div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" id="ctxCollapseItem">
@@ -3910,8 +3922,10 @@ function openCtxMenu(x, y, eventId, dateStr) {
   ctxTargetDate = dateStr || null;
   const ev = events.find(e => e.id === eventId);
   if (!ev) return;
+  // Highlight status efektif untuk tanggal ini (parsial override atau global)
+  const effectiveForDate = getEffectiveStatus(ev, dateStr || '') || ev.status || 'pending';
   ctxMenu.querySelectorAll('.ctx-item[data-status]').forEach(item => {
-    item.classList.toggle('active-status', item.dataset.status === (ev.status || 'pending'));
+    item.classList.toggle('active-status', item.dataset.status === effectiveForDate);
   });
   // Update collapse label
   const isCollapsed = chipCollapseState[eventId] === true;
@@ -4075,14 +4089,15 @@ function openStatusNoteModal(eventId, newStatus, dateStr) {
     // Sub-labels
     const thisSub  = document.getElementById('snScopeThisSub');
     const allSub   = document.getElementById('snScopeAllSub');
-    if (thisSub) thisSub.textContent = dateStr ? fmtDate(dateStr) : 'Tanggal ini';
+    const displayDate = dateStr || ev.dateStart;
+    if (thisSub) thisSub.textContent = fmtDate(displayDate);
     if (allSub)  allSub.textContent  = `${fmtDate(ev.dateStart)} – ${fmtDate(ev.dateEnd)}`;
 
     // Pre-fill range fields dengan batas event
     const rfrom = document.getElementById('snRangeFrom');
     const rto   = document.getElementById('snRangeTo');
-    if (rfrom) { rfrom.min = ev.dateStart; rfrom.max = ev.dateEnd; rfrom.value = dateStr || ev.dateStart; }
-    if (rto)   { rto.min   = ev.dateStart; rto.max   = ev.dateEnd; rto.value   = dateStr || ev.dateEnd; }
+    if (rfrom) { rfrom.min = ev.dateStart; rfrom.max = ev.dateEnd; rfrom.value = displayDate; }
+    if (rto)   { rto.min   = ev.dateStart; rto.max   = ev.dateEnd; rto.value   = displayDate; }
 
     // Range hint
     const hint = document.getElementById('snRangeHint');
@@ -4190,8 +4205,7 @@ ctxMenu.addEventListener('click', async e => {
     return;
   }
 
-  // Klik pada item status
-  // Multi-day: buka modal scope picker. Single-day: langsung update.
+  // Klik status langsung → update parsial hari itu saja (tanpa modal)
   const item = e.target.closest('.ctx-item[data-status]');
   if (!item || !ctxTargetId) return;
   const newStatus = item.dataset.status;
@@ -4201,13 +4215,9 @@ ctxMenu.addEventListener('click', async e => {
   const currentDate3 = ctxTargetDate;
   closeCtxMenu();
   const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
-  if (isMultiDay) {
-    // Buka modal dengan scope picker (tanggal ini / range / semua)
-    openStatusNoteModal(currentId, newStatus, currentDate3);
-  } else {
-    // Single-day: langsung update tanpa modal
-    await applyStatusUpdate(currentId, newStatus, '', 'all', null, null, null);
-  }
+  // Multi-day: parsial hari itu. Single-day: global.
+  const scope = (isMultiDay && currentDate3) ? 'this' : 'all';
+  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate3, null, null);
 });
 
 // Tutup menu saat klik di luar atau Escape
@@ -4239,9 +4249,10 @@ function openMobileCtxSheet(eventId, dateStr) {
   document.getElementById('mctxType').textContent = t.label;
   document.getElementById('mctxType').style.color = t.chip;
 
-  // Mark active status
+  // Highlight status efektif untuk tanggal ini
+  const effectiveMobile = getEffectiveStatus(ev, dateStr || '') || ev.status || 'pending';
   mobileCtxSheet.querySelectorAll('.mctx-item').forEach(item => {
-    item.classList.toggle('active-status', item.dataset.status === (ev.status || 'pending'));
+    item.classList.toggle('active-status', item.dataset.status === effectiveMobile);
   });
 
   mobileCtxSheet.classList.add('open');
@@ -4269,7 +4280,7 @@ mobileCtxSheet.addEventListener('click', async e => {
     return;
   }
 
-  // Status item — multi-day buka modal scope, single-day langsung update
+  // Klik status langsung → update parsial hari itu saja (tanpa modal)
   const item = e.target.closest('.mctx-item');
   if (!item || !mobileCtxTargetId) return;
   const newStatus = item.dataset.status;
@@ -4279,11 +4290,8 @@ mobileCtxSheet.addEventListener('click', async e => {
   const currentDate4 = mobileCtxTargetDate;
   closeMobileCtxSheet();
   const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
-  if (isMultiDay) {
-    openStatusNoteModal(currentId, newStatus, currentDate4);
-  } else {
-    await applyStatusUpdate(currentId, newStatus, '', 'all', null, null, null);
-  }
+  const scope = (isMultiDay && currentDate4) ? 'this' : 'all';
+  await applyStatusUpdate(currentId, newStatus, '', scope, currentDate4, null, null);
 });
 
 // Long press on chips for mobile context menu
