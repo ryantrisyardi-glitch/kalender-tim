@@ -1540,7 +1540,10 @@ function loadCollapseFromFirebase() {
       localStorage.setItem(COLLAPSE_KEY, JSON.stringify(chipCollapseState));
       renderCalendar();
       if (selectedDate) renderPanel(selectedDate);
-    }, e => console.warn('Collapse listen error:', e.message));
+    }, e => {
+      console.error('Collapse listen error:', e.code, e.message);
+      if (e.code === 'permission-denied') showToast('⚠️ Status expand/collapse gagal sinkron. Periksa Firestore Security Rules (cal_collapse).', 4500);
+    });
 }
 const chipCollapseState = loadCollapseState();
 
@@ -3971,7 +3974,10 @@ function loadOrderFromFirebase() {
       localStorage.setItem(ORDER_KEY, JSON.stringify(eventOrder));
       renderCalendar();
       if (selectedDate) renderPanel(selectedDate);
-    }, e => console.warn('Order listen error:', e.message));
+    }, e => {
+      console.error('Order listen error:', e.code, e.message);
+      if (e.code === 'permission-denied') showToast('⚠️ Urutan event gagal sinkron. Periksa Firestore Security Rules (cal_order).', 4500);
+    });
 }
 function sortedEventsForDate(ds, evs) {
   const order = eventOrder[ds];
