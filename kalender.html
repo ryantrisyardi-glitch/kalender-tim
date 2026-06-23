@@ -817,6 +817,10 @@ body.read-only .readonly-badge{display:inline-flex}
       match /events_{ws}/{id}{ allow read: if true; allow write: if request.auth != null; }
       // Config: anyone read (to check editors list), only superadmin write
       match /_config/{ws}    { allow read: if true; allow write: if request.auth != null && request.auth.token.email == "ryan.trisyardi@gmail.com"; }
+      // BUGFIX #1: urutan drag-and-drop & status expand/collapse per tanggal,
+      // disinkronkan realtime agar sama untuk semua user (bukan localStorage saja)
+      match /cal_order/{ws}    { allow read: if true; allow write: if request.auth != null; }
+      match /cal_collapse/{ws} { allow read: if true; allow write: if request.auth != null; }
     }
   }
 -->
@@ -836,6 +840,7 @@ body.read-only .readonly-badge{display:inline-flex}
       <span id="notifBadge" style="position:absolute;top:4px;right:4px;width:8px;height:8px;background:#EF4444;border-radius:50%;display:none"></span>
     </button>
     <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
+    <button class="btn write-only" id="managePicColorsBtn"><i class="ti ti-palette"></i> Warna PIC</button>
     <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
     <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
     <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
@@ -1079,6 +1084,19 @@ body.read-only .readonly-badge{display:inline-flex}
       </div>
     </div>
     <div class="modal-foot"><button class="btn btn-primary" id="closeTypeManagerOk">Selesai</button></div>
+  </div>
+</div>
+
+<!-- ══ PIC COLOR MANAGER ══ -->
+<div class="overlay" id="picColorManagerOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Kelola Warna PIC</div>
+      <button class="btn btn-icon" id="closePicColorManager"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:.82rem;color:var(--ink-lt);margin-bottom:1rem">Setiap PIC otomatis mendapat warna dari sistem. Klik kotak warna untuk mengganti warna kapsul PIC tertentu — perubahan tersimpan untuk semua orang.</p>
+    <div class="type-list" id="picColorList"></div>
+    <div class="modal-foot"><button class="btn btn-primary" id="closePicColorManagerOk">Selesai</button></div>
   </div>
 </div>
 
@@ -1496,13 +1514,33 @@ let canWrite     = false;  // can add/edit/delete events in this workspace
 let isSuperAdmin = false;  // can manage editors + access all workspaces
 let wsEditors    = [];     // emails allowed to write in this workspace (from Firestore)
 let wsViewers    = [];     // emails allowed to view-only (private workspace)
-// Chip collapse state: { [eventId]: true/false } — persisted to localStorage
+// Chip collapse state: { [eventId]: true/false } — persisted ke localStorage (cache)
+// dan disinkronkan secara realtime ke Firestore agar semua user melihat
+// status expand/collapse yang sama dengan yang disusun editor (BUGFIX #1)
 const COLLAPSE_KEY = `cal_collapse_${WORKSPACE}`;
 function loadCollapseState() {
   try { return JSON.parse(localStorage.getItem(COLLAPSE_KEY)||'{}'); } catch(e) { return {}; }
 }
 function saveCollapseState() {
   localStorage.setItem(COLLAPSE_KEY, JSON.stringify(chipCollapseState));
+  if (useFirebase && db) {
+    db.collection('cal_collapse').doc(WORKSPACE).set(chipCollapseState).catch(()=>{});
+  }
+}
+let collapseUnsubscribe = null;
+function loadCollapseFromFirebase() {
+  if (!useFirebase || !db) return;
+  if (collapseUnsubscribe) collapseUnsubscribe();
+  collapseUnsubscribe = db.collection('cal_collapse').doc(WORKSPACE)
+    .onSnapshot(doc => {
+      const remote = doc.exists ? (doc.data() || {}) : {};
+      // Mutasi in-place (bukan reassign) agar referensi chipCollapseState tetap valid di seluruh kode
+      Object.keys(chipCollapseState).forEach(k => delete chipCollapseState[k]);
+      Object.assign(chipCollapseState, remote);
+      localStorage.setItem(COLLAPSE_KEY, JSON.stringify(chipCollapseState));
+      renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    }, e => console.warn('Collapse listen error:', e.message));
 }
 const chipCollapseState = loadCollapseState();
 
@@ -1549,6 +1587,13 @@ async function loadWorkspaceConfig() {
         rebuildFilters();
         renderCalendar();
         if (typeof renderTypeList === 'function') renderTypeList();
+      }
+      if (data.picColors && typeof data.picColors === 'object') {
+        picColors = data.picColors;
+        localStorage.setItem(PIC_COLORS_KEY, JSON.stringify(picColors));
+        renderCalendar();
+        if (selectedDate) renderPanel(selectedDate);
+        if (typeof renderPicColorList === 'function') renderPicColorList();
       }
     } else {
       wsEditors = [];
@@ -1823,6 +1868,49 @@ function hexDarken(hex, amount) {
 }
 function getTypeById(id) { return eventTypes.find(t=>t.id===id)||eventTypes[eventTypes.length-1]||DEFAULT_TYPES[4]; }
 let eventTypes = loadTypes();
+
+/* ════════════════════════════════════════
+   PIC COLORS — BUGFIX #3
+   Default warna kapsul PIC ditentukan otomatis oleh sistem
+   (hash nama PIC → palet warna), namun editor bisa override
+   warna per-PIC. Override disimpan ke Firestore _config/{workspace}
+   field "picColors" agar konsisten untuk semua user.
+   ════════════════════════════════════════ */
+const PIC_COLORS_KEY = `cal_piccolors_${WORKSPACE}`;
+const PIC_PALETTE = ['#EF4444','#F97316','#F59E0B','#84CC16','#22C55E','#10B981','#14B8A6','#06B6D4','#3B82F6','#6366F1','#8B5CF6','#A855F7','#EC4899','#F43F5E','#64748B','#0EA5E9'];
+function hashPicName(s) {
+  let h = 0;
+  s = String(s||'');
+  for (let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+function defaultPicColor(pic) { return PIC_PALETTE[hashPicName(String(pic||'').toLowerCase()) % PIC_PALETTE.length]; }
+function loadPicColors() {
+  try { return JSON.parse(localStorage.getItem(PIC_COLORS_KEY)||'{}'); } catch(e) { return {}; }
+}
+let picColors = loadPicColors();
+function savePicColors() {
+  // Simpan lokal (immediate)
+  localStorage.setItem(PIC_COLORS_KEY, JSON.stringify(picColors));
+  // Simpan ke Firestore supaya semua user (bukan hanya editor) melihat warna yang sama
+  if (useFirebase && db) {
+    db.collection('_config').doc(WORKSPACE).set(
+      { picColors: picColors, picColorsUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() },
+      { merge: true }
+    ).catch(e => console.warn('savePicColors Firestore error:', e.message));
+  }
+}
+function getPicColor(pic) {
+  const key = String(pic||'').toLowerCase();
+  const custom = picColors[key];
+  return (custom && /^#[0-9A-Fa-f]{6}$/.test(custom)) ? custom : defaultPicColor(pic);
+}
+function pickContrastText(hex) {
+  const h = String(hex||'#000000').replace('#','');
+  const r = parseInt(h.slice(0,2),16)||0, g = parseInt(h.slice(2,4),16)||0, b = parseInt(h.slice(4,6),16)||0;
+  const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+  return lum > 0.62 ? '#1C1917' : '#FFFFFF';
+}
 
 /* ════════════════════════════════════════
    STATE
@@ -2189,7 +2277,7 @@ async function renderCalendar() {
     const holHtml=(hol&&c.cur)?`<div class="hol-label" title="${escHtml(hol.name)}">${escHtml(hol.name)}</div>`:'';
     // Tampilkan event di tanggal bulan lain (other) dengan warna muted/tidak dominan
     const evs=getEventsForDate(ds);
-    const evsSorted=c.cur?sortedEventsForDate(ds,evs):evs;
+    const evsSorted=sortedEventsForDate(ds,evs);
     const MAX=5; /* FIX #1 */
     let chipsHtml=evsSorted.slice(0,MAX).map(e=>{
       const t=getTypeById(e.type);
@@ -2199,10 +2287,9 @@ async function renderCalendar() {
       const hiddenCls=e.hidden?' is-hidden-event':'';
       const pics=e.pics||[];
       // Setiap PIC tampil sebagai capsule terpisah
-      const picPillStyle=`color:${t.chip}`;
       const picPillsHtml = pics.length
-        ? pics.map(p=>`<span class="pic-pill" style="${picPillStyle}">${escHtml(p)}</span>`).join('')
-        : `<span class="pic-pill" style="${picPillStyle}">—</span>`;
+        ? pics.map(p=>{const pc=getPicColor(p);return `<span class="pic-pill" style="background:${pc};color:${pickContrastText(pc)}">${escHtml(p)}</span>`;}).join('')
+        : `<span class="pic-pill" style="color:${t.chip}">—</span>`;
       const picLabel=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i>${picPillsHtml}</span>`;
       // Status label untuk collapsed state
       const SM_STATUS={achieve:'✓ Achieve',not_achieve:'✗ Not Achieve',pending:'⟳ In Process',cancel:'⊗ Cancel'};
@@ -2343,11 +2430,13 @@ function renderPanel(ds) {
     holBadge.innerHTML=`<span class="panel-hol-badge" style="background:${bg};color:${col}">${escHtml(hol.name)}</span>`;
   } else { holBadge.innerHTML=''; }
 
-  const evs=events.filter(e=>{
+  const evsRaw=events.filter(e=>{
     if (!canWrite && e.hidden) return false;  // hidden from view-only users
     if(e.dateEnd&&e.dateStart<=ds&&e.dateEnd>=ds) return true;
     return e.dateStart===ds;
   });
+  // Susunan di panel kanan ikut urutan drag-and-drop yang sama dengan kalender (BUGFIX #2)
+  const evs=sortedEventsForDate(ds,evsRaw);
 
   const body=document.getElementById('panelBody');
   if(!evs.length){body.innerHTML=`<div class="panel-empty"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`;return;}
@@ -2379,7 +2468,7 @@ function renderPanel(ds) {
       <div class="pei-body">
         <div class="pei-type" style="color:${t.chip}">${escHtml(t.label)}${hiddenBadge}</div>
         <div class="pei-title">${escHtml(e.title)}</div>
-        ${pics.length?`<div class="pei-pics">${pics.map(p=>`<span class="pic-badge">${escHtml(p)}</span>`).join('')}</div>`:''}
+        ${pics.length?`<div class="pei-pics">${pics.map(p=>{const pc=getPicColor(p);return `<span class="pic-badge" style="background:${pc};color:${pickContrastText(pc)};border-color:${pc}">${escHtml(p)}</span>`;}).join('')}</div>`:''}
         <div class="pei-meta"><span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px"></i> ${dl}</span>${sp}</div>
         ${noteHtml}
         ${statusNoteHtml}
@@ -2450,7 +2539,7 @@ function renderEventList(year,month) {
           ${pics.length?`<span class="spill"><i class="ti ti-users"></i>${pics.length} PIC</span>`:''}
           ${sp}
         </div>
-        ${pics.length>1?`<div class="pics-row">${pics.map(p=>`<span class="pic-badge" style="font-size:.62rem">${escHtml(p)}</span>`).join('')}</div>`:''}
+        ${pics.length>1?`<div class="pics-row">${pics.map(p=>{const pc=getPicColor(p);return `<span class="pic-badge" style="font-size:.62rem;background:${pc};color:${pickContrastText(pc)};border-color:${pc}">${escHtml(p)}</span>`;}).join('')}</div>`:''}
         ${noteHtml}
         ${hiddenBadge}
       </div>
@@ -2533,7 +2622,7 @@ function setupPicAutocomplete() {
    ════════════════════════════════════════ */
 function renderPicTags() {
   const c=document.getElementById('picTags');
-  c.innerHTML=currentPICs.map((p,i)=>`<span class="pic-tag">${escHtml(p)}<button class="pic-tag-remove" data-i="${i}" type="button"><i class="ti ti-x" style="font-size:10px"></i></button></span>`).join('');
+  c.innerHTML=currentPICs.map((p,i)=>{const pc=getPicColor(p);const tc=pickContrastText(pc);return `<span class="pic-tag" style="background:${pc};color:${tc};border-color:${pc}">${escHtml(p)}<button class="pic-tag-remove" data-i="${i}" type="button" style="color:${tc}"><i class="ti ti-x" style="font-size:10px"></i></button></span>`;}).join('');
   c.querySelectorAll('.pic-tag-remove').forEach(btn=>btn.addEventListener('click',()=>{currentPICs.splice(parseInt(btn.dataset.i),1);renderPicTags();}));
 }
 function addPICfromInput() {
@@ -2593,7 +2682,7 @@ function openDetail(id) {
     </div>
     ${hiddenBadgeHtml}
     <div class="drow"><i class="ti ti-calendar drow-ico"></i><span class="drow-lbl">Tanggal</span><span class="drow-val">${dl}</span></div>
-    ${pics.length?`<div class="drow"><i class="ti ti-users drow-ico"></i><span class="drow-lbl">PIC</span><span class="drow-val"><div class="det-pics">${pics.map(p=>`<span class="det-pic-badge">${escHtml(p)}</span>`).join('')}</div></span></div>`:''}
+    ${pics.length?`<div class="drow"><i class="ti ti-users drow-ico"></i><span class="drow-lbl">PIC</span><span class="drow-val"><div class="det-pics">${pics.map(p=>{const pc=getPicColor(p);return `<span class="det-pic-badge" style="background:${pc};color:${pickContrastText(pc)};border-color:${pc}">${escHtml(p)}</span>`;}).join('')}</div></span></div>`:''}
     ${ev.status?`<div class="drow"><i class="ti ti-circle-check drow-ico"></i><span class="drow-lbl">Status</span><span class="drow-val">${sp}</span></div>`:''}
     ${ev.note?`<div class="drow"><i class="ti ti-notes drow-ico"></i><span class="drow-lbl">Catatan</span><span class="drow-val">${escHtml(ev.note)}</span></div>`:''}
     ${ev.statusNote?`<div class="drow"><i class="ti ti-message-circle drow-ico" style="color:#7C3AED"></i><span class="drow-lbl" style="color:#7C3AED">Catatan Status</span><span class="drow-val" style="white-space:pre-line;font-size:.82rem">${escHtml(ev.statusNote)}</span></div>`:''}
@@ -2651,6 +2740,56 @@ function openEditType(id){
     el.classList.add('selected');document.getElementById('editTypeColor').value=el.dataset.color;
   }));
   document.getElementById('editTypeOverlay').classList.add('open');
+}
+
+/* ════════════════════════════════════════
+   PIC COLOR MANAGER — BUGFIX #3
+   ════════════════════════════════════════ */
+function openPicColorManager(){
+  renderPicColorList();
+  document.getElementById('picColorManagerOverlay').classList.add('open');
+}
+function renderPicColorList(){
+  const list=document.getElementById('picColorList');
+  if(!list) return;
+  const allPics=getAllPICs();
+  if(!allPics.length){
+    list.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--ink-lt);font-size:.82rem">Belum ada PIC. Tambahkan PIC pada sebuah event untuk mengatur warnanya di sini.</div>`;
+    return;
+  }
+  list.innerHTML=allPics.map(p=>{
+    const color=getPicColor(p);
+    const isCustom=!!picColors[p.toLowerCase()];
+    return `<div class="type-row" data-pic="${escHtml(p)}">
+      <div class="type-swatch" style="background:${color}">
+        <input type="color" value="${color}" data-pic="${escHtml(p)}" class="inline-pic-color-pick"/>
+      </div>
+      <div class="type-row-name">${escHtml(p)}${isCustom?' <span style="font-size:.62rem;color:var(--ink-lt);font-weight:600">(kustom)</span>':' <span style="font-size:.62rem;color:var(--ink-lt);font-weight:600">(default sistem)</span>'}</div>
+      ${isCustom?`<button class="type-edit-btn" data-pic-reset="${escHtml(p)}" title="Kembalikan ke warna default sistem"><i class="ti ti-arrow-back-up"></i></button>`:''}
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.inline-pic-color-pick').forEach(inp=>{
+    inp.addEventListener('input',e=>{
+      const pic=e.target.dataset.pic;
+      picColors[pic.toLowerCase()]=e.target.value;
+      e.target.closest('.type-swatch').style.background=e.target.value;
+      savePicColors();
+      renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    });
+    inp.addEventListener('change',()=>renderPicColorList());
+  });
+  list.querySelectorAll('[data-pic-reset]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const pic=btn.dataset.picReset;
+      delete picColors[pic.toLowerCase()];
+      savePicColors();
+      renderPicColorList();
+      renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    });
+  });
 }
 
 /* ════════════════════════════════════════
@@ -3226,6 +3365,7 @@ function buildExcelAndDownload(eventsToExport, rangeLabel, mode) {
    ════════════════════════════════════════ */
 document.getElementById('addEventBtn').addEventListener('click',()=>{if(!canWrite){showToast('⚠️ Silakan masuk untuk menambah event');return;}openAdd();});
 document.getElementById('manageTypesBtn').addEventListener('click',()=>{if(!canWrite){showToast('⚠️ Hanya editor yang dapat mengelola jenis event');return;}openTypeManager();});
+document.getElementById('managePicColorsBtn').addEventListener('click',()=>{if(!canWrite){showToast('⚠️ Hanya editor yang dapat mengelola warna PIC');return;}openPicColorManager();});
 document.getElementById('exportExcelBtn').addEventListener('click',exportExcel);
 // Excel range modal
 document.getElementById('excelMode').addEventListener('change',updateExcelPreview);
@@ -3243,10 +3383,12 @@ document.getElementById('nextBtn').addEventListener('click',()=>{currentDate.set
 document.getElementById('closeDetail').addEventListener('click',()=>document.getElementById('detailOverlay').classList.remove('open'));
 document.getElementById('closeTypeManager').addEventListener('click',()=>document.getElementById('typeManagerOverlay').classList.remove('open'));
 document.getElementById('closeTypeManagerOk').addEventListener('click',()=>document.getElementById('typeManagerOverlay').classList.remove('open'));
+document.getElementById('closePicColorManager').addEventListener('click',()=>document.getElementById('picColorManagerOverlay').classList.remove('open'));
+document.getElementById('closePicColorManagerOk').addEventListener('click',()=>document.getElementById('picColorManagerOverlay').classList.remove('open'));
 document.getElementById('closeEditType').addEventListener('click',()=>document.getElementById('editTypeOverlay').classList.remove('open'));
 document.getElementById('cancelEditType').addEventListener('click',()=>document.getElementById('editTypeOverlay').classList.remove('open'));
 
-['addOverlay','detailOverlay','typeManagerOverlay','editTypeOverlay'].forEach(id=>{
+['addOverlay','detailOverlay','typeManagerOverlay','editTypeOverlay','picColorManagerOverlay'].forEach(id=>{
   const el=document.getElementById(id);
   el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
 });
@@ -3725,7 +3867,7 @@ function buildRptRow(e, SM) {
     <td class="rpt-date" style="white-space:nowrap;width:1%"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.chip};margin-right:6px;vertical-align:middle"></span>${dl}</td>
     <td class="rpt-type-cell"><div class="rpt-type-inner"><div class="rpt-type-accent" style="background:${accentColor}"></div><div class="rpt-type-label" style="background:${t.chip}">${escHtml(t.label)}</div></div></td>
     <td><div class="rpt-title">${escHtml(e.title)}</div></td>
-    <td><div class="rpt-pic-list">${pics.map(p=>`<span class="rpt-pic-badge">${escHtml(p)}</span>`).join('')}</div></td>
+    <td><div class="rpt-pic-list">${pics.map(p=>{const pc=getPicColor(p);return `<span class="rpt-pic-badge" style="background:${pc};color:${pickContrastText(pc)};border-color:${pc}">${escHtml(p)}</span>`;}).join('')}</div></td>
     <td style="vertical-align:top;padding-top:10px">${statusCell}</td>
     <td class="rpt-note">${escHtml(e.note||'')}</td>
     <td class="rpt-note" style="max-width:260px;white-space:pre-line;font-size:.72rem;color:#5B21B6">${escHtml(e.statusNote||'')}</td>
@@ -3819,12 +3961,17 @@ function saveOrder() {
     db.collection('cal_order').doc(WORKSPACE).set(eventOrder).catch(()=>{});
   }
 }
-async function loadOrderFromFirebase() {
+let orderUnsubscribe = null;
+function loadOrderFromFirebase() {
   if (!useFirebase || !db) return;
-  try {
-    const doc = await db.collection('cal_order').doc(WORKSPACE).get();
-    if (doc.exists) { eventOrder = doc.data() || {}; renderCalendar(); }
-  } catch(e){}
+  if (orderUnsubscribe) orderUnsubscribe();
+  orderUnsubscribe = db.collection('cal_order').doc(WORKSPACE)
+    .onSnapshot(doc => {
+      eventOrder = doc.exists ? (doc.data() || {}) : {};
+      localStorage.setItem(ORDER_KEY, JSON.stringify(eventOrder));
+      renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    }, e => console.warn('Order listen error:', e.message));
 }
 function sortedEventsForDate(ds, evs) {
   const order = eventOrder[ds];
@@ -4337,9 +4484,10 @@ document.addEventListener('touchmove', e => {
 
 document.addEventListener('touchcancel', cancelLongPress, { passive: true });
 
-/* Load order on init */
+/* Load order & collapse state on init (realtime, shared antar semua user) */
 loadOrder();
 loadOrderFromFirebase();
+loadCollapseFromFirebase();
 
 /* ════════════════════════════════════════
    CHIP TOOLTIP (hover 1 detik → muncul)
