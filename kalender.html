@@ -791,6 +791,66 @@ body.read-only .readonly-badge{display:inline-flex}
 
 
 /* ── LEGACY SMALL SCREEN FALLBACK (handled by 768px block above) ── */
+
+/* ════════════════════════════════════════
+   TUGAS RUTIN (DAILY / WEEKLY ROUTINE)
+   ════════════════════════════════════════ */
+/* Badge kecil di sel kalender — tidak mengganggu chip event */
+.dc-routine-badge{display:flex;align-items:center;gap:3px;font-size:.6rem;font-weight:700;color:#1D4ED8;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:100px;padding:1px 6px;margin:1px 0 2px;max-width:fit-content;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.5}
+.dc-routine-badge.all-done{color:#15803D;background:#DCFCE7;border-color:#86EFAC}
+.dc-routine-badge i{font-size:9px;flex-shrink:0}
+
+/* Section "Tugas Rutin" di panel kanan — tampil di atas, terpisah dari event */
+.routine-section{margin-bottom:4px}
+.routine-section-label{display:flex;align-items:center;gap:5px;font-size:.68rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#1D4ED8;margin-bottom:6px}
+.routine-section-label i{font-size:12px}
+.routine-item{display:flex;align-items:flex-start;gap:8px;padding:7px 9px;border:1px solid #DBEAFE;background:#F8FAFF;border-radius:var(--r-md);margin-bottom:5px;transition:background .12s,border-color .12s}
+.routine-item:hover{background:#EFF6FF}
+.routine-item.is-done{background:#F7FEF9;border-color:#BBF7D0}
+.routine-checkbox{width:17px;height:17px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:#2563EB}
+.routine-item.is-done .routine-checkbox{accent-color:#16A34A}
+.routine-body{flex:1;min-width:0}
+.routine-title-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.routine-title{font-size:.79rem;font-weight:700;color:var(--ink);line-height:1.3;word-break:break-word}
+.routine-item.is-done .routine-title{color:var(--ink-lt);text-decoration:line-through}
+.routine-meta{font-size:.64rem;font-weight:600;color:var(--ink-lt);margin-top:2px;display:flex;align-items:center;gap:3px}
+.routine-override-badge{display:inline-flex;align-items:center;font-size:8px;color:#7C3AED;background:#EDE9FE;border-radius:50%;width:15px;height:15px;justify-content:center;flex-shrink:0}
+.routine-edit-btn{background:none;border:none;color:var(--ink-lt);cursor:pointer;padding:4px 5px;border-radius:var(--r-sm);transition:background .12s,color .12s;flex-shrink:0;display:flex;align-items:center}
+.routine-edit-btn:hover{background:#E0E7FF;color:#1D4ED8}
+.routine-edit-input{flex:1;min-width:80px;font-family:var(--font);font-size:.78rem;font-weight:600;color:var(--ink);background:#FEF9C3;border:1.5px solid #EAB308;border-radius:3px;padding:3px 6px;outline:none}
+.routine-edit-save,.routine-edit-cancel{border:none;border-radius:var(--r-sm);cursor:pointer;padding:4px 6px;display:flex;align-items:center;flex-shrink:0}
+.routine-edit-save{background:#DCFCE7;color:#15803D}
+.routine-edit-save:hover{background:#BBF7D0}
+.routine-edit-cancel{background:var(--bg-dk);color:var(--ink-lt)}
+.routine-edit-cancel:hover{background:var(--rule)}
+.panel-section-divider{height:1.5px;background:var(--rule);margin:10px 0 9px;border-radius:1px}
+
+/* Toggle switch ON/OFF untuk mengaktifkan fitur */
+.routine-enable-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-dk);border-radius:var(--r-lg);padding:11px 13px;margin-bottom:.25rem}
+.routine-enable-title{font-size:.84rem;font-weight:700;color:var(--ink)}
+.routine-enable-desc{font-size:.68rem;color:var(--ink-lt);margin-top:2px;line-height:1.4}
+.rt-switch{position:relative;display:inline-block;width:42px;height:24px;flex-shrink:0;cursor:pointer}
+.rt-switch input{opacity:0;width:0;height:0;position:absolute}
+.rt-switch-track{position:absolute;inset:0;background:#D6D3D1;border-radius:100px;transition:background .18s}
+.rt-switch-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.rt-switch input:checked + .rt-switch-track{background:#2563EB}
+.rt-switch input:checked + .rt-switch-track .rt-switch-thumb{transform:translateX(18px)}
+
+/* Manager modal: daftar tugas rutin */
+.routine-mgr-list{max-height:220px;overflow-y:auto;margin-bottom:.25rem}
+.routine-mgr-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--rule);border-radius:var(--r-md);margin-bottom:6px}
+.routine-mgr-info{flex:1;min-width:0}
+.routine-mgr-title{font-size:.82rem;font-weight:700;color:var(--ink)}
+.routine-mgr-meta{font-size:.68rem;color:var(--ink-lt);margin-top:1px}
+.routine-mgr-actions{display:flex;gap:5px;flex-shrink:0}
+.routine-form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:.6rem}
+.routine-form-hint{font-size:.68rem;color:var(--ink-lt);margin-top:8px;line-height:1.5}
+
+@media (max-width:768px){
+  .routine-item{padding:6px 8px}
+  .routine-title{font-size:.76rem}
+  .dc-routine-badge{font-size:.55rem;padding:1px 4px}
+}
 </style>
 </head>
 <body>
@@ -821,6 +881,9 @@ body.read-only .readonly-badge{display:inline-flex}
       // disinkronkan realtime agar sama untuk semua user (bukan localStorage saja)
       match /cal_order/{ws}    { allow read: if true; allow write: if request.auth != null; }
       match /cal_collapse/{ws} { allow read: if true; allow write: if request.auth != null; }
+      // Tugas Rutin (Daily/Weekly Routine)
+      match /routines/{id}     { allow read: if true; allow write: if request.auth != null; }
+      match /routines_{ws}/{id}{ allow read: if true; allow write: if request.auth != null; }
     }
   }
 -->
@@ -843,6 +906,7 @@ body.read-only .readonly-badge{display:inline-flex}
     <button class="btn write-only" id="managePicColorsBtn"><i class="ti ti-palette"></i> Warna PIC</button>
     <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
     <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
+    <button class="btn write-only" id="manageRoutineBtn" style="background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-repeat"></i> Tugas Rutin</button>
     <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
     <button class="btn" id="printBtn" title="Print Kalender" onclick="window.print()"><i class="ti ti-printer"></i></button>
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
@@ -993,6 +1057,65 @@ body.read-only .readonly-badge{display:inline-flex}
     <div class="modal-foot">
       <button class="btn btn-danger btn-sm" id="clearAllHolBtn"><i class="ti ti-trash"></i> Hapus Semua Custom</button>
       <button class="btn btn-primary" id="closeHolidayManagerOk">Selesai</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TUGAS RUTIN (DAILY/WEEKLY ROUTINE) MANAGER ══ -->
+<div class="overlay" id="routineManagerOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title"><i class="ti ti-repeat" style="color:#1D4ED8"></i> Tugas Rutin</div>
+      <button class="btn btn-icon" id="closeRoutineManager"><i class="ti ti-x"></i></button>
+    </div>
+
+    <div class="routine-enable-row">
+      <div>
+        <div class="routine-enable-title">Aktifkan Tugas Rutin</div>
+        <div class="routine-enable-desc">Jika dimatikan, tugas rutin disembunyikan dari kalender &amp; panel kanan (data tidak terhapus).</div>
+      </div>
+      <label class="rt-switch">
+        <input type="checkbox" id="routineEnabledToggle"/>
+        <span class="rt-switch-track"><span class="rt-switch-thumb"></span></span>
+      </label>
+    </div>
+
+    <div style="font-size:.75rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin:14px 0 8px">Daftar Tugas Rutin Aktif</div>
+    <div class="routine-mgr-list" id="routineMgrList">
+      <div style="color:var(--ink-lt);font-size:.82rem;padding:8px">Belum ada tugas rutin.</div>
+    </div>
+
+    <div style="border-top:1.5px solid var(--rule);padding-top:1rem;margin-top:.25rem">
+      <div style="font-size:.75rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px" id="routineFormLabel">Tambah Tugas Baru</div>
+      <div class="fg">
+        <label class="fl">Nama Tugas</label>
+        <input type="text" class="fc" id="rtTitle" placeholder="Contoh: Cek Email Pagi" autocomplete="off"/>
+      </div>
+      <div class="frow">
+        <div class="fg">
+          <label class="fl">Pengulangan</label>
+          <select class="fc" id="rtRecurrence">
+            <option value="daily">Harian (setiap hari)</option>
+            <option value="weekly">Mingguan (1x seminggu)</option>
+          </select>
+        </div>
+        <div class="fg" id="rtWeekdayWrap" style="display:none">
+          <label class="fl">Hari</label>
+          <select class="fc" id="rtWeekday">
+            <option value="0">Minggu</option><option value="1">Senin</option><option value="2">Selasa</option>
+            <option value="3">Rabu</option><option value="4">Kamis</option><option value="5">Jumat</option><option value="6">Sabtu</option>
+          </select>
+        </div>
+      </div>
+      <div class="routine-form-actions">
+        <button class="btn" id="rtCancelEditBtn" style="display:none">Batal Edit</button>
+        <button class="btn btn-primary" id="rtSaveBtn"><i class="ti ti-plus"></i> Tambah Tugas</button>
+      </div>
+      <div class="routine-form-hint"><i class="ti ti-info-circle" style="font-size:11px;vertical-align:-1px"></i> Mengubah atau menghapus tugas hanya berlaku mulai <strong>hari ini</strong>. Tanggal-tanggal sebelumnya tidak ikut berubah.</div>
+    </div>
+
+    <div class="modal-foot">
+      <button class="btn btn-primary" id="closeRoutineManagerOk">Selesai</button>
     </div>
   </div>
 </div>
@@ -1496,6 +1619,9 @@ const WORKSPACE     = getWorkspace();
 const EVENTS_COLL   = WORKSPACE === 'default' ? 'events' : `events_${WORKSPACE}`;
 const TYPES_KEY     = `cal_types_${WORKSPACE}`;
 const LS_EVENTS_KEY = `cal_events_${WORKSPACE}`;
+const ROUTINE_COLL       = WORKSPACE === 'default' ? 'routines' : `routines_${WORKSPACE}`;
+const LS_ROUTINE_KEY      = `cal_routines_${WORKSPACE}`;
+const ROUTINE_ENABLED_KEY = `cal_routine_enabled_${WORKSPACE}`;
 
 /* ════════════════════════════════════════
    FIX #2 #3 — DYNAMIC PERMISSION SYSTEM
@@ -1597,6 +1723,14 @@ async function loadWorkspaceConfig() {
         renderCalendar();
         if (selectedDate) renderPanel(selectedDate);
         if (typeof renderPicColorList === 'function') renderPicColorList();
+      }
+      if (typeof data.routineEnabled === 'boolean') {
+        routineEnabled = data.routineEnabled;
+        localStorage.setItem(ROUTINE_ENABLED_KEY, routineEnabled?'1':'0');
+        const toggleEl = document.getElementById('routineEnabledToggle');
+        if (toggleEl) toggleEl.checked = routineEnabled;
+        renderCalendar();
+        if (selectedDate) renderPanel(selectedDate);
       }
     } else {
       wsEditors = [];
@@ -1919,6 +2053,13 @@ function pickContrastText(hex) {
    STATE
    ════════════════════════════════════════ */
 let events=[], holidays={};
+let routineTasks=[];
+function loadRoutineEnabled() {
+  try { const v = localStorage.getItem(ROUTINE_ENABLED_KEY); return v===null ? true : v==='1'; }
+  catch(e) { return true; }
+}
+let routineEnabled = loadRoutineEnabled();
+let editingRoutineId = null; // null = mode tambah baru di Routine Manager
 let currentDate=new Date(), filterType='all', filterPIC='all';
 let editingId=null, viewingId=null, selectedDate=null;
 let currentPICs=[], editingTypeId=null;
@@ -2236,6 +2377,196 @@ function picsLabel(ev){
 }
 
 /* ════════════════════════════════════════
+   TUGAS RUTIN (DAILY / WEEKLY ROUTINE) — DATA LAYER
+   Setiap template tugas punya startDate (mulai berlaku) & endDate
+   (null = masih aktif). Saat tugas diedit/dihapus, versi LAMA ditutup
+   per "kemarin" dan versi BARU (jika ada) dimulai "hari ini" — sehingga
+   tanggal yang sudah lewat TIDAK berubah (no backdate), sesuai aturan:
+   - Tugas tidak pernah muncul sebelum tanggal ia dibuat.
+   - Perubahan/penghapusan hanya berlaku mulai hari ini & seterusnya.
+   ════════════════════════════════════════ */
+function todayStr(){ return toStr(new Date()); }
+function addDaysStr(ds, n){ const d=new Date(ds+'T00:00:00'); d.setDate(d.getDate()+n); return toStr(d); }
+
+function loadRoutineTasks() {
+  if (useFirebase) {
+    db.collection(ROUTINE_COLL).onSnapshot(snap=>{
+      routineTasks=snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    }, err=>{ console.error('Routine Firestore error:', err.code, err.message); });
+  } else {
+    try { routineTasks=JSON.parse(localStorage.getItem(LS_ROUTINE_KEY)||'[]'); }catch(e){routineTasks=[];}
+    renderCalendar();
+  }
+}
+function saveRoutineLocal(){ localStorage.setItem(LS_ROUTINE_KEY, JSON.stringify(routineTasks)); }
+
+/* Tambah template tugas rutin baru — mulai berlaku HARI INI */
+async function createRoutineTask({title, recurrence, weeklyDay}) {
+  const data = {
+    title: title.trim(),
+    recurrence,
+    weeklyDay: recurrence==='weekly' ? weeklyDay : null,
+    startDate: todayStr(),
+    endDate: null,
+    order: Date.now(),
+    completions: {},
+    dateOverrides: {}
+  };
+  if (useFirebase) {
+    await db.collection(ROUTINE_COLL).add({...data, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+  } else {
+    routineTasks.push({id:'rt_'+Date.now(), ...data});
+    saveRoutineLocal(); renderCalendar();
+    if (selectedDate) renderPanel(selectedDate);
+  }
+}
+
+/* Edit template tugas rutin.
+   - Jika template baru dibuat HARI INI (belum pernah berlaku historis): edit langsung di tempat.
+   - Jika sudah berlaku sejak sebelum hari ini: tutup versi lama per kemarin,
+     buat versi baru mulai hari ini (tanggal lalu tetap memakai versi lama). */
+async function updateRoutineTask(id, {title, recurrence, weeklyDay}) {
+  const task=routineTasks.find(t=>t.id===id);
+  if (!task) return;
+  const tdy=todayStr();
+  const patch={ title:title.trim(), recurrence, weeklyDay: recurrence==='weekly'?weeklyDay:null };
+  if (task.startDate===tdy) {
+    if (useFirebase) await db.collection(ROUTINE_COLL).doc(id).update(patch);
+    else {
+      routineTasks=routineTasks.map(t=>t.id===id?{...t,...patch}:t);
+      saveRoutineLocal(); renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    }
+  } else {
+    const yesterday=addDaysStr(tdy,-1);
+    const newData={...patch, startDate:tdy, endDate:null, order:task.order||Date.now(), completions:{}, dateOverrides:{}};
+    if (useFirebase) {
+      await db.collection(ROUTINE_COLL).doc(id).update({endDate:yesterday});
+      await db.collection(ROUTINE_COLL).add({...newData, createdAt: firebase.firestore.FieldValue.serverTimestamp()});
+    } else {
+      routineTasks=routineTasks.map(t=>t.id===id?{...t,endDate:yesterday}:t);
+      routineTasks.push({id:'rt_'+Date.now(), ...newData});
+      saveRoutineLocal(); renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+    }
+  }
+}
+
+/* Hapus template tugas rutin.
+   - Jika dibuat HARI INI: hapus permanen (belum pernah berlaku historis).
+   - Jika sudah berlaku sejak sebelum hari ini: tutup per kemarin (riwayat tetap tersimpan). */
+async function removeRoutineTask(id) {
+  const task=routineTasks.find(t=>t.id===id);
+  if (!task) return;
+  const tdy=todayStr();
+  if (task.startDate===tdy) {
+    if (useFirebase) await db.collection(ROUTINE_COLL).doc(id).delete();
+    else { routineTasks=routineTasks.filter(t=>t.id!==id); saveRoutineLocal(); renderCalendar(); if (selectedDate) renderPanel(selectedDate); }
+  } else {
+    const yesterday=addDaysStr(tdy,-1);
+    if (useFirebase) await db.collection(ROUTINE_COLL).doc(id).update({endDate:yesterday});
+    else { routineTasks=routineTasks.map(t=>t.id===id?{...t,endDate:yesterday}:t); saveRoutineLocal(); renderCalendar(); if (selectedDate) renderPanel(selectedDate); }
+  }
+}
+
+/* Tandai selesai/belum untuk SATU tanggal tertentu (per-instance, tidak mengubah template) */
+async function toggleRoutineCompletion(taskId, ds, done) {
+  if (!canWrite) return;
+  const task=routineTasks.find(t=>t.id===taskId);
+  if (!task) return;
+  const completions={...(task.completions||{}), [ds]:done};
+  task.completions=completions; // update optimis di memori agar UI langsung responsif
+  if (useFirebase) {
+    try { await db.collection(ROUTINE_COLL).doc(taskId).update({completions}); }
+    catch(e){ showToast('❌ '+e.message); }
+  } else {
+    routineTasks=routineTasks.map(t=>t.id===taskId?{...t,completions}:t);
+    saveRoutineLocal();
+  }
+  renderCalendar();
+  if (selectedDate) renderPanel(selectedDate);
+}
+
+/* Ubah manual judul tugas HANYA untuk tanggal tertentu (tidak mengubah template/tanggal lain) */
+async function saveRoutineTitleOverride(taskId, ds, newTitle) {
+  const task=routineTasks.find(t=>t.id===taskId);
+  if (!task) return;
+  if (!newTitle) { showToast('⚠️ Judul tidak boleh kosong'); renderPanel(ds); return; }
+  const dateOverrides={...(task.dateOverrides||{})};
+  if (newTitle===task.title) delete dateOverrides[ds];
+  else dateOverrides[ds]={title:newTitle};
+  task.dateOverrides=dateOverrides; // optimis
+  if (useFirebase) {
+    try { await db.collection(ROUTINE_COLL).doc(taskId).update({dateOverrides}); }
+    catch(e){ showToast('❌ '+e.message); }
+  } else {
+    routineTasks=routineTasks.map(t=>t.id===taskId?{...t,dateOverrides}:t);
+    saveRoutineLocal();
+  }
+  showToast('✅ Tugas tanggal ini diperbarui');
+  renderCalendar();
+  renderPanel(ds);
+}
+
+/* Aktif/nonaktifkan seluruh fitur tugas rutin (shared per workspace) */
+async function setRoutineEnabled(val) {
+  routineEnabled=val;
+  localStorage.setItem(ROUTINE_ENABLED_KEY, val?'1':'0');
+  if (useFirebase && db) {
+    try { await db.collection('_config').doc(WORKSPACE).set({routineEnabled:val},{merge:true}); }
+    catch(e){ console.warn('setRoutineEnabled Firestore error:', e.message); }
+  }
+  renderCalendar();
+  if (selectedDate) renderPanel(selectedDate);
+}
+
+/* Daftar template yang masih berlaku (belum ditutup) — dipakai di modal Kelola */
+function getActiveRoutineTemplates() {
+  const tdy=todayStr();
+  return routineTasks.filter(t=>!t.endDate||t.endDate>=tdy).sort((a,b)=>(a.order||0)-(b.order||0));
+}
+
+/* Hitung daftar tugas rutin yang berlaku untuk SATU tanggal tertentu,
+   lengkap dengan status selesai & judul efektif (termasuk override per-tanggal). */
+function getRoutineTasksForDate(ds) {
+  if (!routineEnabled || !routineTasks.length) return [];
+  const dow=new Date(ds+'T00:00:00').getDay();
+  return routineTasks
+    .filter(t=>{
+      if (t.startDate && t.startDate>ds) return false; // belum berlaku saat itu (no backdate)
+      if (t.endDate && t.endDate<ds) return false;      // sudah ditutup/diganti sebelum tanggal ini
+      if (t.recurrence==='weekly' && t.weeklyDay!==dow) return false;
+      return true;
+    })
+    .sort((a,b)=>(a.order||0)-(b.order||0))
+    .map(t=>{
+      const ov=t.dateOverrides && t.dateOverrides[ds];
+      const effTitle=(ov && ov.title) ? ov.title : t.title;
+      return {
+        id:t.id,
+        title:effTitle,
+        baseTitle:t.title,
+        hasOverride: !!(ov && ov.title),
+        recurrence:t.recurrence,
+        weeklyDay:t.weeklyDay,
+        done: !!(t.completions && t.completions[ds])
+      };
+    });
+}
+
+/* Badge kecil untuk sel kalender, mis. "2/3 Rutin" — tidak mengganggu chip event */
+function getRoutineBadgeHtml(ds) {
+  const list=getRoutineTasksForDate(ds);
+  if (!list.length) return '';
+  const done=list.filter(t=>t.done).length;
+  const allDone=done===list.length;
+  return `<div class="dc-routine-badge${allDone?' all-done':''}"><i class="ti ti-repeat"></i>${done}/${list.length} Rutin</div>`;
+}
+
+
+/* ════════════════════════════════════════
    RENDER CALENDAR — FIX #1: up to 5 chips, auto height
    ════════════════════════════════════════ */
 async function renderCalendar() {
@@ -2278,6 +2609,7 @@ async function renderCalendar() {
     if(ds===selectedDate&&c.cur) cls+=' selected';
 
     const holHtml=(hol&&c.cur)?`<div class="hol-label" title="${escHtml(hol.name)}">${escHtml(hol.name)}</div>`:'';
+    const routineBadgeHtml=c.cur?getRoutineBadgeHtml(ds):'';
     // Tampilkan event di tanggal bulan lain (other) dengan warna muted/tidak dominan
     const evs=getEventsForDate(ds);
     const evsSorted=sortedEventsForDate(ds,evs);
@@ -2314,6 +2646,7 @@ async function renderCalendar() {
       <div class="dc-head">
         <div class="day-num" data-adddate="${ds}">${c.day}</div>
         ${holHtml}
+        ${routineBadgeHtml}
       </div>
       ${chipsHtml?`<div class="dc-events">${chipsHtml}</div>`:''}
     </div>`;
@@ -2391,6 +2724,7 @@ function openMobilePanel(ds) {
   const src = document.getElementById('panelBody');
   const dst = document.getElementById('mpanelBody');
   dst.innerHTML = src ? src.innerHTML : '';
+  attachRoutineListeners(dst, ds);
   // Re-attach click listeners
   dst.querySelectorAll('.panel-event-item').forEach(el => {
     el.addEventListener('click', ev => {
@@ -2441,11 +2775,34 @@ function renderPanel(ds) {
   // Susunan di panel kanan ikut urutan drag-and-drop yang sama dengan kalender (BUGFIX #2)
   const evs=sortedEventsForDate(ds,evsRaw);
 
+  const routineList=getRoutineTasksForDate(ds);
+
   const body=document.getElementById('panelBody');
-  if(!evs.length){body.innerHTML=`<div class="panel-empty"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`;return;}
+  if(!evs.length && !routineList.length){body.innerHTML=`<div class="panel-empty"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`;return;}
+
+  const DNAMES2=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  let routineSectionHtml='';
+  if (routineList.length) {
+    const itemsHtml=routineList.map(t=>{
+      const metaText=t.recurrence==='daily'?'Harian':`Mingguan · ${DNAMES2[t.weeklyDay]}`;
+      const overrideBadge=t.hasOverride?`<span class="routine-override-badge" title="Diubah manual untuk tanggal ini"><i class="ti ti-pencil"></i></span>`:'';
+      const editBtn=canWrite?`<button class="routine-edit-btn" data-redit="${t.id}" title="Ubah manual untuk tanggal ini"><i class="ti ti-pencil"></i></button>`:'';
+      return `<div class="routine-item${t.done?' is-done':''}" data-rid="${t.id}">
+        <input type="checkbox" class="routine-checkbox" data-rcheck="${t.id}" ${t.done?'checked':''} ${canWrite?'':'disabled'}/>
+        <div class="routine-body">
+          <div class="routine-title-row">
+            <span class="routine-title">${escHtml(t.title)}</span>${overrideBadge}
+          </div>
+          <div class="routine-meta"><i class="ti ti-repeat" style="font-size:10px"></i> ${metaText}</div>
+        </div>
+        ${editBtn}
+      </div>`;
+    }).join('');
+    routineSectionHtml=`<div class="routine-section"><div class="routine-section-label"><i class="ti ti-repeat"></i> Tugas Rutin</div>${itemsHtml}</div>${evs.length?'<div class="panel-section-divider"></div>':''}`;
+  }
 
   const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process',cancel:'Cancel'};
-  body.innerHTML=evs.map(e=>{
+  const eventsHtml = evs.length ? evs.map(e=>{
     const t=getTypeById(e.type);
     const pics=e.pics||[];
     const dl=e.dateEnd&&e.dateEnd!==e.dateStart?`${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}`:fmtDate(e.dateStart);
@@ -2478,8 +2835,11 @@ function renderPanel(ds) {
       </div>
       <button class="pei-copy-btn write-only" onclick="event.stopPropagation(); copySingleEvent('${e.id}')" title="Copy Event"><i class="ti ti-copy"></i></button>
     </div>`;
-  }).join('');
+  }).join('') : (routineList.length?`<div class="panel-empty" style="padding:1rem 0"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`:'');
 
+  body.innerHTML = routineSectionHtml + eventsHtml;
+
+  attachRoutineListeners(body, ds);
   body.querySelectorAll('.panel-event-item').forEach(el=>{
     el.addEventListener('click', ev => {
       // Don't open detail if clicking inside note edit actions (save/cancel buttons)
@@ -2494,6 +2854,7 @@ function renderPanel(ds) {
     const dst = document.getElementById('mpanelBody');
     if (dst) {
       dst.innerHTML = body.innerHTML;
+      attachRoutineListeners(dst, ds);
       dst.querySelectorAll('.panel-event-item').forEach(el => {
         el.addEventListener('click', ev => {
           if (ev.target.closest('.pei-note-edit-actions') || ev.target.closest('.pei-note-edit-btn') || ev.target.closest('.pei-note-wrap')) return;
@@ -2502,6 +2863,54 @@ function renderPanel(ds) {
       });
     }
   }
+}
+
+/* ── Pasang event listener checkbox & tombol edit manual untuk Tugas Rutin
+   di dalam sebuah container panel (dipakai untuk panelBody & mpanelBody) ── */
+function attachRoutineListeners(container, ds) {
+  container.querySelectorAll('[data-rcheck]').forEach(cb=>{
+    cb.addEventListener('click', e=>e.stopPropagation());
+    cb.addEventListener('change', e=>{
+      toggleRoutineCompletion(cb.dataset.rcheck, ds, e.target.checked);
+    });
+  });
+  container.querySelectorAll('[data-redit]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      startEditRoutineTitle(btn.dataset.redit, ds);
+    });
+  });
+}
+
+/* Inline-edit judul tugas rutin untuk satu tanggal saja (tidak mengubah template) */
+function startEditRoutineTitle(taskId, ds) {
+  if (!canWrite) return;
+  const task=routineTasks.find(t=>t.id===taskId);
+  if (!task) return;
+  const ov=task.dateOverrides && task.dateOverrides[ds];
+  const current=(ov && ov.title) ? ov.title : task.title;
+  document.querySelectorAll(`.routine-item[data-rid="${taskId}"] .routine-title-row`).forEach(titleRow=>{
+    titleRow.innerHTML=`
+      <input type="text" class="routine-edit-input" value="${escHtml(current)}"/>
+      <button class="routine-edit-save" title="Simpan"><i class="ti ti-check"></i></button>
+      <button class="routine-edit-cancel" title="Batal"><i class="ti ti-x"></i></button>
+    `;
+    const input=titleRow.querySelector('.routine-edit-input');
+    input.focus(); input.select();
+    titleRow.querySelector('.routine-edit-save').addEventListener('click', e=>{
+      e.stopPropagation();
+      saveRoutineTitleOverride(taskId, ds, input.value.trim());
+    });
+    titleRow.querySelector('.routine-edit-cancel').addEventListener('click', e=>{
+      e.stopPropagation();
+      renderPanel(ds);
+    });
+    input.addEventListener('click', e=>e.stopPropagation());
+    input.addEventListener('keydown', e=>{
+      if (e.key==='Enter') { e.preventDefault(); saveRoutineTitleOverride(taskId, ds, input.value.trim()); }
+      if (e.key==='Escape') { e.preventDefault(); renderPanel(ds); }
+    });
+  });
 }
 
 /* ════════════════════════════════════════
@@ -3125,6 +3534,100 @@ document.getElementById('holidayManagerOverlay').addEventListener('click', e => 
 document.getElementById('manageHolidayBtn').addEventListener('click', openHolidayManager);
 
 /* ════════════════════════════════════════
+   TUGAS RUTIN (DAILY/WEEKLY ROUTINE) — MODAL KELOLA
+   ════════════════════════════════════════ */
+function openRoutineManager(){
+  document.getElementById('routineEnabledToggle').checked = routineEnabled;
+  resetRoutineForm();
+  renderRoutineMgrList();
+  document.getElementById('routineManagerOverlay').classList.add('open');
+}
+function renderRoutineMgrList(){
+  const list = getActiveRoutineTemplates();
+  const el = document.getElementById('routineMgrList');
+  if (!list.length) { el.innerHTML = `<div style="color:var(--ink-lt);font-size:.82rem;padding:8px">Belum ada tugas rutin.</div>`; return; }
+  const DNAMES=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  el.innerHTML = list.map(t=>`
+    <div class="routine-mgr-item" data-rid="${t.id}">
+      <div class="routine-mgr-info">
+        <div class="routine-mgr-title">${escHtml(t.title)}</div>
+        <div class="routine-mgr-meta">${t.recurrence==='daily'?'Setiap hari':'Setiap '+DNAMES[t.weeklyDay]}</div>
+      </div>
+      <div class="routine-mgr-actions">
+        <button class="btn btn-icon btn-sm rt-edit-btn" data-id="${t.id}" title="Edit"><i class="ti ti-pencil"></i></button>
+        <button class="btn btn-icon btn-sm btn-danger rt-del-btn" data-id="${t.id}" title="Hapus"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`).join('');
+  el.querySelectorAll('.rt-edit-btn').forEach(b=>b.addEventListener('click',()=>startEditRoutineTemplate(b.dataset.id)));
+  el.querySelectorAll('.rt-del-btn').forEach(b=>b.addEventListener('click',()=>confirmDeleteRoutineTemplate(b.dataset.id)));
+}
+function resetRoutineForm(){
+  editingRoutineId = null;
+  document.getElementById('rtTitle').value = '';
+  document.getElementById('rtRecurrence').value = 'daily';
+  document.getElementById('rtWeekday').value = String(new Date().getDay());
+  document.getElementById('rtWeekdayWrap').style.display = 'none';
+  document.getElementById('rtSaveBtn').innerHTML = '<i class="ti ti-plus"></i> Tambah Tugas';
+  document.getElementById('rtCancelEditBtn').style.display = 'none';
+  document.getElementById('routineFormLabel').textContent = 'Tambah Tugas Baru';
+}
+function startEditRoutineTemplate(id){
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return; }
+  const t = routineTasks.find(x=>x.id===id);
+  if (!t) return;
+  editingRoutineId = id;
+  document.getElementById('rtTitle').value = t.title;
+  document.getElementById('rtRecurrence').value = t.recurrence;
+  document.getElementById('rtWeekdayWrap').style.display = t.recurrence==='weekly' ? 'block' : 'none';
+  if (t.recurrence==='weekly') document.getElementById('rtWeekday').value = String(t.weeklyDay);
+  document.getElementById('rtSaveBtn').innerHTML = '<i class="ti ti-device-floppy"></i> Simpan Perubahan';
+  document.getElementById('rtCancelEditBtn').style.display = 'inline-flex';
+  document.getElementById('routineFormLabel').textContent = 'Edit Tugas (berlaku mulai hari ini)';
+  document.getElementById('rtTitle').focus();
+}
+async function confirmDeleteRoutineTemplate(id){
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return; }
+  if (!confirm('Hapus tugas rutin ini? Tugas pada tanggal sebelumnya tetap tersimpan, hanya tidak akan muncul lagi mulai hari ini.')) return;
+  try {
+    await removeRoutineTask(id);
+    if (editingRoutineId===id) resetRoutineForm();
+    renderRoutineMgrList();
+    showToast('🗑️ Tugas rutin dihapus (mulai hari ini)');
+  } catch(e){ showToast('❌ '+e.message); }
+}
+document.getElementById('rtRecurrence').addEventListener('change', e=>{
+  document.getElementById('rtWeekdayWrap').style.display = e.target.value==='weekly' ? 'block' : 'none';
+});
+document.getElementById('rtSaveBtn').addEventListener('click', async ()=>{
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses untuk mengedit'); return; }
+  const title = document.getElementById('rtTitle').value.trim();
+  if (!title) { showToast('⚠️ Nama tugas wajib diisi!'); return; }
+  const recurrence = document.getElementById('rtRecurrence').value;
+  const weeklyDay = parseInt(document.getElementById('rtWeekday').value, 10);
+  const btn = document.getElementById('rtSaveBtn');
+  btn.disabled = true;
+  try {
+    if (editingRoutineId) {
+      await updateRoutineTask(editingRoutineId, {title, recurrence, weeklyDay});
+      showToast('✅ Tugas rutin diperbarui (mulai hari ini)');
+    } else {
+      await createRoutineTask({title, recurrence, weeklyDay});
+      showToast('✅ Tugas rutin ditambahkan');
+    }
+    resetRoutineForm();
+    renderRoutineMgrList();
+  } catch(e){ showToast('❌ '+e.message); }
+  finally { btn.disabled = false; }
+});
+document.getElementById('rtCancelEditBtn').addEventListener('click', resetRoutineForm);
+document.getElementById('routineEnabledToggle').addEventListener('change', e=>{ setRoutineEnabled(e.target.checked); });
+document.getElementById('manageRoutineBtn').addEventListener('click', openRoutineManager);
+document.getElementById('closeRoutineManager').addEventListener('click', () => { document.getElementById('routineManagerOverlay').classList.remove('open'); resetRoutineForm(); });
+document.getElementById('closeRoutineManagerOk').addEventListener('click', () => { document.getElementById('routineManagerOverlay').classList.remove('open'); resetRoutineForm(); });
+document.getElementById('routineManagerOverlay').addEventListener('click', e => { if (e.target === document.getElementById('routineManagerOverlay')) { document.getElementById('routineManagerOverlay').classList.remove('open'); resetRoutineForm(); } });
+
+
+/* ════════════════════════════════════════
    FIX #2 — EXCEL EXPORT: colorful + range picker
    ════════════════════════════════════════ */
 
@@ -3568,14 +4071,14 @@ if (useFirebase && auth) {
     // When auth state changes, reload config so editor list is fresh
     await loadWorkspaceConfig();
     applyAuthState(user);
-    if (!window._eventsLoaded) { window._eventsLoaded=true; loadEvents(); renderCalendar(); }
+    if (!window._eventsLoaded) { window._eventsLoaded=true; loadEvents(); loadRoutineTasks(); renderCalendar(); }
   });
-  if (!window._eventsLoaded) { window._eventsLoaded=true; loadEvents(); renderCalendar(); }
+  if (!window._eventsLoaded) { window._eventsLoaded=true; loadEvents(); loadRoutineTasks(); renderCalendar(); }
 } else {
   canWrite=true;
   document.body.classList.remove('read-only');
   document.getElementById('authChip').innerHTML='';
-  loadEvents(); renderCalendar();
+  loadEvents(); loadRoutineTasks(); renderCalendar();
 }
 
 /* Setup autocomplete after DOM is ready */
