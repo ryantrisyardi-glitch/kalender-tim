@@ -868,22 +868,125 @@ body.read-only .readonly-badge{display:inline-flex}
 </div>
 <!-- Firestore Rules reminder — shown only in console, not UI -->
 <!--
-  FIRESTORE SECURITY RULES yang diperlukan:
+  FIRESTORE SECURITY RULES yang diperlukan (copy-paste ke Firebase Console → Firestore → Rules):
+
   rules_version = '2';
   service cloud.firestore {
     match /databases/{database}/documents {
-      // Events: anyone read, logged-in write
-      match /events/{id}     { allow read: if true; allow write: if request.auth != null; }
-      match /events_{ws}/{id}{ allow read: if true; allow write: if request.auth != null; }
-      // Config: anyone read (to check editors list), only superadmin write
-      match /_config/{ws}    { allow read: if true; allow write: if request.auth != null && request.auth.token.email == "ryan.trisyardi@gmail.com"; }
-      // BUGFIX #1: urutan drag-and-drop & status expand/collapse per tanggal,
-      // disinkronkan realtime agar sama untuk semua user (bukan localStorage saja)
-      match /cal_order/{ws}    { allow read: if true; allow write: if request.auth != null; }
-      match /cal_collapse/{ws} { allow read: if true; allow write: if request.auth != null; }
-      // Tugas Rutin (Daily/Weekly Routine)
-      match /routines/{id}     { allow read: if true; allow write: if request.auth != null; }
-      match /routines_{ws}/{id}{ allow read: if true; allow write: if request.auth != null; }
+
+      // ── HELPERS ──────────────────────────────────────────────────
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      function userEmail() {
+        return request.auth.token.email;
+      }
+      function isSuperAdmin() {
+        return isSignedIn() && userEmail() == 'ryan.trisyardi@gmail.com';
+      }
+      function isWorkspaceOwner(wsId) {
+        return isSignedIn() &&
+          exists(/databases/$(database)/documents/_workspaces/$(wsId)) &&
+          get(/databases/$(database)/documents/_workspaces/$(wsId)).data.ownerEmail == userEmail();
+      }
+      function isWorkspaceEditor(wsId) {
+        return isSignedIn() &&
+          exists(/databases/$(database)/documents/_config/$(wsId)) &&
+          userEmail() in get(/databases/$(database)/documents/_config/$(wsId)).data.editors;
+      }
+      function isWorkspaceViewer(wsId) {
+        return isSignedIn() &&
+          exists(/databases/$(database)/documents/_config/$(wsId)) &&
+          'viewers' in get(/databases/$(database)/documents/_config/$(wsId)).data &&
+          userEmail() in get(/databases/$(database)/documents/_config/$(wsId)).data.viewers;
+      }
+      function isWorkspacePublic(wsId) {
+        return exists(/databases/$(database)/documents/_workspaces/$(wsId)) &&
+          get(/databases/$(database)/documents/_workspaces/$(wsId)).data.visibility == 'public';
+      }
+      function canReadWorkspace(wsId) {
+        return isSuperAdmin()
+            || isWorkspaceOwner(wsId)
+            || isWorkspaceEditor(wsId)
+            || isWorkspaceViewer(wsId)
+            || isWorkspacePublic(wsId);
+      }
+      function canWriteWorkspace(wsId) {
+        return isSuperAdmin()
+            || isWorkspaceOwner(wsId)
+            || isWorkspaceEditor(wsId);
+      }
+
+      // ── _workspaces registry ─────────────────────────────────────
+      match /_workspaces/{wsId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn()
+                      && request.resource.data.ownerEmail == userEmail()
+                      && !exists(/databases/$(database)/documents/_workspaces/$(wsId));
+        allow update: if isSuperAdmin()
+                      || (isWorkspaceOwner(wsId)
+                          && request.resource.data.ownerEmail == resource.data.ownerEmail
+                          && request.resource.data.ownerUid  == resource.data.ownerUid);
+        allow delete: if isSuperAdmin() || isWorkspaceOwner(wsId);
+      }
+
+      // ── _config (visibilitas, editors, viewers) ───────────────────
+      match /_config/{wsId} {
+        allow read: if true;
+        allow create: if isSignedIn() && (isWorkspaceOwner(wsId) || isSuperAdmin());
+        allow update: if isWorkspaceOwner(wsId) || isSuperAdmin();
+        allow delete: if isSuperAdmin();
+      }
+
+      // ── cal_order & cal_collapse (drag-and-drop & expand/collapse) ─
+      match /cal_order/{wsId} {
+        allow read:  if canReadWorkspace(wsId);
+        allow write: if canWriteWorkspace(wsId);
+      }
+      match /cal_collapse/{wsId} {
+        allow read:  if canReadWorkspace(wsId);
+        allow write: if canWriteWorkspace(wsId);
+      }
+
+      // ── _auditLog ────────────────────────────────────────────────
+      match /_auditLog/{logId} {
+        allow read:           if isSuperAdmin();
+        allow create:         if isSignedIn();
+        allow update, delete: if false;
+      }
+
+      // ── _notifications ───────────────────────────────────────────
+      match /_notifications/{notifId} {
+        allow read:   if isSignedIn() && resource.data.toEmail == userEmail();
+        allow create: if isSignedIn();
+        allow update: if isSignedIn()
+                      && resource.data.toEmail == userEmail()
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow delete: if false;
+      }
+
+      // ── events (workspace "default") ─────────────────────────────
+      match /events/{docId} {
+        allow read:  if canReadWorkspace('default');
+        allow write: if canWriteWorkspace('default');
+      }
+
+      // ── routines (workspace "default") — Tugas Rutin ──────────────
+      match /routines/{docId} {
+        allow read:  if canReadWorkspace('default');
+        allow write: if canWriteWorkspace('default');
+      }
+
+      // ── events_* dan routines_* (semua workspace lain) ────────────
+      // Firestore tidak mendukung wildcard SEBAGIAN nama collection
+      // (mis. "events_{wsId}" tidak valid — wildcard harus 1 segmen penuh),
+      // jadi gunakan wildcard penuh {collId} lalu filter + ekstrak wsId-nya.
+      match /{collId}/{docId} {
+        allow read:  if (collId.matches('events_.+')   && canReadWorkspace(collId.split('events_')[1]))
+                     || (collId.matches('routines_.+') && canReadWorkspace(collId.split('routines_')[1]));
+        allow write: if (collId.matches('events_.+')   && canWriteWorkspace(collId.split('events_')[1]))
+                     || (collId.matches('routines_.+') && canWriteWorkspace(collId.split('routines_')[1]));
+      }
     }
   }
 -->
