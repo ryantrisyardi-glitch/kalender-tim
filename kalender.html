@@ -4,6 +4,16 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover"/>
 <title>Kalender Tim</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#1C1917"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Kalender Tim"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png"/>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -780,6 +790,18 @@ body.read-only .readonly-badge{display:inline-flex}
   body.print-report .main-row{display:none!important}
   body.print-report #reportView{display:block!important}
   body.print-report .rpt-print-title{display:block!important}
+  body.print-routine-report .tab-nav,
+  body.print-routine-report .rpt-controls,
+  body.print-routine-report .hdr-right,
+  body.print-routine-report .legend-bar,
+  body.print-routine-report .list-section,
+  body.print-routine-report .panel-col,
+  body.print-routine-report .toast,
+  body.print-routine-report .overlay,
+  body.print-routine-report .control-bar,
+  body.print-routine-report .main-row{display:none!important}
+  body.print-routine-report #routineReportView{display:block!important}
+  body.print-routine-report .rpt-print-title{display:block!important}
   .rpt-table-wrap{box-shadow:none;border:1px solid #ccc}
   .rpt-table th{background:#1C1917!important;color:rgba(255,255,255,.85)!important}
   .rpt-row:hover{background:none}
@@ -787,6 +809,17 @@ body.read-only .readonly-badge{display:inline-flex}
   .rpt-type-pill{border:1px solid #ccc!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .rpt-status{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+/* ── DAILY TASK REPORT SUMMARY BAR ── */
+.rr-summary-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1rem}
+.rr-sum-card{flex:1;min-width:140px;background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);padding:12px 16px}
+.rr-sum-label{font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:4px}
+.rr-sum-value{font-size:1.4rem;font-weight:800;color:var(--ink);letter-spacing:-.02em}
+.rr-sum-card.rr-sum-done .rr-sum-value{color:var(--s-achieve-tx)}
+.rr-sum-card.rr-sum-pending .rr-sum-value{color:var(--s-pending-tx)}
+.rr-sum-card.rr-sum-rate .rr-sum-value{color:#1D4ED8}
+
+
 
 
 
@@ -814,6 +847,7 @@ body.read-only .readonly-badge{display:inline-flex}
 .routine-title{font-size:.79rem;font-weight:700;color:var(--ink);line-height:1.3;word-break:break-word}
 .routine-item.is-done .routine-title{color:var(--ink-lt);text-decoration:line-through}
 .routine-meta{font-size:.64rem;font-weight:600;color:var(--ink-lt);margin-top:2px;display:flex;align-items:center;gap:3px}
+.routine-pics{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
 .routine-override-badge{display:inline-flex;align-items:center;font-size:8px;color:#7C3AED;background:#EDE9FE;border-radius:50%;width:15px;height:15px;justify-content:center;flex-shrink:0}
 .routine-edit-btn{background:none;border:none;color:var(--ink-lt);cursor:pointer;padding:4px 5px;border-radius:var(--r-sm);transition:background .12s,color .12s;flex-shrink:0;display:flex;align-items:center}
 .routine-edit-btn:hover{background:#E0E7FF;color:#1D4ED8}
@@ -824,6 +858,15 @@ body.read-only .readonly-badge{display:inline-flex}
 .routine-edit-cancel{background:var(--bg-dk);color:var(--ink-lt)}
 .routine-edit-cancel:hover{background:var(--rule)}
 .panel-section-divider{height:1.5px;background:var(--rule);margin:10px 0 9px;border-radius:1px}
+
+/* Panel kanan: blok terpisah secara visual antara Tugas Rutin & Event biasa */
+.panel-block{border-radius:var(--r-lg);padding:10px 9px 8px;margin-bottom:10px}
+.panel-block:last-child{margin-bottom:0}
+.panel-block-routine{background:#F5F9FF;border:1.5px solid #DBEAFE}
+.panel-block-events{background:var(--bg-dk);border:1.5px solid var(--rule)}
+.panel-block-count{margin-left:auto;font-size:.62rem;font-weight:700;color:var(--ink-lt);background:rgba(0,0,0,.06);padding:1px 7px;border-radius:100px;text-transform:none;letter-spacing:0}
+.event-section-label{display:flex;align-items:center;gap:5px;font-size:.68rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-md);margin-bottom:7px}
+.event-section-label i{font-size:12px}
 
 /* Toggle switch ON/OFF untuk mengaktifkan fitur */
 .routine-enable-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg-dk);border-radius:var(--r-lg);padding:11px 13px;margin-bottom:.25rem}
@@ -842,6 +885,7 @@ body.read-only .readonly-badge{display:inline-flex}
 .routine-mgr-info{flex:1;min-width:0}
 .routine-mgr-title{font-size:.82rem;font-weight:700;color:var(--ink)}
 .routine-mgr-meta{font-size:.68rem;color:var(--ink-lt);margin-top:1px}
+.routine-mgr-pics{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
 .routine-mgr-actions{display:flex;gap:5px;flex-shrink:0}
 .routine-form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:.6rem}
 .routine-form-hint{font-size:.68rem;color:var(--ink-lt);margin-top:8px;line-height:1.5}
@@ -1005,6 +1049,7 @@ body.read-only .readonly-badge{display:inline-flex}
       <i class="ti ti-bell"></i>
       <span id="notifBadge" style="position:absolute;top:4px;right:4px;width:8px;height:8px;background:#EF4444;border-radius:50%;display:none"></span>
     </button>
+    <button class="btn" id="installAppBtn" style="display:none;background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-download"></i> Install App</button>
     <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
     <button class="btn write-only" id="managePicColorsBtn"><i class="ti ti-palette"></i> Warna PIC</button>
     <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
@@ -1026,6 +1071,7 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="tab-nav" id="tabNav">
   <button class="tab-btn active" id="tabCalBtn" onclick="switchTab('calendar')"><i class="ti ti-calendar-month"></i> Kalender</button>
   <button class="tab-btn" id="tabReportBtn" onclick="switchTab('report')"><i class="ti ti-list-details"></i> Timeline Report</button>
+  <button class="tab-btn" id="tabRoutineReportBtn" onclick="switchTab('routineReport')"><i class="ti ti-repeat"></i> Report Tugas Rutin</button>
 </div>
 
 <!-- CONTROL BAR -->
@@ -1124,6 +1170,46 @@ body.read-only .readonly-badge{display:inline-flex}
   </div>
 </div>
 
+<!-- ══ REPORT TUGAS RUTIN (DAILY TASK) VIEW ══ -->
+<div id="routineReportView" style="display:none">
+  <!-- Report Controls -->
+  <div class="rpt-controls">
+    <div class="rpt-filter-group">
+      <span class="filter-sep">Filter</span>
+      <select class="filter-select" id="rrFilterTask"><option value="all">Semua Tugas</option></select>
+      <select class="filter-select" id="rrFilterPIC"><option value="all">Semua PIC</option></select>
+      <select class="filter-select" id="rrFilterRecurrence">
+        <option value="all">Semua Pengulangan</option>
+        <option value="daily">Harian</option>
+        <option value="weekly">Mingguan</option>
+      </select>
+      <select class="filter-select" id="rrFilterStatus">
+        <option value="all">Semua Status</option>
+        <option value="done">Selesai</option>
+        <option value="pending">Belum Selesai</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="rpt-range-wrap">
+        <label class="filter-sep">Dari</label>
+        <input type="date" class="jump-year" id="rrFrom" style="width:150px;padding:6px 8px" />
+        <label class="filter-sep">s/d</label>
+        <input type="date" class="jump-year" id="rrTo" style="width:150px;padding:6px 8px" />
+      </div>
+      <button class="btn btn-green" id="rrExportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
+      <button class="btn" id="rrPrintBtn"><i class="ti ti-printer"></i> Print PDF</button>
+    </div>
+  </div>
+  <!-- Summary -->
+  <div class="rr-summary-bar" id="rrSummaryBar"></div>
+  <!-- Report Title (for print) -->
+  <div class="rpt-print-title" id="rrPrintTitle"></div>
+  <!-- Report Table -->
+  <div class="rpt-table-wrap" id="rrTableWrap">
+    <div style="text-align:center;padding:3rem;color:var(--ink-lt)"><i class="ti ti-loader" style="font-size:24px"></i><br>Memuat data...</div>
+  </div>
+</div>
+
 <!-- ══ HOLIDAY MANAGER MODAL ══ -->
 <div class="overlay" id="holidayManagerOverlay">
   <div class="modal">
@@ -1209,6 +1295,15 @@ body.read-only .readonly-badge{display:inline-flex}
             <option value="3">Rabu</option><option value="4">Kamis</option><option value="5">Jumat</option><option value="6">Sabtu</option>
           </select>
         </div>
+      </div>
+      <div class="fg" style="position:relative">
+        <label class="fl">Penanggungjawab (PIC)</label>
+        <div class="pic-input-wrap" id="rtPicInputWrap">
+          <div id="rtPicTags"></div>
+          <input type="text" class="pic-input-field" id="rtPicInput" placeholder="Ketik nama lalu Enter..." autocomplete="off"/>
+        </div>
+        <div class="pic-ac-list" id="rtPicAcList" style="display:none"></div>
+        <div class="pic-hint"><i class="ti ti-info-circle" style="font-size:11px;vertical-align:-1px"></i> Opsional. Tekan <strong>Enter</strong> atau <strong>koma</strong> untuk tambah PIC, bisa lebih dari satu — dipakai untuk filter PIC di kalender &amp; laporan.</div>
       </div>
       <div class="routine-form-actions">
         <button class="btn" id="rtCancelEditBtn" style="display:none">Batal Edit</button>
@@ -2165,7 +2260,7 @@ let routineEnabled = loadRoutineEnabled();
 let editingRoutineId = null; // null = mode tambah baru di Routine Manager
 let currentDate=new Date(), filterType='all', filterPIC='all';
 let editingId=null, viewingId=null, selectedDate=null;
-let currentPICs=[], editingTypeId=null;
+let currentPICs=[], editingTypeId=null, currentRoutinePICs=[];
 const PRESET_COLORS=['#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E','#10B981','#14B8A6','#06B6D4','#3B82F6','#6366F1','#8B5CF6','#A855F7','#EC4899','#F43F5E','#64748B'];
 
 /* ════════════════════════════════════════
@@ -2430,7 +2525,7 @@ function rebuildFilters() {
   if (eventTypes.find(t=>t.id===tCur)) tSel.value=tCur;
 
   const pSel=document.getElementById('filterPIC'), pCur=pSel.value;
-  const allPICs=[...new Set(events.flatMap(e=>e.pics||[]).filter(Boolean))].sort();
+  const allPICs=getAllPICsCombined();
   pSel.innerHTML='<option value="all">Semua PIC</option>'+allPICs.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
   if (allPICs.includes(pCur)) pSel.value=pCur;
 
@@ -2497,6 +2592,7 @@ function loadRoutineTasks() {
       routineTasks=snap.docs.map(d=>({id:d.id,...d.data()}));
       renderCalendar();
       if (selectedDate) renderPanel(selectedDate);
+      if (typeof activeTab!=='undefined' && activeTab==='routineReport') { rebuildRoutineReportFilters(); renderRoutineReport(); }
     }, err=>{ console.error('Routine Firestore error:', err.code, err.message); });
   } else {
     try { routineTasks=JSON.parse(localStorage.getItem(LS_ROUTINE_KEY)||'[]'); }catch(e){routineTasks=[];}
@@ -2506,11 +2602,12 @@ function loadRoutineTasks() {
 function saveRoutineLocal(){ localStorage.setItem(LS_ROUTINE_KEY, JSON.stringify(routineTasks)); }
 
 /* Tambah template tugas rutin baru — mulai berlaku HARI INI */
-async function createRoutineTask({title, recurrence, weeklyDay}) {
+async function createRoutineTask({title, recurrence, weeklyDay, pics}) {
   const data = {
     title: title.trim(),
     recurrence,
     weeklyDay: recurrence==='weekly' ? weeklyDay : null,
+    pics: Array.isArray(pics) ? pics.filter(Boolean) : [],
     startDate: todayStr(),
     endDate: null,
     order: Date.now(),
@@ -2530,11 +2627,11 @@ async function createRoutineTask({title, recurrence, weeklyDay}) {
    - Jika template baru dibuat HARI INI (belum pernah berlaku historis): edit langsung di tempat.
    - Jika sudah berlaku sejak sebelum hari ini: tutup versi lama per kemarin,
      buat versi baru mulai hari ini (tanggal lalu tetap memakai versi lama). */
-async function updateRoutineTask(id, {title, recurrence, weeklyDay}) {
+async function updateRoutineTask(id, {title, recurrence, weeklyDay, pics}) {
   const task=routineTasks.find(t=>t.id===id);
   if (!task) return;
   const tdy=todayStr();
-  const patch={ title:title.trim(), recurrence, weeklyDay: recurrence==='weekly'?weeklyDay:null };
+  const patch={ title:title.trim(), recurrence, weeklyDay: recurrence==='weekly'?weeklyDay:null, pics: Array.isArray(pics) ? pics.filter(Boolean) : [] };
   if (task.startDate===tdy) {
     if (useFirebase) await db.collection(ROUTINE_COLL).doc(id).update(patch);
     else {
@@ -2641,6 +2738,7 @@ function getRoutineTasksForDate(ds) {
       if (t.startDate && t.startDate>ds) return false; // belum berlaku saat itu (no backdate)
       if (t.endDate && t.endDate<ds) return false;      // sudah ditutup/diganti sebelum tanggal ini
       if (t.recurrence==='weekly' && t.weeklyDay!==dow) return false;
+      if (filterPIC!=='all' && !(t.pics||[]).includes(filterPIC)) return false; // ikut filter PIC global
       return true;
     })
     .sort((a,b)=>(a.order||0)-(b.order||0))
@@ -2654,10 +2752,16 @@ function getRoutineTasksForDate(ds) {
         hasOverride: !!(ov && ov.title),
         recurrence:t.recurrence,
         weeklyDay:t.weeklyDay,
+        pics:t.pics||[],
         done: !!(t.completions && t.completions[ds])
       };
     });
 }
+
+/* Semua nama PIC yang pernah dipakai di tugas rutin (untuk autocomplete & filter) */
+function getAllRoutinePICs() { return [...new Set(routineTasks.flatMap(t=>t.pics||[]).filter(Boolean))].sort(); }
+/* Gabungan PIC dari event & tugas rutin — dipakai untuk dropdown filter global & autocomplete */
+function getAllPICsCombined() { return [...new Set([...getAllPICs(), ...getAllRoutinePICs()])].sort(); }
 
 /* Badge kecil untuk sel kalender, mis. "2/3 Rutin" — tidak mengganggu chip event */
 function getRoutineBadgeHtml(ds) {
@@ -2890,6 +2994,7 @@ function renderPanel(ds) {
       const metaText=t.recurrence==='daily'?'Harian':`Mingguan · ${DNAMES2[t.weeklyDay]}`;
       const overrideBadge=t.hasOverride?`<span class="routine-override-badge" title="Diubah manual untuk tanggal ini"><i class="ti ti-pencil"></i></span>`:'';
       const editBtn=canWrite?`<button class="routine-edit-btn" data-redit="${t.id}" title="Ubah manual untuk tanggal ini"><i class="ti ti-pencil"></i></button>`:'';
+      const picsHtml=(t.pics&&t.pics.length)?`<div class="routine-pics">${t.pics.map(p=>{const pc=getPicColor(p);return `<span class="pic-badge" style="background:${pc};color:${pickContrastText(pc)};border-color:${pc}">${escHtml(p)}</span>`;}).join('')}</div>`:'';
       return `<div class="routine-item${t.done?' is-done':''}" data-rid="${t.id}">
         <input type="checkbox" class="routine-checkbox" data-rcheck="${t.id}" ${t.done?'checked':''} ${canWrite?'':'disabled'}/>
         <div class="routine-body">
@@ -2897,11 +3002,12 @@ function renderPanel(ds) {
             <span class="routine-title">${escHtml(t.title)}</span>${overrideBadge}
           </div>
           <div class="routine-meta"><i class="ti ti-repeat" style="font-size:10px"></i> ${metaText}</div>
+          ${picsHtml}
         </div>
         ${editBtn}
       </div>`;
     }).join('');
-    routineSectionHtml=`<div class="routine-section"><div class="routine-section-label"><i class="ti ti-repeat"></i> Tugas Rutin</div>${itemsHtml}</div>${evs.length?'<div class="panel-section-divider"></div>':''}`;
+    routineSectionHtml=`<div class="panel-block panel-block-routine"><div class="routine-section-label"><i class="ti ti-repeat"></i> Tugas Rutin <span class="panel-block-count">${routineList.filter(t=>t.done).length}/${routineList.length}</span></div>${itemsHtml}</div>`;
   }
 
   const SM={achieve:'Achieve',not_achieve:'Not Achieve',pending:'In Process',cancel:'Cancel'};
@@ -2938,9 +3044,13 @@ function renderPanel(ds) {
       </div>
       <button class="pei-copy-btn write-only" onclick="event.stopPropagation(); copySingleEvent('${e.id}')" title="Copy Event"><i class="ti ti-copy"></i></button>
     </div>`;
-  }).join('') : (routineList.length?`<div class="panel-empty" style="padding:1rem 0"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>`:'');
+  }).join('') : '';
 
-  body.innerHTML = routineSectionHtml + eventsHtml;
+  const eventsSectionHtml = evs.length
+    ? `<div class="panel-block panel-block-events"><div class="event-section-label"><i class="ti ti-calendar-event"></i> Event Hari Ini <span class="panel-block-count">${evs.length}</span></div>${eventsHtml}</div>`
+    : (routineList.length ? `<div class="panel-empty" style="padding:1rem 0"><i class="ti ti-calendar-off"></i>Tidak ada event di hari ini</div>` : '');
+
+  body.innerHTML = routineSectionHtml + eventsSectionHtml;
 
   attachRoutineListeners(body, ds);
   body.querySelectorAll('.panel-event-item').forEach(el=>{
@@ -3106,7 +3216,7 @@ function setupPicAutocomplete() {
   function showPicAc(val) {
     const q=val.trim().toLowerCase();
     const used=new Set(currentPICs.map(p=>p.toLowerCase()));
-    const matches=getAllPICs().filter(p=>!used.has(p.toLowerCase())&&(q?p.toLowerCase().includes(q):true));
+    const matches=getAllPICsCombined().filter(p=>!used.has(p.toLowerCase())&&(q?p.toLowerCase().includes(q):true));
     if(!matches.length||!val.trim()){list.style.display='none';return;}
     list.innerHTML=matches.slice(0,8).map((m,i)=>{
       const hi=q?m.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<strong>$1</strong>'):escHtml(m);
@@ -3154,6 +3264,64 @@ document.getElementById('picInput').addEventListener('blur',()=>{
   setTimeout(()=>{if(document.getElementById('picInput').value.trim())addPICfromInput();},200);
 });
 document.getElementById('picInputWrap').addEventListener('click',()=>document.getElementById('picInput').focus());
+
+/* ════════════════════════════════════════
+   MULTI-PIC INPUT — TUGAS RUTIN (mirrors event PIC input above)
+   ════════════════════════════════════════ */
+function setupRtPicAutocomplete() {
+  const input=document.getElementById('rtPicInput');
+  const list=document.getElementById('rtPicAcList');
+  let acIdx=-1;
+
+  function showRtPicAc(val) {
+    const q=val.trim().toLowerCase();
+    const used=new Set(currentRoutinePICs.map(p=>p.toLowerCase()));
+    const matches=getAllPICsCombined().filter(p=>!used.has(p.toLowerCase())&&(q?p.toLowerCase().includes(q):true));
+    if(!matches.length||!val.trim()){list.style.display='none';return;}
+    list.innerHTML=matches.slice(0,8).map((m,i)=>{
+      const hi=q?m.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'),'<strong>$1</strong>'):escHtml(m);
+      return `<div class="pic-ac-item" data-val="${escHtml(m)}" data-i="${i}"><i class="ti ti-user"></i>${hi}</div>`;
+    }).join('');
+    list.style.display='block'; acIdx=-1;
+    list.querySelectorAll('.pic-ac-item').forEach(el=>el.addEventListener('mousedown',ev=>{
+      ev.preventDefault();
+      const name=el.dataset.val;
+      if(!currentRoutinePICs.includes(name)){currentRoutinePICs.push(name);renderRtPicTags();}
+      input.value=''; list.style.display='none';
+    }));
+  }
+
+  input.addEventListener('input',()=>showRtPicAc(input.value));
+  input.addEventListener('keydown',e=>{
+    const items=list.querySelectorAll('.pic-ac-item');
+    if(e.key==='ArrowDown'){e.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('ac-active',i===acIdx));}
+    else if(e.key==='ArrowUp'){e.preventDefault();acIdx=Math.max(acIdx-1,0);items.forEach((el,i)=>el.classList.toggle('ac-active',i===acIdx));}
+    else if((e.key==='Enter'||e.key===',')&&acIdx>=0){e.preventDefault();const name=items[acIdx].dataset.val;if(!currentRoutinePICs.includes(name)){currentRoutinePICs.push(name);renderRtPicTags();}input.value='';list.style.display='none';acIdx=-1;}
+    else if(e.key==='Escape'){list.style.display='none';}
+  });
+  input.addEventListener('blur',()=>setTimeout(()=>list.style.display='none',150));
+}
+setupRtPicAutocomplete();
+
+function renderRtPicTags() {
+  const c=document.getElementById('rtPicTags');
+  c.innerHTML=currentRoutinePICs.map((p,i)=>{const pc=getPicColor(p);const tc=pickContrastText(pc);return `<span class="pic-tag" style="background:${pc};color:${tc};border-color:${pc}">${escHtml(p)}<button class="pic-tag-remove" data-i="${i}" type="button" style="color:${tc}"><i class="ti ti-x" style="font-size:10px"></i></button></span>`;}).join('');
+  c.querySelectorAll('.pic-tag-remove').forEach(btn=>btn.addEventListener('click',()=>{currentRoutinePICs.splice(parseInt(btn.dataset.i),1);renderRtPicTags();}));
+}
+function addRtPICfromInput() {
+  const input=document.getElementById('rtPicInput');
+  const names=input.value.trim().replace(/,+$/,'').split(',').map(s=>s.trim()).filter(Boolean);
+  names.forEach(n=>{if(n&&!currentRoutinePICs.includes(n))currentRoutinePICs.push(n);});
+  input.value=''; renderRtPicTags();
+}
+document.getElementById('rtPicInput').addEventListener('keydown',e=>{
+  if((e.key==='Enter'||e.key===',')&&document.getElementById('rtPicAcList').style.display==='none'){e.preventDefault();addRtPICfromInput();}
+  if(e.key==='Backspace'&&!e.target.value&&currentRoutinePICs.length){currentRoutinePICs.pop();renderRtPicTags();}
+});
+document.getElementById('rtPicInput').addEventListener('blur',()=>{
+  setTimeout(()=>{if(document.getElementById('rtPicInput').value.trim())addRtPICfromInput();},200);
+});
+document.getElementById('rtPicInputWrap').addEventListener('click',()=>document.getElementById('rtPicInput').focus());
 
 /* ════════════════════════════════════════
    ADD MODAL
@@ -3267,9 +3435,9 @@ function openPicColorManager(){
 function renderPicColorList(){
   const list=document.getElementById('picColorList');
   if(!list) return;
-  const allPics=getAllPICs();
+  const allPics=getAllPICsCombined();
   if(!allPics.length){
-    list.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--ink-lt);font-size:.82rem">Belum ada PIC. Tambahkan PIC pada sebuah event untuk mengatur warnanya di sini.</div>`;
+    list.innerHTML=`<div style="text-align:center;padding:1.5rem;color:var(--ink-lt);font-size:.82rem">Belum ada PIC. Tambahkan PIC pada sebuah event atau tugas rutin untuk mengatur warnanya di sini.</div>`;
     return;
   }
   list.innerHTML=allPics.map(p=>{
@@ -3650,17 +3818,21 @@ function renderRoutineMgrList(){
   const el = document.getElementById('routineMgrList');
   if (!list.length) { el.innerHTML = `<div style="color:var(--ink-lt);font-size:.82rem;padding:8px">Belum ada tugas rutin.</div>`; return; }
   const DNAMES=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-  el.innerHTML = list.map(t=>`
+  el.innerHTML = list.map(t=>{
+    const pics=t.pics||[];
+    const picsHtml=pics.length?`<div class="routine-mgr-pics">${pics.map(p=>{const pc=getPicColor(p);return `<span class="pic-badge" style="background:${pc};color:${pickContrastText(pc)};border-color:${pc}">${escHtml(p)}</span>`;}).join('')}</div>`:'';
+    return `
     <div class="routine-mgr-item" data-rid="${t.id}">
       <div class="routine-mgr-info">
         <div class="routine-mgr-title">${escHtml(t.title)}</div>
         <div class="routine-mgr-meta">${t.recurrence==='daily'?'Setiap hari':'Setiap '+DNAMES[t.weeklyDay]}</div>
+        ${picsHtml}
       </div>
       <div class="routine-mgr-actions">
         <button class="btn btn-icon btn-sm rt-edit-btn" data-id="${t.id}" title="Edit"><i class="ti ti-pencil"></i></button>
         <button class="btn btn-icon btn-sm btn-danger rt-del-btn" data-id="${t.id}" title="Hapus"><i class="ti ti-trash"></i></button>
       </div>
-    </div>`).join('');
+    </div>`;}).join('');
   el.querySelectorAll('.rt-edit-btn').forEach(b=>b.addEventListener('click',()=>startEditRoutineTemplate(b.dataset.id)));
   el.querySelectorAll('.rt-del-btn').forEach(b=>b.addEventListener('click',()=>confirmDeleteRoutineTemplate(b.dataset.id)));
 }
@@ -3670,6 +3842,10 @@ function resetRoutineForm(){
   document.getElementById('rtRecurrence').value = 'daily';
   document.getElementById('rtWeekday').value = String(new Date().getDay());
   document.getElementById('rtWeekdayWrap').style.display = 'none';
+  currentRoutinePICs = [];
+  document.getElementById('rtPicInput').value = '';
+  document.getElementById('rtPicAcList').style.display = 'none';
+  renderRtPicTags();
   document.getElementById('rtSaveBtn').innerHTML = '<i class="ti ti-plus"></i> Tambah Tugas';
   document.getElementById('rtCancelEditBtn').style.display = 'none';
   document.getElementById('routineFormLabel').textContent = 'Tambah Tugas Baru';
@@ -3683,6 +3859,8 @@ function startEditRoutineTemplate(id){
   document.getElementById('rtRecurrence').value = t.recurrence;
   document.getElementById('rtWeekdayWrap').style.display = t.recurrence==='weekly' ? 'block' : 'none';
   if (t.recurrence==='weekly') document.getElementById('rtWeekday').value = String(t.weeklyDay);
+  currentRoutinePICs = [...(t.pics||[])];
+  renderRtPicTags();
   document.getElementById('rtSaveBtn').innerHTML = '<i class="ti ti-device-floppy"></i> Simpan Perubahan';
   document.getElementById('rtCancelEditBtn').style.display = 'inline-flex';
   document.getElementById('routineFormLabel').textContent = 'Edit Tugas (berlaku mulai hari ini)';
@@ -3705,16 +3883,18 @@ document.getElementById('rtSaveBtn').addEventListener('click', async ()=>{
   if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses untuk mengedit'); return; }
   const title = document.getElementById('rtTitle').value.trim();
   if (!title) { showToast('⚠️ Nama tugas wajib diisi!'); return; }
+  if (document.getElementById('rtPicInput').value.trim()) addRtPICfromInput();
   const recurrence = document.getElementById('rtRecurrence').value;
   const weeklyDay = parseInt(document.getElementById('rtWeekday').value, 10);
+  const pics = [...currentRoutinePICs];
   const btn = document.getElementById('rtSaveBtn');
   btn.disabled = true;
   try {
     if (editingRoutineId) {
-      await updateRoutineTask(editingRoutineId, {title, recurrence, weeklyDay});
+      await updateRoutineTask(editingRoutineId, {title, recurrence, weeklyDay, pics});
       showToast('✅ Tugas rutin diperbarui (mulai hari ini)');
     } else {
-      await createRoutineTask({title, recurrence, weeklyDay});
+      await createRoutineTask({title, recurrence, weeklyDay, pics});
       showToast('✅ Tugas rutin ditambahkan');
     }
     resetRoutineForm();
@@ -4188,6 +4368,7 @@ if (useFirebase && auth) {
 setupTitleAutocomplete();
 setupPicAutocomplete();
 initReportRange();
+initRoutineReportRange();
 
 /* ════════════════════════════════════════
    TAB SWITCHING
@@ -4198,6 +4379,7 @@ function switchTab(tab) {
   activeTab = tab;
   document.getElementById('tabCalBtn').classList.toggle('active', tab==='calendar');
   document.getElementById('tabReportBtn').classList.toggle('active', tab==='report');
+  document.getElementById('tabRoutineReportBtn').classList.toggle('active', tab==='routineReport');
 
   const calViews = [
     document.querySelector('.control-bar'),
@@ -4205,15 +4387,18 @@ function switchTab(tab) {
     document.querySelector('.main-row'),
   ];
   const reportView = document.getElementById('reportView');
+  const routineReportView = document.getElementById('routineReportView');
 
-  if (tab === 'calendar') {
-    calViews.forEach(el => { if(el) el.style.display = ''; });
-    reportView.style.display = 'none';
-  } else {
-    calViews.forEach(el => { if(el) el.style.display = 'none'; });
-    reportView.style.display = 'block';
+  calViews.forEach(el => { if(el) el.style.display = (tab==='calendar') ? '' : 'none'; });
+  reportView.style.display = (tab==='report') ? 'block' : 'none';
+  routineReportView.style.display = (tab==='routineReport') ? 'block' : 'none';
+
+  if (tab === 'report') {
     rebuildReportFilters();
     renderReport();
+  } else if (tab === 'routineReport') {
+    rebuildRoutineReportFilters();
+    renderRoutineReport();
   }
 }
 
@@ -4403,6 +4588,37 @@ function renderReport() {
   }
 }
 
+/* ── Helper: warna badge status ── */
+function statusColors(st) {
+  return {
+    tx: st==='achieve'?'var(--s-achieve-tx)':st==='not_achieve'?'var(--s-not-tx)':st==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)',
+    bg: st==='achieve'?'var(--s-achieve-bg)':st==='not_achieve'?'var(--s-not-bg)':st==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)'
+  };
+}
+/* ── Helper: kelompokkan entries [ds, {status}] berdasarkan status, dipadatkan jadi rentang tanggal ── */
+function buildStatusRangeBadges(entries, SM, small=true) {
+  const byStatus = {};
+  entries.forEach(([ds, v]) => { (byStatus[v.status] = byStatus[v.status]||[]).push(ds); });
+  return Object.entries(byStatus).map(([st, dates]) => {
+    const c = statusColors(st);
+    const sortedDates = [...dates].sort();
+    const ranges = [];
+    let rStart = sortedDates[0], rEnd = sortedDates[0];
+    for (let i = 1; i <= sortedDates.length; i++) {
+      const cur = sortedDates[i];
+      const prevEnd = new Date(rEnd + 'T00:00:00');
+      prevEnd.setDate(prevEnd.getDate() + 1);
+      if (cur && toStr(prevEnd) === cur) { rEnd = cur; }
+      else {
+        ranges.push(rStart === rEnd ? fmtDate(rStart) : `${fmtDate(rStart)}–${fmtDate(rEnd)}`);
+        rStart = rEnd = cur;
+      }
+    }
+    const sizeStyle = small ? 'font-size:.6rem;padding:2px 6px' : '';
+    return `<span class="rpt-status" style="background:${c.bg};color:${c.tx};${sizeStyle}">${SM[st]||st}: ${ranges.join(', ')}</span>`;
+  }).join(' ');
+}
+
 /* ── Helper: build single report row (with partial status display) ── */
 function buildRptRow(e, SM) {
   const t    = getTypeById(e.type);
@@ -4412,64 +4628,51 @@ function buildRptRow(e, SM) {
     : fmtDateReport(e.dateStart);
 
   const globalStatus  = e.status || '';
-  const statusTx  = globalStatus==='achieve'?'var(--s-achieve-tx)':globalStatus==='not_achieve'?'var(--s-not-tx)':globalStatus==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
-  const statusBg  = globalStatus==='achieve'?'var(--s-achieve-bg)':globalStatus==='not_achieve'?'var(--s-not-bg)':globalStatus==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
+  const gc = statusColors(globalStatus);
   const statusTxt = SM[globalStatus] || globalStatus || '–';
   const accentColor = hexDarken(t.chip, 0.28);
 
-  // Partial status: tampilkan HANYA jika ada tanggal yang statusnya BERBEDA dari status global
   const dateStatuses = e.dateStatuses || {};
-  const dsEntries = Object.entries(dateStatuses).filter(([, v]) => v && v.status);
-  // Saring: hanya tanggal yang statusnya berbeda dari global (atau tidak ada global)
-  const diffEntries = dsEntries.filter(([, v]) => v.status !== globalStatus);
-  const hasPartial = diffEntries.length > 0;
-  const hasSamePartial = dsEntries.length > 0 && diffEntries.length === 0; // semua parsial = global
 
-  // Build partial status summary — hanya untuk yang berbeda dari global
-  let partialHtml = '';
-  if (hasPartial) {
-    // Group tanggal berdasarkan status
-    const byStatus = {};
-    diffEntries.forEach(([ds, v]) => {
-      if (!byStatus[v.status]) byStatus[v.status] = [];
-      byStatus[v.status].push(ds);
-    });
-    const parts = Object.entries(byStatus).map(([st, dates]) => {
-      const stTx = st==='achieve'?'var(--s-achieve-tx)':st==='not_achieve'?'var(--s-not-tx)':st==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
-      const stBg = st==='achieve'?'var(--s-achieve-bg)':st==='not_achieve'?'var(--s-not-bg)':st==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
-      // Compactkan tanggal menjadi ranges
-      const sortedDates = [...dates].sort();
-      const ranges = [];
-      let rStart = sortedDates[0], rEnd = sortedDates[0];
-      for (let i = 1; i <= sortedDates.length; i++) {
-        const cur = sortedDates[i];
-        const prevEnd = new Date(rEnd + 'T00:00:00');
-        prevEnd.setDate(prevEnd.getDate() + 1);
-        if (cur && toStr(prevEnd) === cur) { rEnd = cur; }
-        else {
-          ranges.push(rStart === rEnd ? fmtDate(rStart) : `${fmtDate(rStart)}–${fmtDate(rEnd)}`);
-          rStart = rEnd = cur;
-        }
-      }
-      return `<span class="rpt-status" style="background:${stBg};color:${stTx};font-size:.6rem;padding:2px 6px">${SM[st]||st}: ${ranges.join(', ')}</span>`;
-    }).join(' ');
-    partialHtml = `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;align-items:center">
-      <i class="ti ti-calendar-stats" style="font-size:10px;color:#7C3AED" title="Ada status berbeda di tanggal tertentu"></i>
-      ${parts}
-    </div>`;
-  }
+  // Daftar semua tanggal dalam rentang event (untuk cek apakah SEMUA tanggal sudah di-update per-tanggal)
+  const rangeDates = [];
+  { let cur = e.dateStart; const end = e.dateEnd || e.dateStart; let guard = 0;
+    while (cur <= end && guard < 3660) { rangeDates.push(cur); cur = addDaysStr(cur, 1); guard++; } }
+  const fullyDated = rangeDates.length > 0 && rangeDates.every(ds => dateStatuses[ds] && dateStatuses[ds].status);
 
-  // Status cell: global badge + parsial (hanya jika ada yang berbeda)
-  // Jika tidak ada global tapi ada parsial, tampilkan parsial saja
   let statusCell;
-  if (globalStatus) {
-    statusCell = `<span class="rpt-status" style="background:${statusBg};color:${statusTx}">${statusTxt}</span>`;
-    if (hasPartial) statusCell += partialHtml;
-    // Jika hasSamePartial: tidak tambah apa-apa (sudah ada global)
-  } else if (hasPartial) {
-    statusCell = partialHtml;
+  if (fullyDated) {
+    // Semua tanggal pada event ini sudah punya input status sendiri —
+    // status global ("In Process") sudah usang & tidak relevan, jangan ditampilkan.
+    // Cukup tampilkan status hasil input terakhir; jika semua sama, tampilkan 1 badge saja.
+    const distinct = [...new Set(rangeDates.map(ds => dateStatuses[ds].status))];
+    if (distinct.length === 1) {
+      const c = statusColors(distinct[0]);
+      statusCell = `<span class="rpt-status" style="background:${c.bg};color:${c.tx}">${SM[distinct[0]] || distinct[0]}</span>`;
+    } else {
+      statusCell = buildStatusRangeBadges(rangeDates.map(ds => [ds, dateStatuses[ds]]), SM, false);
+    }
   } else {
-    statusCell = '–';
+    // Belum semua tanggal di-update manual — tampilkan status global,
+    // ditambah rincian tanggal yang statusnya berbeda dari global (jika ada)
+    const dsEntries = Object.entries(dateStatuses).filter(([, v]) => v && v.status);
+    const diffEntries = dsEntries.filter(([, v]) => v.status !== globalStatus);
+    const hasPartial = diffEntries.length > 0;
+    let partialHtml = '';
+    if (hasPartial) {
+      partialHtml = `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:3px;align-items:center">
+        <i class="ti ti-calendar-stats" style="font-size:10px;color:#7C3AED" title="Ada status berbeda di tanggal tertentu"></i>
+        ${buildStatusRangeBadges(diffEntries, SM, true)}
+      </div>`;
+    }
+    if (globalStatus) {
+      statusCell = `<span class="rpt-status" style="background:${gc.bg};color:${gc.tx}">${statusTxt}</span>`;
+      if (hasPartial) statusCell += partialHtml;
+    } else if (hasPartial) {
+      statusCell = partialHtml;
+    } else {
+      statusCell = '–';
+    }
   }
 
   return `<tr class="rpt-row" data-id="${escHtml(e.id)}">
@@ -4544,6 +4747,248 @@ document.getElementById('rptExportExcelBtn').addEventListener('click', () => {
   const safeName = rangeLabel.replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_');
   XLSX.writeFile(wb, `Timeline_${safeName}.xlsx`);
   showToast('✅ Excel Timeline berhasil didownload!');
+});
+
+/* ════════════════════════════════════════
+   REPORT TUGAS RUTIN (DAILY TASK REPORT)
+   Merekap histori tugas rutin (harian/mingguan) per tanggal, lengkap
+   dengan PIC & status selesai/belum — untuk periode tanggal yang dipilih.
+   ════════════════════════════════════════ */
+let rrSortCol = 'date';  // 'date'|'task'|'pic'|'status'
+let rrSortDir = 'asc';
+
+function initRoutineReportRange() {
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const last  = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  document.getElementById('rrFrom').value = toStr(first);
+  document.getElementById('rrTo').value   = toStr(last);
+}
+
+function rebuildRoutineReportFilters() {
+  // Task filter — semua judul tugas rutin unik (termasuk yang sudah tidak aktif, agar histori tetap kelihatan)
+  const taskSel = document.getElementById('rrFilterTask');
+  const taskCur = taskSel.value;
+  const allTaskTitles = [...new Set(routineTasks.map(t=>t.title).filter(Boolean))].sort();
+  taskSel.innerHTML = '<option value="all">Semua Tugas</option>' + allTaskTitles.map(t=>`<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('');
+  if (allTaskTitles.includes(taskCur)) taskSel.value = taskCur;
+
+  // PIC filter
+  const picSel = document.getElementById('rrFilterPIC');
+  const picCur = picSel.value;
+  const allPICs = getAllRoutinePICs();
+  picSel.innerHTML = '<option value="all">Semua PIC</option>' + allPICs.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
+  if (allPICs.includes(picCur)) picSel.value = picCur;
+
+  if (!document.getElementById('rrFrom').value) initRoutineReportRange();
+}
+
+/* Hasilkan daftar baris laporan: 1 baris = 1 tugas pada 1 tanggal tertentu dalam rentang,
+   TIDAK terikat pada filterPIC global kalender — laporan ini punya filter sendiri. */
+function getRoutineReportFiltered() {
+  const rTask   = document.getElementById('rrFilterTask').value;
+  const rPIC    = document.getElementById('rrFilterPIC').value;
+  const rRec    = document.getElementById('rrFilterRecurrence').value;
+  const rStatus = document.getElementById('rrFilterStatus').value;
+  const rFrom   = document.getElementById('rrFrom').value;
+  const rTo     = document.getElementById('rrTo').value;
+  if (!rFrom || !rTo || !routineEnabled) return [];
+
+  const rows = [];
+  let cur = rFrom, guard = 0;
+  while (cur <= rTo && guard < 3660) {
+    const dow = new Date(cur+'T00:00:00').getDay();
+    routineTasks.forEach(t => {
+      if (t.startDate && t.startDate>cur) return;
+      if (t.endDate && t.endDate<cur) return;
+      if (t.recurrence==='weekly' && t.weeklyDay!==dow) return;
+      if (rRec !== 'all' && t.recurrence !== rRec) return;
+      if (rTask !== 'all' && t.title !== rTask) return;
+      if (rPIC  !== 'all' && !(t.pics||[]).includes(rPIC)) return;
+      const done = !!(t.completions && t.completions[cur]);
+      if (rStatus === 'done' && !done) return;
+      if (rStatus === 'pending' && done) return;
+      const ov = t.dateOverrides && t.dateOverrides[cur];
+      rows.push({
+        date: cur,
+        title: (ov && ov.title) ? ov.title : t.title,
+        recurrence: t.recurrence,
+        weeklyDay: t.weeklyDay,
+        pics: t.pics || [],
+        done
+      });
+    });
+    cur = addDaysStr(cur, 1); guard++;
+  }
+  return rows;
+}
+
+function renderRoutineReport() {
+  const filtered = getRoutineReportFiltered();
+  const wrap = document.getElementById('rrTableWrap');
+  const sumBar = document.getElementById('rrSummaryBar');
+
+  const rFrom = document.getElementById('rrFrom').value;
+  const rTo   = document.getElementById('rrTo').value;
+  const rPIC  = document.getElementById('rrFilterPIC').value;
+  const rangeLabel = rFrom && rTo ? `${fmtDate(rFrom)} – ${fmtDate(rTo)}` : '';
+  const picLabel = rPIC !== 'all' ? ` · ${rPIC}` : '';
+  document.getElementById('rrPrintTitle').innerHTML =
+    `<h2>Laporan Tugas Rutin${picLabel ? ' — '+escHtml(rPIC) : ''}${WORKSPACE!=='default'?' ('+escHtml(WORKSPACE)+')':''}</h2><p>${rangeLabel}</p>`;
+
+  if (!routineEnabled) {
+    sumBar.innerHTML = '';
+    wrap.innerHTML = `<div class="rpt-empty"><i class="ti ti-repeat-off"></i>Fitur Tugas Rutin sedang dinonaktifkan.</div>`;
+    return;
+  }
+
+  // ── Summary cards ──
+  const total = filtered.length;
+  const doneCount = filtered.filter(r=>r.done).length;
+  const pendingCount = total - doneCount;
+  const rate = total ? Math.round((doneCount/total)*100) : 0;
+  sumBar.innerHTML = `
+    <div class="rr-sum-card"><div class="rr-sum-label">Total Item</div><div class="rr-sum-value">${total}</div></div>
+    <div class="rr-sum-card rr-sum-done"><div class="rr-sum-label">Selesai</div><div class="rr-sum-value">${doneCount}</div></div>
+    <div class="rr-sum-card rr-sum-pending"><div class="rr-sum-label">Belum Selesai</div><div class="rr-sum-value">${pendingCount}</div></div>
+    <div class="rr-sum-card rr-sum-rate"><div class="rr-sum-label">Tingkat Penyelesaian</div><div class="rr-sum-value">${rate}%</div></div>
+  `;
+
+  if (!filtered.length) {
+    wrap.innerHTML = `<div class="rpt-empty"><i class="ti ti-calendar-off"></i>Tidak ada data tugas rutin pada periode/filter yang dipilih.</div>`;
+    return;
+  }
+
+  // ── SORT ──
+  const sorted = [...filtered].sort((a,b) => {
+    let va, vb;
+    switch (rrSortCol) {
+      case 'task':   va = a.title;               vb = b.title;               break;
+      case 'pic':    va = (a.pics||[]).join(','); vb = (b.pics||[]).join(','); break;
+      case 'status': va = a.done?1:0;             vb = b.done?1:0;
+                     return rrSortDir==='asc' ? va-vb : vb-va;
+      default:       va = a.date; vb = b.date; break;
+    }
+    const cmp = String(va).localeCompare(String(vb), 'id');
+    return rrSortDir === 'asc' ? cmp : -cmp;
+  });
+
+  const sortIcon = col => {
+    if (rrSortCol !== col) return `<i class="ti ti-arrows-sort" style="font-size:10px;opacity:.35;margin-left:4px"></i>`;
+    return rrSortDir === 'asc'
+      ? `<i class="ti ti-sort-ascending" style="font-size:10px;color:#7C3AED;margin-left:4px"></i>`
+      : `<i class="ti ti-sort-descending" style="font-size:10px;color:#7C3AED;margin-left:4px"></i>`;
+  };
+  const mkTh = (col, label, extraStyle='') =>
+    `<th style="${extraStyle}cursor:pointer;user-select:none" data-sort="${col}">${label}${sortIcon(col)}</th>`;
+
+  const DNAMES=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const MONTHS_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+  let html = `<table class="rpt-table">
+    <thead><tr id="rrHeaderRow">
+      ${mkTh('date',   'Tanggal',     'width:1%;white-space:nowrap;')}
+      ${mkTh('task',   'Nama Tugas',  '')}
+      <th style="width:130px">Pengulangan</th>
+      ${mkTh('pic',    'PIC',         'width:160px;')}
+      ${mkTh('status', 'Status',      'width:120px;')}
+    </tr></thead><tbody>`;
+
+  const buildRow = r => {
+    const meta = r.recurrence==='daily' ? 'Harian' : `Mingguan · ${DNAMES[r.weeklyDay]}`;
+    const statusBadge = r.done
+      ? `<span class="rpt-status" style="background:var(--s-achieve-bg);color:var(--s-achieve-tx)">✓ Selesai</span>`
+      : `<span class="rpt-status" style="background:var(--s-pending-bg);color:var(--s-pending-tx)">In Process</span>`;
+    return `<tr class="rpt-row">
+      <td class="rpt-date" style="white-space:nowrap;width:1%">${fmtDateReport(r.date)}</td>
+      <td><div class="rpt-title">${escHtml(r.title)}</div></td>
+      <td style="font-size:.78rem;color:var(--ink-md)">${meta}</td>
+      <td><div class="rpt-pic-list">${r.pics.map(p=>{const pc=getPicColor(p);return `<span class="rpt-pic-badge" style="background:${pc};color:${pickContrastText(pc)};border-color:${pc}">${escHtml(p)}</span>`;}).join('')}</div></td>
+      <td>${statusBadge}</td>
+    </tr>`;
+  };
+
+  if (rrSortCol === 'date') {
+    const groups = {};
+    sorted.forEach(r => { const mo=r.date.slice(0,7); (groups[mo]=groups[mo]||[]).push(r); });
+    Object.entries(groups).sort((a,b)=> rrSortDir==='asc'? a[0].localeCompare(b[0]) : b[0].localeCompare(a[0])).forEach(([mo, rows]) => {
+      const [y,m] = mo.split('-');
+      html += `<tr class="rpt-month-hdr"><td colspan="5">${MONTHS_ID[parseInt(m)-1].toUpperCase()} ${y}</td></tr>`;
+      rows.forEach(r => { html += buildRow(r); });
+    });
+  } else {
+    sorted.forEach(r => { html += buildRow(r); });
+  }
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (rrSortCol === col) rrSortDir = rrSortDir === 'asc' ? 'desc' : 'asc';
+      else { rrSortCol = col; rrSortDir = 'asc'; }
+      renderRoutineReport();
+    });
+  });
+}
+
+/* Filter listeners */
+['rrFilterTask','rrFilterPIC','rrFilterRecurrence','rrFilterStatus','rrFrom','rrTo'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    if (activeTab === 'routineReport') renderRoutineReport();
+  });
+});
+
+/* Print PDF */
+document.getElementById('rrPrintBtn').addEventListener('click', () => {
+  document.body.classList.add('print-routine-report');
+  window.print();
+  setTimeout(() => document.body.classList.remove('print-routine-report'), 1000);
+});
+
+/* Export Excel dari Report Tugas Rutin */
+document.getElementById('rrExportExcelBtn').addEventListener('click', () => {
+  const filtered = getRoutineReportFiltered();
+  if (!filtered.length) { showToast('⚠️ Tidak ada data untuk diexport'); return; }
+  const DNAMES=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const rFrom = document.getElementById('rrFrom').value;
+  const rTo   = document.getElementById('rrTo').value;
+  const rangeLabel = `${fmtDate(rFrom)}-${fmtDate(rTo)}`;
+
+  const headers = ['Tanggal','Nama Tugas','Pengulangan','PIC','Status'];
+  const rows = [...filtered].sort((a,b)=>a.date.localeCompare(b.date)).map(r => [
+    fmtDate(r.date),
+    r.title,
+    r.recurrence==='daily' ? 'Harian' : `Mingguan (${DNAMES[r.weeklyDay]})`,
+    (r.pics||[]).join(', '),
+    r.done ? 'Selesai' : 'Belum Selesai'
+  ]);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = [{wch:13},{wch:34},{wch:20},{wch:26},{wch:14}];
+  ws['!rows'] = [{hpt:22}, ...rows.map(()=>({hpt:18}))];
+  headers.forEach((_,ci) => {
+    const a = XLSX.utils.encode_cell({r:0,c:ci});
+    if (!ws[a]) ws[a] = {v:headers[ci],t:'s'};
+    ws[a].s = {
+      font:{bold:true,sz:10,color:{rgb:'FFFFFF'}},
+      fill:{fgColor:{rgb:'1C1917'}},
+      alignment:{horizontal:'center',vertical:'center'},
+      border:{bottom:{style:'thin',color:{rgb:'E7E2DA'}}}
+    };
+  });
+  rows.forEach((row,ri) => {
+    const statusCol = 4;
+    const a = XLSX.utils.encode_cell({r:ri+1,c:statusCol});
+    if (ws[a]) ws[a].s = { font:{bold:true,color:{rgb: row[statusCol]==='Selesai' ? '15803D' : '92400E'}} };
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Report Tugas Rutin');
+  const safeName = rangeLabel.replace(/[\/\\:*?"<>|]/g,'-').replace(/\s+/g,'_');
+  XLSX.writeFile(wb, `TugasRutin_${safeName}.xlsx`);
+  showToast('✅ Excel Report Tugas Rutin berhasil didownload!');
 });
 
 /* Also update rebuildFilters to update report filters when tab is active */
@@ -5212,6 +5657,41 @@ async function saveEditedStatusNote(eventId) {
 function cancelEditStatusNote(eventId) {
   if (selectedDate) renderPanel(selectedDate);
 }
+
+/* ════════════════════════════════════════
+   PWA — Registrasi Service Worker
+   ════════════════════════════════════════ */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{ /* offline shell tidak wajib, abaikan jika gagal */ });
+  });
+}
+
+/* Prompt "Install App" kustom (opsional, tombol muncul saat browser mengizinkan install) */
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('installAppBtn');
+  if (btn) btn.style.display = 'inline-flex';
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('installAppBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    btn.style.display = 'none';
+  });
+});
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('installAppBtn');
+  if (btn) btn.style.display = 'none';
+  showToast('✅ Kalender Tim berhasil di-install');
+});
+
 </script>
 
 
