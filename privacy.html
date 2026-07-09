@@ -43,7 +43,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1
 .section strong{color:var(--ink);font-weight:700}
 
 /* ── DATA TABLE ── */
-.data-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:.75rem}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:.75rem}
+.data-table{width:100%;min-width:460px;border-collapse:collapse;font-size:.82rem;margin-bottom:0}
 .data-table th{text-align:left;padding:8px 12px;font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);background:var(--bg);border-bottom:1.5px solid var(--rule)}
 .data-table td{padding:10px 12px;border-bottom:1px solid var(--rule);color:var(--ink-md);vertical-align:top}
 .data-table tr:last-child td{border-bottom:none}
@@ -77,9 +78,20 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1
 .footer a:hover{color:var(--ink)}
 
 @media(max-width:600px){
-  .page{padding:2rem 1rem 4rem}
-  .doc-title{font-size:1.5rem}
-  .section{padding:1.25rem}
+  .page{padding:1.5rem .85rem 4rem}
+  .doc-title{font-size:1.4rem}
+  .doc-meta{line-height:1.6}
+  .section{padding:1.1rem}
+  .section-title{font-size:.92rem}
+  .toc{padding:1rem 1.1rem}
+  .important-banner{padding:14px}
+  .contact-box{padding:1.25rem}
+  .data-table th,.data-table td{padding:8px}
+}
+
+@media(max-width:380px){
+  .doc-title{font-size:1.2rem}
+  .back-link{font-size:.75rem;padding:5px 10px}
 }
 </style>
 </head>
@@ -132,6 +144,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1
   <div class="section" id="s1">
     <div class="section-title"><i class="ti ti-database"></i> 1. Data yang Kami Kumpulkan</div>
     <p>Kami mengumpulkan data berikut saat Anda menggunakan Kalender Tim:</p>
+    <div class="table-scroll">
     <table class="data-table">
       <thead><tr><th>Jenis Data</th><th>Contoh</th><th>Sumber</th></tr></thead>
       <tbody>
@@ -143,6 +156,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);line-height:1
         <tr><td><strong>Data Teknis</strong></td><td>Browser, waktu akses, IP (via Firebase)</td><td>Otomatis oleh Firebase</td></tr>
       </tbody>
     </table>
+    </div>
     <p>Kami <strong>tidak mengumpulkan</strong> password — otentikasi sepenuhnya ditangani oleh Google.</p>
   </div>
 

@@ -974,11 +974,25 @@ body.read-only .readonly-badge{display:inline-flex}
         allow delete: if isSuperAdmin() || isWorkspaceOwner(wsId);
       }
 
-      // ── _config (visibilitas, editors, viewers) ───────────────────
+      // ── _config (visibilitas, editors, viewers, warna, dll) ────────
       match /_config/{wsId} {
         allow read: if true;
         allow create: if isSignedIn() && (isWorkspaceOwner(wsId) || isSuperAdmin());
-        allow update: if isWorkspaceOwner(wsId) || isSuperAdmin();
+        // BUGFIX: owner & superadmin boleh ubah field APA PUN (termasuk
+        // editors/viewers/visibility). Editor HANYA boleh menulis preferensi
+        // tampilan bersama (warna tipe event, warna PIC, status fitur rutin) —
+        // TIDAK boleh mengubah daftar editors/viewers/visibility, supaya kontrol
+        // akses tetap di tangan owner/superadmin. Tanpa baris isWorkspaceEditor
+        // di bawah, tulisan warna dari editor akan ditolak Firestore (permission-
+        // denied) dan hanya tersimpan di localStorage browser editor itu sendiri —
+        // ini penyebab warna hilang saat cache dibersihkan dan tidak konsisten
+        // untuk viewer/editor lain.
+        allow update: if isWorkspaceOwner(wsId) || isSuperAdmin()
+                      || (isWorkspaceEditor(wsId) &&
+                          request.resource.data.diff(resource.data).affectedKeys()
+                            .hasOnly(['eventTypes','typesUpdatedAt',
+                                      'picColors','picColorsUpdatedAt',
+                                      'routineEnabled']));
         allow delete: if isSuperAdmin();
       }
 
@@ -1871,6 +1885,54 @@ function loadCollapseFromFirebase() {
 }
 const chipCollapseState = loadCollapseState();
 
+/* ════════════════════════════════════════
+   BUGFIX — SINKRONISASI WARNA REALTIME
+   eventTypes & picColors sebelumnya hanya dibaca sekali saat load
+   (db.collection('_config').doc(WORKSPACE).get()), jadi jika ada
+   perubahan warna oleh editor lain, user yang sudah membuka halaman
+   (termasuk viewer non-editor) tidak melihat warna baru sampai reload
+   manual. Listener onSnapshot ini membuat warna tersinkron langsung,
+   dan tetap konsisten meski cache/localStorage browser dibersihkan
+   karena sumber kebenarannya selalu Firestore.
+   ════════════════════════════════════════ */
+let configColorsUnsubscribe = null;
+function subscribeConfigColors() {
+  if (!useFirebase || !db) return;
+  if (configColorsUnsubscribe) configColorsUnsubscribe();
+  configColorsUnsubscribe = db.collection('_config').doc(WORKSPACE).onSnapshot(doc => {
+    if (!doc.exists) return;
+    const data = doc.data();
+    let changed = false;
+    if (data.eventTypes && Array.isArray(data.eventTypes) && data.eventTypes.length > 0) {
+      eventTypes = data.eventTypes;
+      localStorage.setItem(TYPES_KEY, JSON.stringify(eventTypes));
+      changed = true;
+    }
+    if (data.picColors && typeof data.picColors === 'object') {
+      picColors = data.picColors;
+      localStorage.setItem(PIC_COLORS_KEY, JSON.stringify(picColors));
+      changed = true;
+    }
+    if (typeof data.routineEnabled === 'boolean' && data.routineEnabled !== routineEnabled) {
+      routineEnabled = data.routineEnabled;
+      localStorage.setItem(ROUTINE_ENABLED_KEY, routineEnabled?'1':'0');
+      const toggleEl = document.getElementById('routineEnabledToggle');
+      if (toggleEl) toggleEl.checked = routineEnabled;
+      changed = true;
+    }
+    if (changed) {
+      rebuildFilters();
+      renderCalendar();
+      if (selectedDate) renderPanel(selectedDate);
+      if (typeof renderTypeList === 'function') renderTypeList();
+      if (typeof renderPicColorList === 'function') renderPicColorList();
+    }
+  }, e => {
+    console.error('Config colors listen error:', e.code, e.message);
+    if (e.code === 'permission-denied') showToast('⚠️ Sinkronisasi warna gagal. Periksa Firestore Security Rules (_config).', 4500);
+  });
+}
+
 try {
   if (!firebaseConfig.apiKey.includes('YOUR_')) {
     firebase.initializeApp(firebaseConfig);
@@ -2186,7 +2248,14 @@ function saveTypes() {
     db.collection('_config').doc(WORKSPACE).set(
       { eventTypes: eventTypes, typesUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() },
       { merge: true }
-    ).catch(e => console.warn('saveTypes Firestore error:', e.message));
+    ).catch(e => {
+      console.warn('saveTypes Firestore error:', e.message);
+      if (e.code === 'permission-denied') {
+        showToast('⚠️ Warna tipe event gagal disimpan online (izin ditolak). Update Firestore Security Rules, perubahan hanya tersimpan di perangkat ini.', 5000);
+      } else {
+        showToast('⚠️ Warna tipe event gagal disimpan online: ' + e.message, 4000);
+      }
+    });
   }
 }
 function hexToLight(hex) {
@@ -2232,7 +2301,14 @@ function savePicColors() {
     db.collection('_config').doc(WORKSPACE).set(
       { picColors: picColors, picColorsUpdatedAt: firebase.firestore.FieldValue.serverTimestamp() },
       { merge: true }
-    ).catch(e => console.warn('savePicColors Firestore error:', e.message));
+    ).catch(e => {
+      console.warn('savePicColors Firestore error:', e.message);
+      if (e.code === 'permission-denied') {
+        showToast('⚠️ Warna PIC gagal disimpan online (izin ditolak). Update Firestore Security Rules, perubahan hanya tersimpan di perangkat ini.', 5000);
+      } else {
+        showToast('⚠️ Warna PIC gagal disimpan online: ' + e.message, 4000);
+      }
+    });
   }
 }
 function getPicColor(pic) {
@@ -2716,7 +2792,10 @@ async function setRoutineEnabled(val) {
   localStorage.setItem(ROUTINE_ENABLED_KEY, val?'1':'0');
   if (useFirebase && db) {
     try { await db.collection('_config').doc(WORKSPACE).set({routineEnabled:val},{merge:true}); }
-    catch(e){ console.warn('setRoutineEnabled Firestore error:', e.message); }
+    catch(e){
+      console.warn('setRoutineEnabled Firestore error:', e.message);
+      if (e.code === 'permission-denied') showToast('⚠️ Gagal menyimpan status fitur rutin ke server (izin ditolak).', 4500);
+    }
   }
   renderCalendar();
   if (selectedDate) renderPanel(selectedDate);
@@ -4350,6 +4429,7 @@ if (useFirebase && auth) {
   applyAuthState(null);
   // Load workspace config (editors list) then events — both can run in parallel
   loadWorkspaceConfig();
+  subscribeConfigColors(); // realtime: warna tipe event & PIC selalu sinkron ke semua user
   auth.onAuthStateChanged(async user => {
     // When auth state changes, reload config so editor list is fresh
     await loadWorkspaceConfig();

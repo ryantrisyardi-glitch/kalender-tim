@@ -148,10 +148,33 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .login-gate{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
 .login-box{background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-xl);padding:2.5rem 2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 8px 40px rgba(28,25,23,.08)}
 
+/* ── TABLE SCROLL WRAPPER (mobile) ──
+   #wsTableWrap's innerHTML is re-rendered by JS, but the wrapper div itself
+   stays in the DOM, so styling it here keeps the table from ever breaking
+   the page layout on narrow screens — it scrolls horizontally instead. */
+#wsTableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+#wsTableWrap .data-table{min-width:560px}
+
 @media(max-width:640px){
   .stats-grid{grid-template-columns:1fr 1fr}
   .data-table th:nth-child(4),.data-table td:nth-child(4){display:none}
   .page{padding:1rem .75rem 4rem}
+  .admin-header{gap:10px}
+  .admin-title{font-size:1.05rem}
+  .hdr-right{width:100%;justify-content:flex-start}
+  .filter-bar{width:100%}
+  .search-input{flex:1 1 140px;min-width:0}
+  .filter-select{flex:0 1 auto}
+  .data-table th,.data-table td{padding-left:12px;padding-right:12px}
+  .modal{padding:1.25rem}
+  .modal-foot{flex-wrap:wrap}
+  .modal-foot .btn{flex:1 1 auto;justify-content:center}
+}
+
+@media(max-width:420px){
+  .auth-chip-name{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;vertical-align:middle}
+  .modal-foot{flex-direction:column-reverse}
+  .modal-foot .btn{width:100%}
 }
 </style>
 </head>
@@ -383,7 +406,7 @@ auth.onAuthStateChanged(async user => {
   const av = user.photoURL
     ? `<img class="auth-avatar" src="${user.photoURL}" referrerpolicy="no-referrer"/>`
     : `<span style="width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700">${initial}</span>`;
-  document.getElementById('adminAuthChip').innerHTML = `<div class="auth-chip">${av} ${escHtml(user.displayName||user.email)} <span style="color:#7C3AED;font-size:.65rem;font-weight:700">⚡ Superadmin</span></div>`;
+  document.getElementById('adminAuthChip').innerHTML = `<div class="auth-chip">${av} <span class="auth-chip-name">${escHtml(user.displayName||user.email)}</span> <span style="color:#7C3AED;font-size:.65rem;font-weight:700;white-space:nowrap">⚡ Superadmin</span></div>`;
 
   loadWorkspaces();
   loadAuditLog();
