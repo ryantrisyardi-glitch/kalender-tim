@@ -431,6 +431,28 @@ code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;font-size:.76r
 .dev-support-footer a{font-size:.85rem;font-weight:600;color:var(--ink-lt);text-decoration:none;opacity:.85;transition:opacity .15s}
 .dev-support-footer a:hover{opacity:1;text-decoration:underline}
 @media print{.dev-support-footer{display:none}}
+
+/* ── KRITIK & SARAN ── */
+.modal-wide{width:640px}
+.fb-list{display:flex;flex-direction:column;gap:12px;max-height:48vh;overflow-y:auto;padding-right:2px}
+.fb-empty{font-size:.82rem;color:var(--ink-lt);padding:18px 0;text-align:center}
+.fb-item{border:1.5px solid var(--rule);border-radius:var(--r-md);padding:12px 14px;background:var(--bg)}
+.fb-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;font-size:.78rem;color:var(--ink-lt)}
+.fb-meta strong{color:var(--ink);font-size:.82rem}
+.fb-email{color:var(--ink-lt);font-size:.74rem}
+.fb-time{margin-left:auto;font-size:.7rem;color:var(--ink-lt);white-space:nowrap}
+.fb-msg{font-size:.86rem;color:var(--ink-md);white-space:pre-wrap;line-height:1.5}
+.fb-del-own{border:none;background:none;color:#DC2626;font-size:.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 4px}
+.fb-del-own:hover{text-decoration:underline}
+.fb-replies{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.fb-reply{background:var(--surface);border:1.5px dashed var(--rule);border-radius:var(--r-sm);padding:8px 10px;margin-left:14px}
+.fb-reply-head{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--ink-lt);margin-bottom:4px}
+.fb-reply-head strong{color:#7C3AED}
+.fb-del-reply{margin-left:auto;border:none;background:none;color:#DC2626;cursor:pointer;padding:0 2px;display:flex;align-items:center}
+.fb-reply-msg{font-size:.82rem;color:var(--ink-md);white-space:pre-wrap}
+.fb-reply-form{display:flex;flex-direction:column;gap:6px;margin-top:10px;border-top:1px solid var(--rule);padding-top:10px}
+.fb-reply-input{width:100%;resize:vertical;font-family:var(--font);font-size:.82rem;padding:8px 10px;border:1.5px solid var(--rule);border-radius:var(--r-sm);background:var(--surface);color:var(--ink)}
+.fb-reply-form .btn{align-self:flex-end}
 .color-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:10px 0}
 .color-swatch-opt{width:32px;height:32px;border-radius:var(--r-sm);cursor:pointer;border:3px solid transparent;transition:border-color .12s,transform .12s}
 .color-swatch-opt:hover{transform:scale(1.1)}
@@ -1021,6 +1043,38 @@ body.read-only .readonly-badge{display:inline-flex}
         allow delete: if isSuperAdmin();
       }
 
+      // ── _feedback (Kritik & Saran) ────────────────────────────────
+      // Hanya bisa dibaca oleh pembuatnya sendiri & superadmin.
+      // Siapapun yang login boleh membuat. Hapus feedback sendiri hanya
+      // dalam 30 menit pertama; superadmin bisa hapus kapan saja (moderasi).
+      // Tidak ada update (kritik/saran tidak bisa diedit setelah dikirim).
+      match /_feedback/{feedbackId} {
+        allow read:   if isSignedIn() &&
+                      (resource.data.userId == request.auth.uid || isSuperAdmin());
+        allow create: if isSignedIn()
+                      && request.resource.data.userId == request.auth.uid
+                      && request.resource.data.userEmail == userEmail()
+                      && request.resource.data.message is string
+                      && request.resource.data.message.size() > 0
+                      && request.resource.data.message.size() <= 2000;
+        allow update: if false;
+        allow delete: if isSuperAdmin()
+                      || (isSignedIn() && resource.data.userId == request.auth.uid
+                          && request.time < resource.data.createdAt + duration.value(30,'m'));
+
+        // Balasan superadmin — hanya superadmin yang bisa membuat & menghapus
+        // (tanpa batas waktu). Pembuat feedback & superadmin bisa membaca.
+        match /replies/{replyId} {
+          allow read:   if isSuperAdmin() ||
+                        (isSignedIn() &&
+                         exists(/databases/$(database)/documents/_feedback/$(feedbackId)) &&
+                         get(/databases/$(database)/documents/_feedback/$(feedbackId)).data.userId == request.auth.uid);
+          allow create: if isSuperAdmin() && request.resource.data.by == userEmail();
+          allow update: if false;
+          allow delete: if isSuperAdmin();
+        }
+      }
+
       // ── cal_order & cal_collapse (drag-and-drop & expand/collapse) ─
       match /cal_order/{wsId} {
         allow read:  if canReadWorkspace(wsId);
@@ -1095,6 +1149,7 @@ body.read-only .readonly-badge{display:inline-flex}
     <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
     <button class="btn write-only" id="manageRoutineBtn" style="background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-repeat"></i> Tugas Rutin</button>
     <a class="btn" href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener noreferrer" title="Dukung pengembang aplikasi ini">☕ Dukung Kami</a>
+    <button class="btn" id="feedbackBtn" style="display:none"><i class="ti ti-message-2"></i> Kritik &amp; Saran</button>
     <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
     <button class="btn" id="printBtn" title="Print Kalender" onclick="window.print()"><i class="ti ti-printer"></i></button>
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
@@ -1503,6 +1558,31 @@ body.read-only .readonly-badge{display:inline-flex}
   <div class="cp-actions">
     <button class="btn btn-sm" id="cpCancel">Batal</button>
     <button class="btn btn-primary btn-sm" id="cpConfirm"><i class="ti ti-check"></i> Pilih</button>
+  </div>
+</div>
+
+<!-- ══ KRITIK & SARAN ══ -->
+<div class="overlay" id="feedbackOverlay">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <div class="modal-title" id="feedbackModalTitle">Kritik &amp; Saran</div>
+      <button class="btn btn-icon" id="closeFeedback"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- Form kirim (hanya untuk user biasa, disembunyikan untuk superadmin) -->
+    <div id="feedbackSubmitSection">
+      <p style="font-size:.82rem;color:var(--ink-lt);margin-bottom:.6rem">Sampaikan kritik atau saran Anda. Hanya Anda dan superadmin yang bisa melihatnya.</p>
+      <textarea class="fc" id="feedbackMessageInput" rows="3" placeholder="Tulis kritik/saran Anda di sini..." style="width:100%;resize:vertical;margin-bottom:.6rem"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+        <button class="btn btn-primary btn-sm" id="feedbackSubmitBtn"><i class="ti ti-send"></i> Kirim</button>
+      </div>
+      <div style="border-top:1.5px solid var(--rule);padding-top:.9rem;margin-bottom:.6rem;font-size:.8rem;font-weight:700;color:var(--ink)">Riwayat Kritik/Saran Saya</div>
+    </div>
+
+    <div class="fb-list" id="feedbackHistoryList"></div>
+    <div class="fb-list" id="feedbackAdminList" style="display:none"></div>
+
+    <div class="modal-foot"><button class="btn btn-primary" id="closeFeedbackOk">Tutup</button></div>
   </div>
 </div>
 
@@ -2230,6 +2310,9 @@ function applyAuthState(user) {
   const adminBtn = document.getElementById('manageAccessBtn');
   if (adminBtn) adminBtn.style.display = (isSuperAdmin || isOwner) ? '' : 'none';
 
+  const feedbackBtnEl = document.getElementById('feedbackBtn');
+  if (feedbackBtnEl) feedbackBtnEl.style.display = user ? '' : 'none';
+
   const chip = document.getElementById('authChip');
   if (user) {
     const initial = (user.displayName||user.email||'?')[0].toUpperCase();
@@ -2267,8 +2350,213 @@ function signInGoogle() {
 }
 function signOut() {
   if (notifUnsubscribe) { notifUnsubscribe(); notifUnsubscribe = null; }
+  closeFeedbackModal();
   if (auth) auth.signOut().then(() => { showToast('👋 Berhasil keluar'); applyAuthState(null); });
 }
+
+/* ════════════════════════════════════════
+   KRITIK & SARAN (Feedback)
+   ─────────────────────────────────────────
+   - Siapapun yang login boleh mengirim kritik/saran (submit langsung, tanpa draft).
+   - Hanya terlihat oleh pengirimnya sendiri & superadmin (ryan.trisyardi@gmail.com).
+   - User: punya riwayat kirimannya sendiri + bisa hapus jika masih < 30 menit.
+   - Superadmin: melihat SEMUA kritik/saran beserta nama & email pengirim, bisa
+     membalas, dan balasannya bisa dihapus kapan saja (tanpa batas waktu).
+   ════════════════════════════════════════ */
+let feedbackUnsub = null;
+let feedbackReplyUnsubs = [];
+let feedbackTickInterval = null;
+let lastFeedbackItems = [];
+
+function fmtFeedbackTime(ts) {
+  if (!ts) return 'baru saja';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function openFeedbackModal(){
+  if (!currentUser) { showToast('⚠️ Silakan masuk terlebih dahulu untuk mengirim kritik/saran'); return; }
+  document.getElementById('feedbackModalTitle').textContent = isSuperAdmin ? 'Kritik & Saran Pengguna' : 'Kritik & Saran';
+  document.getElementById('feedbackSubmitSection').style.display = isSuperAdmin ? 'none' : '';
+  document.getElementById('feedbackHistoryList').style.display = isSuperAdmin ? 'none' : '';
+  document.getElementById('feedbackAdminList').style.display = isSuperAdmin ? '' : 'none';
+  document.getElementById('feedbackOverlay').classList.add('open');
+  subscribeFeedback();
+  if (feedbackTickInterval) clearInterval(feedbackTickInterval);
+  if (!isSuperAdmin) feedbackTickInterval = setInterval(()=>renderFeedbackUserList(lastFeedbackItems), 30000);
+}
+function closeFeedbackModal(){
+  document.getElementById('feedbackOverlay').classList.remove('open');
+  if (feedbackUnsub) { feedbackUnsub(); feedbackUnsub = null; }
+  feedbackReplyUnsubs.forEach(u=>u()); feedbackReplyUnsubs = [];
+  if (feedbackTickInterval) { clearInterval(feedbackTickInterval); feedbackTickInterval = null; }
+}
+function subscribeFeedback(){
+  if (!useFirebase || !db || !currentUser) return;
+  if (feedbackUnsub) feedbackUnsub();
+  const q = isSuperAdmin
+    ? db.collection('_feedback').orderBy('createdAt','desc').limit(200)
+    : db.collection('_feedback').where('userId','==',currentUser.uid).orderBy('createdAt','desc');
+  feedbackUnsub = q.onSnapshot(snap => {
+    const items = snap.docs.map(d=>({id:d.id,...d.data()}));
+    lastFeedbackItems = items;
+    if (isSuperAdmin) renderFeedbackAdminList(items);
+    else renderFeedbackUserList(items);
+  }, err => {
+    console.error('Feedback listen error:', err.code, err.message);
+    showToast('⚠️ Gagal memuat kritik/saran: ' + err.message, 4000);
+  });
+}
+
+async function submitFeedback(){
+  if (!currentUser) { showToast('⚠️ Silakan masuk terlebih dahulu'); return; }
+  const ta = document.getElementById('feedbackMessageInput');
+  const msg = ta.value.trim();
+  if (!msg) { showToast('⚠️ Tulis kritik/saran Anda terlebih dahulu'); return; }
+  if (!useFirebase || !db) { showToast('⚠️ Firebase tidak aktif, tidak bisa mengirim'); return; }
+  const btn = document.getElementById('feedbackSubmitBtn');
+  btn.disabled = true;
+  try {
+    await db.collection('_feedback').add({
+      userId: currentUser.uid,
+      userEmail: currentUser.email,
+      userName: currentUser.displayName || currentUser.email,
+      message: msg,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    ta.value = '';
+    showToast('✅ Kritik/saran terkirim, terima kasih!');
+  } catch(e) {
+    console.error('submitFeedback error:', e.code, e.message);
+    showToast('❌ Gagal mengirim kritik/saran: ' + e.message, 4000);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderFeedbackUserList(items){
+  feedbackReplyUnsubs.forEach(u=>u()); feedbackReplyUnsubs = [];
+  const wrap = document.getElementById('feedbackHistoryList');
+  if (!items.length) { wrap.innerHTML = '<div class="fb-empty">Anda belum pernah mengirim kritik/saran.</div>'; return; }
+  wrap.innerHTML = items.map(it=>{
+    const canDelete = it.createdAt && (Date.now() - (it.createdAt.toDate ? it.createdAt.toDate().getTime() : new Date(it.createdAt).getTime())) < 30*60*1000;
+    return `
+    <div class="fb-item" data-id="${it.id}">
+      <div class="fb-meta"><span class="fb-time">${fmtFeedbackTime(it.createdAt)}</span>
+        ${canDelete ? `<button class="fb-del-own" data-id="${it.id}"><i class="ti ti-trash"></i> Hapus</button>` : ''}
+      </div>
+      <div class="fb-msg">${escHtml(it.message)}</div>
+      <div class="fb-replies" id="fbReplies_${it.id}"></div>
+    </div>`;
+  }).join('');
+  wrap.querySelectorAll('.fb-del-own').forEach(b=>b.addEventListener('click',()=>deleteOwnFeedback(b.dataset.id)));
+  items.forEach(it=>{
+    const unsub = db.collection('_feedback').doc(it.id).collection('replies').orderBy('createdAt','asc')
+      .onSnapshot(rs=>{
+        const repliesEl = document.getElementById(`fbReplies_${it.id}`);
+        if (!repliesEl) return;
+        repliesEl.innerHTML = rs.docs.map(rd=>{
+          const r = rd.data();
+          return `<div class="fb-reply">
+            <div class="fb-reply-head"><i class="ti ti-corner-down-right"></i> <strong>Balasan Superadmin</strong> <span class="fb-time">${fmtFeedbackTime(r.createdAt)}</span></div>
+            <div class="fb-reply-msg">${escHtml(r.message)}</div>
+          </div>`;
+        }).join('');
+      }, err=>console.warn('reply listen error:', err.code, err.message));
+    feedbackReplyUnsubs.push(unsub);
+  });
+}
+
+function renderFeedbackAdminList(items){
+  feedbackReplyUnsubs.forEach(u=>u()); feedbackReplyUnsubs = [];
+  const wrap = document.getElementById('feedbackAdminList');
+  if (!items.length) { wrap.innerHTML = '<div class="fb-empty">Belum ada kritik/saran dari pengguna.</div>'; return; }
+  wrap.innerHTML = items.map(it=>`
+    <div class="fb-item" data-id="${it.id}">
+      <div class="fb-meta">
+        <strong>${escHtml(it.userName||it.userEmail||'Pengguna')}</strong>
+        <span class="fb-email">${escHtml(it.userEmail||'')}</span>
+        <span class="fb-time">${fmtFeedbackTime(it.createdAt)}</span>
+      </div>
+      <div class="fb-msg">${escHtml(it.message)}</div>
+      <div class="fb-replies" id="fbReplies_${it.id}"></div>
+      <div class="fb-reply-form">
+        <textarea class="fb-reply-input" id="fbReplyInput_${it.id}" rows="2" placeholder="Tulis balasan untuk pengguna ini..."></textarea>
+        <button class="btn btn-sm btn-primary" data-reply-id="${it.id}"><i class="ti ti-send"></i> Kirim Balasan</button>
+      </div>
+    </div>`).join('');
+
+  wrap.querySelectorAll('[data-reply-id]').forEach(btn=>{
+    btn.addEventListener('click', ()=> submitFeedbackReply(btn.dataset.replyId));
+  });
+
+  items.forEach(it=>{
+    const unsub = db.collection('_feedback').doc(it.id).collection('replies').orderBy('createdAt','asc')
+      .onSnapshot(rs=>{
+        const repliesEl = document.getElementById(`fbReplies_${it.id}`);
+        if (!repliesEl) return;
+        repliesEl.innerHTML = rs.docs.map(rd=>{
+          const r = rd.data();
+          return `<div class="fb-reply">
+            <div class="fb-reply-head"><i class="ti ti-corner-down-right"></i> <strong>Superadmin</strong> <span class="fb-time">${fmtFeedbackTime(r.createdAt)}</span>
+              <button class="fb-del-reply" data-fid="${it.id}" data-rid="${rd.id}" title="Hapus balasan"><i class="ti ti-trash"></i></button>
+            </div>
+            <div class="fb-reply-msg">${escHtml(r.message)}</div>
+          </div>`;
+        }).join('');
+        repliesEl.querySelectorAll('.fb-del-reply').forEach(b=>b.addEventListener('click',()=>deleteFeedbackReply(b.dataset.fid,b.dataset.rid)));
+      }, err=>console.warn('reply listen error:', err.code, err.message));
+    feedbackReplyUnsubs.push(unsub);
+  });
+}
+
+async function deleteOwnFeedback(id){
+  if (!confirm('Hapus kritik/saran ini? Tindakan ini tidak bisa dibatalkan.')) return;
+  try {
+    await db.collection('_feedback').doc(id).delete();
+    showToast('🗑️ Kritik/saran dihapus');
+  } catch(e) {
+    console.error('deleteOwnFeedback error:', e.code, e.message);
+    if (e.code === 'permission-denied') showToast('⚠️ Tidak bisa dihapus — sudah lewat 30 menit.', 4000);
+    else showToast('❌ Gagal menghapus: ' + e.message, 4000);
+  }
+}
+async function submitFeedbackReply(feedbackId){
+  if (!isSuperAdmin) return;
+  const ta = document.getElementById(`fbReplyInput_${feedbackId}`);
+  const msg = ta.value.trim();
+  if (!msg) { showToast('⚠️ Tulis balasan terlebih dahulu'); return; }
+  try {
+    await db.collection('_feedback').doc(feedbackId).collection('replies').add({
+      message: msg,
+      by: currentUser.email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    ta.value = '';
+    showToast('✅ Balasan terkirim');
+  } catch(e) {
+    console.error('submitFeedbackReply error:', e.code, e.message);
+    showToast('❌ Gagal mengirim balasan: ' + e.message, 4000);
+  }
+}
+async function deleteFeedbackReply(feedbackId, replyId){
+  if (!isSuperAdmin) return;
+  if (!confirm('Hapus balasan ini?')) return;
+  try {
+    await db.collection('_feedback').doc(feedbackId).collection('replies').doc(replyId).delete();
+    showToast('🗑️ Balasan dihapus');
+  } catch(e) {
+    console.error('deleteFeedbackReply error:', e.code, e.message);
+    showToast('❌ Gagal menghapus balasan: ' + e.message, 4000);
+  }
+}
+
+document.getElementById('feedbackBtn').addEventListener('click', openFeedbackModal);
+document.getElementById('closeFeedback').addEventListener('click', closeFeedbackModal);
+document.getElementById('closeFeedbackOk').addEventListener('click', closeFeedbackModal);
+document.getElementById('feedbackSubmitBtn').addEventListener('click', submitFeedback);
+document.getElementById('feedbackOverlay').addEventListener('click', e=>{ if (e.target.id === 'feedbackOverlay') closeFeedbackModal(); });
+
 
 /* ── BRAND TITLE shows workspace ── */
 if (WORKSPACE !== 'default') {
