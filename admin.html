@@ -155,6 +155,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 #wsTableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 #wsTableWrap .data-table{min-width:560px}
 
+/* ── DEV SUPPORT FOOTER (kecil, tidak eyecatching) ── */
+.dev-support-footer{text-align:center;padding:14px 4px 4px}
+.dev-support-footer a{font-size:.72rem;color:var(--ink-lt);text-decoration:none;opacity:.65;transition:opacity .15s}
+.dev-support-footer a:hover{opacity:1;text-decoration:underline}
+
 @media(max-width:640px){
   .stats-grid{grid-template-columns:1fr 1fr}
   .data-table th:nth-child(4),.data-table td:nth-child(4){display:none}
@@ -290,6 +295,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
     </div>
   </div>
 
+  <div class="dev-support-footer"><a href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener noreferrer">☕ Dukung pengembang</a></div>
 </div><!-- /page -->
 
 <!-- Modal: Konfirmasi Akses Workspace -->

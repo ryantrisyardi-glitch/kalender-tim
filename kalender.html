@@ -426,7 +426,11 @@ textarea.fc{resize:vertical;height:70px}
 .cfg-notice i{font-size:17px;color:#D97706;flex-shrink:0;margin-top:1px}
 code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;font-size:.76rem;font-family:monospace}
 
-/* ── COLOR PICKER ── */
+/* ── DEV SUPPORT FOOTER (kecil, tidak eyecatching) ── */
+.dev-support-footer{text-align:center;padding:14px 12px 22px}
+.dev-support-footer a{font-size:.72rem;color:var(--ink-lt);text-decoration:none;opacity:.65;transition:opacity .15s}
+.dev-support-footer a:hover{opacity:1;text-decoration:underline}
+@media print{.dev-support-footer{display:none}}
 .color-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:10px 0}
 .color-swatch-opt{width:32px;height:32px;border-radius:var(--r-sm);cursor:pointer;border:3px solid transparent;transition:border-color .12s,transform .12s}
 .color-swatch-opt:hover{transform:scale(1.1)}
@@ -1840,6 +1844,11 @@ body.read-only .readonly-badge{display:inline-flex}
 
 <!-- Long press visual indicator -->
 <div class="long-press-indicator" id="longPressIndicator"></div>
+
+<!-- Dukungan pengembang — kecil & tidak mengganggu, opsional bagi yang ingin memberi dukungan -->
+<div class="dev-support-footer">
+  <a href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener noreferrer">☕ Dukung pengembang</a>
+</div>
 
 <script>
 /* ════════════════════════════════════════
