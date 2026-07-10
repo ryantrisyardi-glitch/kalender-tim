@@ -2394,11 +2394,23 @@ function closeFeedbackModal(){
 function subscribeFeedback(){
   if (!useFirebase || !db || !currentUser) return;
   if (feedbackUnsub) feedbackUnsub();
+  // BUGFIX: where('userId','==',...) + orderBy('createdAt') di field lain butuh
+  // composite index di Firestore ("The query requires an index"). Supaya user
+  // biasa tidak perlu membuat index manual sama sekali, query-nya disederhanakan
+  // jadi cuma equality filter (index tunggal, otomatis tersedia), lalu diurutkan
+  // dari terbaru ke terlama di sisi browser (JS), bukan lewat orderBy Firestore.
   const q = isSuperAdmin
     ? db.collection('_feedback').orderBy('createdAt','desc').limit(200)
-    : db.collection('_feedback').where('userId','==',currentUser.uid).orderBy('createdAt','desc');
+    : db.collection('_feedback').where('userId','==',currentUser.uid);
   feedbackUnsub = q.onSnapshot(snap => {
-    const items = snap.docs.map(d=>({id:d.id,...d.data()}));
+    let items = snap.docs.map(d=>({id:d.id,...d.data()}));
+    if (!isSuperAdmin) {
+      items.sort((a,b)=>{
+        const ta=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
+        const tb=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
+        return tb-ta;
+      });
+    }
     lastFeedbackItems = items;
     if (isSuperAdmin) renderFeedbackAdminList(items);
     else renderFeedbackUserList(items);
