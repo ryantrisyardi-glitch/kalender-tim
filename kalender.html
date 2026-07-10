@@ -440,6 +440,7 @@ code{background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;font-size:.76r
 .fb-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;font-size:.78rem;color:var(--ink-lt)}
 .fb-meta strong{color:var(--ink);font-size:.82rem}
 .fb-email{color:var(--ink-lt);font-size:.74rem}
+.fb-ws-badge{font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#EEF2FF;color:#4338CA}
 .fb-time{margin-left:auto;font-size:.7rem;color:var(--ink-lt);white-space:nowrap}
 .fb-msg{font-size:.86rem;color:var(--ink-md);white-space:pre-wrap;line-height:1.5}
 .fb-del-own{border:none;background:none;color:#DC2626;font-size:.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:4px;padding:2px 4px}
@@ -2434,6 +2435,7 @@ async function submitFeedback(){
       userEmail: currentUser.email,
       userName: currentUser.displayName || currentUser.email,
       message: msg,
+      workspace: WORKSPACE,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
     ta.value = '';
@@ -2488,6 +2490,7 @@ function renderFeedbackAdminList(items){
       <div class="fb-meta">
         <strong>${escHtml(it.userName||it.userEmail||'Pengguna')}</strong>
         <span class="fb-email">${escHtml(it.userEmail||'')}</span>
+        <span class="fb-ws-badge">${escHtml(it.workspace||'default')}</span>
         <span class="fb-time">${fmtFeedbackTime(it.createdAt)}</span>
       </div>
       <div class="fb-msg">${escHtml(it.message)}</div>

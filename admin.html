@@ -59,6 +59,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .stat-card.blue::before{background:var(--accent-blue)}
 .stat-card.green::before{background:var(--accent-green)}
 .stat-card.amber::before{background:var(--accent-amber)}
+.stat-card.rose::before{background:#E11D48}
 .stat-label{font-size:.65rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:6px}
 .stat-value{font-size:1.8rem;font-weight:800;color:var(--ink);letter-spacing:-.04em;line-height:1}
 .stat-sub{font-size:.72rem;color:var(--ink-lt);margin-top:4px}
@@ -160,6 +161,27 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .dev-support-footer a{font-size:.85rem;font-weight:600;color:var(--ink-lt);text-decoration:none;opacity:.85;transition:opacity .15s}
 .dev-support-footer a:hover{opacity:1;text-decoration:underline}
 
+/* ── KRITIK & SARAN (global, semua workspace) ── */
+.fb-list{display:flex;flex-direction:column;gap:12px}
+.fb-empty{font-size:.82rem;color:var(--ink-lt);padding:18px 0;text-align:center}
+.fb-item{border:1.5px solid var(--rule);border-radius:var(--r-md);padding:12px 14px;background:var(--bg)}
+.fb-meta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;font-size:.78rem;color:var(--ink-lt)}
+.fb-meta strong{color:var(--ink);font-size:.82rem}
+.fb-email{color:var(--ink-lt);font-size:.74rem}
+.fb-ws-badge{font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#EEF2FF;color:#4338CA}
+.fb-time{margin-left:auto;font-size:.7rem;color:var(--ink-lt);white-space:nowrap}
+.fb-msg{font-size:.86rem;color:var(--ink-md);white-space:pre-wrap;line-height:1.5}
+.fb-replies{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.fb-reply{background:var(--surface);border:1.5px dashed var(--rule);border-radius:var(--r-sm);padding:8px 10px;margin-left:14px}
+.fb-reply-head{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--ink-lt);margin-bottom:4px}
+.fb-reply-head strong{color:#7C3AED}
+.fb-del-reply{margin-left:auto;border:none;background:none;color:#DC2626;cursor:pointer;padding:0 2px;display:flex;align-items:center}
+.fb-reply-msg{font-size:.82rem;color:var(--ink-md);white-space:pre-wrap}
+.fb-reply-form{display:flex;flex-direction:column;gap:6px;margin-top:10px;border-top:1px solid var(--rule);padding-top:10px}
+.fb-reply-input{width:100%;resize:vertical;font-family:var(--font);font-size:.82rem;padding:8px 10px;border:1.5px solid var(--rule);border-radius:var(--r-sm);background:var(--surface);color:var(--ink)}
+.fb-reply-form .btn{align-self:flex-end}
+.fb-badge-new{font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF2F2;color:#B91C1C}
+
 @media(max-width:640px){
   .stats-grid{grid-template-columns:1fr 1fr}
   .data-table th:nth-child(4),.data-table td:nth-child(4){display:none}
@@ -251,6 +273,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
       <div class="stat-value" id="statLogs">—</div>
       <div class="stat-sub">aktivitas tercatat</div>
     </div>
+    <div class="stat-card rose">
+      <div class="stat-label">Kritik &amp; Saran</div>
+      <div class="stat-value" id="statFeedback">—</div>
+      <div class="stat-sub">dari semua workspace</div>
+    </div>
   </div>
 
   <!-- WORKSPACES TABLE -->
@@ -270,6 +297,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
     <div class="section-body">
       <div id="wsTableWrap">
         <div class="empty-state"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i>Memuat workspace...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KRITIK & SARAN (semua workspace, tidak perlu buka workspace satu-satu) -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title"><i class="ti ti-message-2"></i> Kritik &amp; Saran Pengguna</div>
+      <div class="filter-bar">
+        <input type="text" class="search-input" id="fbSearch" placeholder="Cari nama / email / isi..."/>
+        <button class="btn btn-sm" id="btnRefreshFeedback"><i class="ti ti-refresh"></i></button>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="fb-list" id="fbAdminList">
+        <div class="empty-state"><i class="ti ti-loader" style="animation:spin .7s linear infinite"></i>Memuat kritik/saran...</div>
       </div>
     </div>
   </div>
@@ -396,12 +439,16 @@ auth.onAuthStateChanged(async user => {
   if (!user) {
     document.getElementById('loginGate').style.display = 'flex';
     document.getElementById('mainDashboard').style.display = 'none';
+    if (fbUnsub) { fbUnsub(); fbUnsub = null; }
+    fbReplyUnsubs.forEach(u=>u()); fbReplyUnsubs = [];
     return;
   }
   if (user.email !== SUPERADMIN_EMAIL) {
     document.getElementById('loginGate').style.display = 'flex';
     document.getElementById('mainDashboard').style.display = 'none';
     document.getElementById('loginGateMsg').textContent = `Akun ${user.email} tidak memiliki akses admin. Silakan login dengan akun superadmin.`;
+    if (fbUnsub) { fbUnsub(); fbUnsub = null; }
+    fbReplyUnsubs.forEach(u=>u()); fbReplyUnsubs = [];
     return;
   }
 
@@ -417,6 +464,7 @@ auth.onAuthStateChanged(async user => {
 
   loadWorkspaces();
   loadAuditLog();
+  subscribeFeedbackAdmin();
 });
 
 document.getElementById('btnAdminLogin').addEventListener('click', () => {
@@ -712,6 +760,126 @@ async function loadAuditLog() {
 
 document.getElementById('logFilterAction').addEventListener('change', loadAuditLog);
 document.getElementById('btnRefreshLog').addEventListener('click', loadAuditLog);
+
+document.getElementById('logFilterAction').addEventListener('change', loadAuditLog);
+document.getElementById('btnRefreshLog').addEventListener('click', loadAuditLog);
+
+/* ════════════════════════════════════════
+   KRITIK & SARAN — semua workspace, satu tempat
+   ─────────────────────────────────────────
+   Koleksi Firestore "_feedback" bersifat GLOBAL (tidak dipisah per workspace),
+   jadi cukup dibaca sekali di sini tanpa perlu tahu/membuka workspace asalnya.
+   Superadmin bisa membalas & menghapus balasannya sendiri kapan saja.
+   ════════════════════════════════════════ */
+let fbUnsub = null;
+let fbReplyUnsubs = [];
+let fbAllItems = [];
+
+function fmtFbTime(ts) {
+  if (!ts) return 'baru saja';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function subscribeFeedbackAdmin(){
+  if (fbUnsub) fbUnsub();
+  fbUnsub = db.collection('_feedback').orderBy('createdAt','desc').limit(300).onSnapshot(snap => {
+    fbAllItems = snap.docs.map(d=>({id:d.id,...d.data()}));
+    document.getElementById('statFeedback').textContent = fbAllItems.length;
+    renderFeedbackAdmin();
+  }, err => {
+    console.error('Feedback listen error:', err.code, err.message);
+    document.getElementById('fbAdminList').innerHTML = `<div class="empty-state"><i class="ti ti-alert-circle"></i>Gagal memuat: ${escHtml(err.message)}</div>`;
+  });
+}
+
+function renderFeedbackAdmin(){
+  fbReplyUnsubs.forEach(u=>u()); fbReplyUnsubs = [];
+  const wrap = document.getElementById('fbAdminList');
+  const kw = (document.getElementById('fbSearch').value||'').trim().toLowerCase();
+  let items = fbAllItems;
+  if (kw) {
+    items = items.filter(it =>
+      (it.userName||'').toLowerCase().includes(kw) ||
+      (it.userEmail||'').toLowerCase().includes(kw) ||
+      (it.message||'').toLowerCase().includes(kw) ||
+      (it.workspace||'').toLowerCase().includes(kw)
+    );
+  }
+  if (!items.length) {
+    wrap.innerHTML = `<div class="empty-state"><i class="ti ti-message-2"></i>${kw?'Tidak ada hasil untuk pencarian ini.':'Belum ada kritik/saran dari pengguna.'}</div>`;
+    return;
+  }
+  wrap.innerHTML = items.map(it=>`
+    <div class="fb-item" data-id="${it.id}">
+      <div class="fb-meta">
+        <strong>${escHtml(it.userName||it.userEmail||'Pengguna')}</strong>
+        <span class="fb-email">${escHtml(it.userEmail||'')}</span>
+        <span class="fb-ws-badge">${escHtml(it.workspace||'default')}</span>
+        <span class="fb-time">${fmtFbTime(it.createdAt)}</span>
+      </div>
+      <div class="fb-msg">${escHtml(it.message)}</div>
+      <div class="fb-replies" id="fbAReplies_${it.id}"></div>
+      <div class="fb-reply-form">
+        <textarea class="fb-reply-input" id="fbAReplyInput_${it.id}" rows="2" placeholder="Tulis balasan untuk pengguna ini..."></textarea>
+        <button class="btn btn-sm btn-primary" data-reply-id="${it.id}"><i class="ti ti-send"></i> Kirim Balasan</button>
+      </div>
+    </div>`).join('');
+
+  wrap.querySelectorAll('[data-reply-id]').forEach(btn=>{
+    btn.addEventListener('click', ()=> submitFeedbackReplyAdmin(btn.dataset.replyId));
+  });
+
+  items.forEach(it=>{
+    const unsub = db.collection('_feedback').doc(it.id).collection('replies').orderBy('createdAt','asc')
+      .onSnapshot(rs=>{
+        const el = document.getElementById(`fbAReplies_${it.id}`);
+        if (!el) return;
+        el.innerHTML = rs.docs.map(rd=>{
+          const r = rd.data();
+          return `<div class="fb-reply">
+            <div class="fb-reply-head"><i class="ti ti-corner-down-right"></i> <strong>Anda (Superadmin)</strong> <span class="fb-time">${fmtFbTime(r.createdAt)}</span>
+              <button class="fb-del-reply" data-fid="${it.id}" data-rid="${rd.id}" title="Hapus balasan"><i class="ti ti-trash"></i></button>
+            </div>
+            <div class="fb-reply-msg">${escHtml(r.message)}</div>
+          </div>`;
+        }).join('');
+        el.querySelectorAll('.fb-del-reply').forEach(b=>b.addEventListener('click',()=>deleteFeedbackReplyAdmin(b.dataset.fid,b.dataset.rid)));
+      }, err=>console.warn('reply listen error:', err.code, err.message));
+    fbReplyUnsubs.push(unsub);
+  });
+}
+
+async function submitFeedbackReplyAdmin(feedbackId){
+  const ta = document.getElementById(`fbAReplyInput_${feedbackId}`);
+  const msg = ta.value.trim();
+  if (!msg) { showToast('⚠️ Tulis balasan terlebih dahulu'); return; }
+  try {
+    await db.collection('_feedback').doc(feedbackId).collection('replies').add({
+      message: msg,
+      by: auth.currentUser.email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    ta.value = '';
+    showToast('✅ Balasan terkirim');
+  } catch(e) {
+    console.error('submitFeedbackReplyAdmin error:', e.code, e.message);
+    showToast('❌ Gagal mengirim balasan: ' + e.message);
+  }
+}
+async function deleteFeedbackReplyAdmin(feedbackId, replyId){
+  if (!confirm('Hapus balasan ini?')) return;
+  try {
+    await db.collection('_feedback').doc(feedbackId).collection('replies').doc(replyId).delete();
+    showToast('🗑️ Balasan dihapus');
+  } catch(e) {
+    console.error('deleteFeedbackReplyAdmin error:', e.code, e.message);
+    showToast('❌ Gagal menghapus balasan: ' + e.message);
+  }
+}
+
+document.getElementById('fbSearch').addEventListener('input', renderFeedbackAdmin);
+document.getElementById('btnRefreshFeedback').addEventListener('click', subscribeFeedbackAdmin);
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
