@@ -57,7 +57,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .site-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.6rem;flex-wrap:wrap;gap:12px}
 .brand-title{font-size:clamp(1.1rem,1.5vw,1.55rem);font-weight:800;letter-spacing:-.035em;color:var(--ink)}
 .brand-sub{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);margin-top:2px}
-.hdr-right{display:flex;gap:clamp(4px,0.6vw,8px);align-items:center;flex-wrap:wrap}
+.hdr-right{display:flex;gap:clamp(4px,0.6vw,8px);align-items:center;flex-wrap:wrap;position:relative}
+.mobile-menu-btn{display:none}
+.hdr-secondary{display:contents}
 
 /* ── BUTTONS ── */
 .btn{font-family:var(--font);font-size:clamp(.72rem,.75vw,.8rem);font-weight:600;padding:clamp(6px,0.7vw,8px) clamp(10px,1.1vw,14px);border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-md);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .14s,border-color .14s,transform .1s;white-space:nowrap}
@@ -271,11 +273,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
   .brand-title{font-size:1rem}
   .brand-sub{font-size:.6rem}
   .hdr-right{gap:4px;flex-wrap:nowrap}
-  /* Hide non-essential buttons on mobile, show only key ones */
-  .hdr-right .btn:not(#addEventBtn):not(#todayBtn):not(#exportExcelBtn){display:none}
-  #exportExcelBtn{display:none} /* hide excel on mobile too, save space */
-  /* Show hamburger menu on mobile */
-  .mobile-menu-btn{display:inline-flex!important}
+  /* Tombol utama (Hari ini, Tambah Event, notifikasi, install, menu ·) tetap tampil;
+     semua fitur lain (Kelola Jenis, Warna PIC, Export, dst) masuk dropdown menu. */
+  .mobile-menu-btn{display:inline-flex}
+  .hdr-secondary{
+    display:none;position:absolute;top:calc(100% + 8px);right:0;
+    flex-direction:column;gap:6px;background:var(--surface);
+    border:1.5px solid var(--rule);border-radius:var(--r-lg);
+    box-shadow:0 16px 40px rgba(28,25,23,.22);padding:10px;
+    min-width:210px;max-width:calc(100vw - 24px);max-height:70vh;overflow-y:auto;z-index:500;
+  }
+  .hdr-secondary.open{display:flex}
+  .hdr-secondary .btn{display:flex!important;width:100%;justify-content:flex-start}
   .main-row{flex-direction:column;gap:0}
   .panel-col{display:none!important} /* panel handled as bottom sheet on mobile */
   .cal-col{width:100%}
@@ -1144,15 +1153,21 @@ body.read-only .readonly-badge{display:inline-flex}
       <span id="notifBadge" style="position:absolute;top:4px;right:4px;width:8px;height:8px;background:#EF4444;border-radius:50%;display:none"></span>
     </button>
     <button class="btn" id="installAppBtn" style="display:none;background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-download"></i> Install App</button>
-    <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
-    <button class="btn write-only" id="managePicColorsBtn"><i class="ti ti-palette"></i> Warna PIC</button>
-    <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
-    <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
-    <button class="btn write-only" id="manageRoutineBtn" style="background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-repeat"></i> Tugas Rutin</button>
-    <a class="btn" href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener noreferrer" title="Dukung pengembang aplikasi ini">☕ Dukung Kami</a>
-    <button class="btn" id="feedbackBtn" style="display:none"><i class="ti ti-message-2"></i> Kritik &amp; Saran</button>
-    <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
-    <button class="btn" id="printBtn" title="Print Kalender" onclick="window.print()"><i class="ti ti-printer"></i></button>
+    <!-- Tombol menu mobile — membuka dropdown berisi semua fitur konfigurasi di bawah ini,
+         supaya tidak ada fitur yang "hilang" di layar kecil (sebelumnya hanya Hari ini &
+         Tambah Event yang tampil di mobile, sisanya tersembunyi tanpa cara membukanya). -->
+    <button class="btn btn-icon mobile-menu-btn" id="mobileMenuBtn" title="Menu lainnya"><i class="ti ti-dots-vertical"></i></button>
+    <div class="hdr-secondary" id="hdrSecondary">
+      <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
+      <button class="btn write-only" id="managePicColorsBtn"><i class="ti ti-palette"></i> Warna PIC</button>
+      <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
+      <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
+      <button class="btn write-only" id="manageRoutineBtn" style="background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-repeat"></i> Tugas Rutin</button>
+      <a class="btn" href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener noreferrer" title="Dukung pengembang aplikasi ini">☕ Dukung Kami</a>
+      <button class="btn" id="feedbackBtn" style="display:none"><i class="ti ti-message-2"></i> Kritik &amp; Saran</button>
+      <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
+      <button class="btn" id="printBtn" title="Print Kalender" onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
+    </div>
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
     <button class="btn btn-primary write-only" id="addEventBtn"><i class="ti ti-plus"></i> Tambah Event</button>
   </div>
@@ -2571,6 +2586,28 @@ document.getElementById('closeFeedback').addEventListener('click', closeFeedback
 document.getElementById('closeFeedbackOk').addEventListener('click', closeFeedbackModal);
 document.getElementById('feedbackSubmitBtn').addEventListener('click', submitFeedback);
 document.getElementById('feedbackOverlay').addEventListener('click', e=>{ if (e.target.id === 'feedbackOverlay') closeFeedbackModal(); });
+
+/* ── MOBILE DROPDOWN MENU (·) ──
+   Menampilkan semua fitur konfigurasi (Kelola Jenis, Warna PIC, Export, Kritik
+   & Saran, dst) di layar kecil lewat dropdown, karena di header mobile hanya
+   cukup ruang untuk 2-3 tombol utama. Ini menyamakan fitur mobile dengan desktop
+   — sebelumnya tombol-tombol ini disembunyikan tanpa ada cara lain membukanya. */
+(function(){
+  const btn = document.getElementById('mobileMenuBtn');
+  const menu = document.getElementById('hdrSecondary');
+  if (!btn || !menu) return;
+  btn.addEventListener('click', e=>{
+    e.stopPropagation();
+    menu.classList.toggle('open');
+  });
+  menu.querySelectorAll('.btn').forEach(b=>b.addEventListener('click', ()=>menu.classList.remove('open')));
+  document.addEventListener('click', e=>{
+    if (menu.classList.contains('open') && !menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      menu.classList.remove('open');
+    }
+  });
+  document.addEventListener('keydown', e=>{ if (e.key === 'Escape') menu.classList.remove('open'); });
+})();
 
 
 /* ── BRAND TITLE shows workspace ── */
