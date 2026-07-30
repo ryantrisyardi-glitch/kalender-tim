@@ -272,7 +272,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
   .site-header{gap:6px;margin-bottom:.85rem;flex-wrap:nowrap;align-items:flex-start}
   .brand-title{font-size:1rem}
   .brand-sub{font-size:.6rem}
-  .hdr-right{gap:4px;flex-wrap:nowrap}
+  .hdr-right{gap:4px;flex-wrap:wrap;justify-content:flex-end}
   /* Tombol utama (Hari ini, Tambah Event, notifikasi, install, menu ·) tetap tampil;
      semua fitur lain (Kelola Jenis, Warna PIC, Export, dst) masuk dropdown menu. */
   .mobile-menu-btn{display:inline-flex}
@@ -281,7 +281,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
     flex-direction:column;gap:6px;background:var(--surface);
     border:1.5px solid var(--rule);border-radius:var(--r-lg);
     box-shadow:0 16px 40px rgba(28,25,23,.22);padding:10px;
-    min-width:210px;max-width:calc(100vw - 24px);max-height:70vh;overflow-y:auto;z-index:500;
+    min-width:210px;max-width:calc(100vw - 24px);max-height:70vh;overflow-y:auto;z-index:5000;
   }
   .hdr-secondary.open{display:flex}
   .hdr-secondary .btn{display:flex!important;width:100%;justify-content:flex-start}
@@ -1153,10 +1153,14 @@ body.read-only .readonly-badge{display:inline-flex}
       <span id="notifBadge" style="position:absolute;top:4px;right:4px;width:8px;height:8px;background:#EF4444;border-radius:50%;display:none"></span>
     </button>
     <button class="btn" id="installAppBtn" style="display:none;background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-download"></i> Install App</button>
+    <!-- Tombol Admin Dashboard — hanya untuk superadmin, selalu tampil langsung (bukan
+         di dalam dropdown) supaya superadmin bisa lompat ke admin.html kapan saja
+         walau sedang membuka kalender miliknya sendiri atau kalender orang lain. -->
+    <a class="btn" id="adminDashboardLink" href="admin.html" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6;font-weight:700" title="Buka Admin Dashboard"><i class="ti ti-shield-lock"></i> Admin</a>
     <!-- Tombol menu mobile — membuka dropdown berisi semua fitur konfigurasi di bawah ini,
          supaya tidak ada fitur yang "hilang" di layar kecil (sebelumnya hanya Hari ini &
          Tambah Event yang tampil di mobile, sisanya tersembunyi tanpa cara membukanya). -->
-    <button class="btn btn-icon mobile-menu-btn" id="mobileMenuBtn" title="Menu lainnya"><i class="ti ti-dots-vertical"></i></button>
+    <button class="btn mobile-menu-btn" id="mobileMenuBtn" title="Buka menu fitur lainnya (Kelola Jenis, Warna PIC, Export, dll)"><i class="ti ti-menu-2"></i> Menu</button>
     <div class="hdr-secondary" id="hdrSecondary">
       <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
       <button class="btn write-only" id="managePicColorsBtn"><i class="ti ti-palette"></i> Warna PIC</button>
@@ -2326,6 +2330,9 @@ function applyAuthState(user) {
   const adminBtn = document.getElementById('manageAccessBtn');
   if (adminBtn) adminBtn.style.display = (isSuperAdmin || isOwner) ? '' : 'none';
 
+  const adminDashLink = document.getElementById('adminDashboardLink');
+  if (adminDashLink) adminDashLink.style.display = isSuperAdmin ? '' : 'none';
+
   const feedbackBtnEl = document.getElementById('feedbackBtn');
   if (feedbackBtnEl) feedbackBtnEl.style.display = user ? '' : 'none';
 
@@ -2596,17 +2603,24 @@ document.getElementById('feedbackOverlay').addEventListener('click', e=>{ if (e.
   const btn = document.getElementById('mobileMenuBtn');
   const menu = document.getElementById('hdrSecondary');
   if (!btn || !menu) return;
+  function setOpen(open){
+    menu.classList.toggle('open', open);
+    // Jaminan tambahan lewat inline style, supaya tidak bergantung 100% pada
+    // urutan/spesifisitas CSS eksternal (mis. jika ada cache CSS lama di hosting).
+    menu.style.display = open ? 'flex' : 'none';
+  }
   btn.addEventListener('click', e=>{
+    e.preventDefault();
     e.stopPropagation();
-    menu.classList.toggle('open');
+    setOpen(!menu.classList.contains('open'));
   });
-  menu.querySelectorAll('.btn').forEach(b=>b.addEventListener('click', ()=>menu.classList.remove('open')));
+  menu.querySelectorAll('.btn').forEach(b=>b.addEventListener('click', ()=>setOpen(false)));
   document.addEventListener('click', e=>{
     if (menu.classList.contains('open') && !menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-      menu.classList.remove('open');
+      setOpen(false);
     }
   });
-  document.addEventListener('keydown', e=>{ if (e.key === 'Escape') menu.classList.remove('open'); });
+  document.addEventListener('keydown', e=>{ if (e.key === 'Escape') setOpen(false); });
 })();
 
 
@@ -3623,10 +3637,10 @@ function renderPanel(ds) {
     const sp=effStatus?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[effStatus]}</span>${partialBadge}`:'';
     const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:10px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
     const statusNoteContent=effStatusNote?escHtml(effStatusNote.split('\n').pop()):'';
-    const editBtnHtml=canWrite?`<button class="pei-note-edit-btn" onclick="event.stopPropagation();startEditStatusNote('${e.id}')" title="Edit catatan"><i class="ti ti-pencil" style="font-size:10px"></i> edit</button>`:'';
+    const editBtnHtml=canWrite?`<button class="pei-note-edit-btn" onclick="event.stopPropagation();startEditStatusNote('${e.id}','${ds}')" title="Edit catatan"><i class="ti ti-pencil" style="font-size:10px"></i> edit</button>`:'';
     const statusNoteHtml=effStatusNote
       ?`<div class="pei-note-wrap" data-note-id="${e.id}"><div class="pei-note" style="background:#EDE9FE;border-left-color:#7C3AED;color:#3B1C8C;margin-top:3px"><i class="ti ti-message-circle" style="font-size:10px;vertical-align:-1px;color:#7C3AED"></i> ${statusNoteContent}${editBtnHtml}</div></div>`
-      :(canWrite?`<div class="pei-note-wrap" data-note-id="${e.id}"><button class="pei-note-edit-btn" style="opacity:1;pointer-events:auto;position:static;transform:none;margin-top:3px;display:inline-flex" onclick="event.stopPropagation();startEditStatusNote('${e.id}')" title="Tambah catatan"><i class="ti ti-plus" style="font-size:10px"></i> + Catatan Tambahan</button></div>`:'');
+      :(canWrite?`<div class="pei-note-wrap" data-note-id="${e.id}"><button class="pei-note-edit-btn" style="opacity:1;pointer-events:auto;position:static;transform:none;margin-top:3px;display:inline-flex" onclick="event.stopPropagation();startEditStatusNote('${e.id}','${ds}')" title="Tambah catatan"><i class="ti ti-plus" style="font-size:10px"></i> + Catatan Tambahan</button></div>`:'');
     const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;margin-left:4px">🔒 Tersembunyi</span>`:'';
     const hiddenCls=e.hidden?' is-hidden-event':'';
     return `<div class="panel-event-item${hiddenCls}" data-id="${e.id}">
@@ -6251,38 +6265,58 @@ document.addEventListener('mouseout', e => {
 /* ════════════════════════════════════════
    EDIT STATUS NOTE INLINE (Panel)
    ════════════════════════════════════════ */
-function startEditStatusNote(eventId) {
+function startEditStatusNote(eventId, dateStr) {
   const ev = events.find(e => e.id === eventId);
   if (!ev || !canWrite) return;
   const wrap = document.querySelector(`.pei-note-wrap[data-note-id="${eventId}"]`);
   if (!wrap) return;
-  const existing = ev.statusNote || '';
+  const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
+  // BUGFIX: sebelumnya selalu memakai ev.statusNote (catatan global 1 event),
+  // padahal untuk event yang berlangsung beberapa hari, catatan seharusnya
+  // per-tanggal (dateStatuses) — supaya konsisten dengan apa yang ditampilkan
+  // (getEffectiveStatusNote) dan tidak "bocor"/tertukar ke tanggal lain.
+  const existing = (isMultiDay && dateStr) ? getEffectiveStatusNote(ev, dateStr) : (ev.statusNote || '');
+  const hint = (isMultiDay && dateStr) ? `<div style="font-size:.62rem;color:var(--ink-lt);margin-bottom:3px">Catatan untuk tanggal ${fmtDate(dateStr)} saja</div>` : '';
   wrap.innerHTML = `
+    ${hint}
     <textarea class="pei-note-textarea" id="pnEdit_${eventId}">${escHtml(existing)}</textarea>
     <div class="pei-note-edit-actions">
-      <button class="pei-note-save" onclick="saveEditedStatusNote('${eventId}')"><i class="ti ti-check"></i> Simpan</button>
+      <button class="pei-note-save" onclick="saveEditedStatusNote('${eventId}','${dateStr||''}')"><i class="ti ti-check"></i> Simpan</button>
       <button class="pei-note-cancel" onclick="cancelEditStatusNote('${eventId}')">Batal</button>
     </div>`;
   const ta = document.getElementById(`pnEdit_${eventId}`);
   if (ta) { ta.focus(); ta.selectionStart = ta.value.length; }
 }
-async function saveEditedStatusNote(eventId) {
+async function saveEditedStatusNote(eventId, dateStr) {
   const ta = document.getElementById(`pnEdit_${eventId}`);
   if (!ta) return;
   const newNote = ta.value.trim();
   const ev = events.find(e => e.id === eventId);
   if (!ev) return;
-  // Save directly without changing editingId (which would trigger editor open)
-  if (useFirebase) {
-    await db.collection(EVENTS_COLL).doc(eventId).update({ statusNote: newNote });
+  const isMultiDay = ev.dateEnd && ev.dateStart !== ev.dateEnd;
+  let updateData;
+  if (isMultiDay && dateStr) {
+    // Simpan khusus untuk tanggal ini saja (tidak menimpa tanggal lain di event yang sama)
+    const dateStatuses = { ...(ev.dateStatuses || {}) };
+    const existingEntry = dateStatuses[dateStr] || {};
+    dateStatuses[dateStr] = {
+      status: existingEntry.status || ev.status,
+      statusNote: newNote
+    };
+    updateData = { dateStatuses };
   } else {
-    events = events.map(e => e.id === eventId ? { ...e, statusNote: newNote } : e);
+    updateData = { statusNote: newNote };
+  }
+  if (useFirebase) {
+    await db.collection(EVENTS_COLL).doc(eventId).update(updateData);
+  } else {
+    events = events.map(e => e.id === eventId ? { ...e, ...updateData } : e);
     localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
     rebuildFilters(); renderCalendar();
   }
   // Update local state immediately
-  ev.statusNote = newNote;
-  showToast('✅ Catatan disimpan');
+  Object.assign(ev, updateData);
+  showToast('✅ Catatan disimpan' + (isMultiDay && dateStr ? ` untuk ${fmtDate(dateStr)}` : ''));
   // Refresh panel only, do NOT open addOverlay
   if (selectedDate) renderPanel(selectedDate);
 }
@@ -6295,7 +6329,27 @@ function cancelEditStatusNote(eventId) {
    ════════════════════════════════════════ */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(()=>{ /* offline shell tidak wajib, abaikan jika gagal */ });
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      // BUGFIX: sebelumnya update hanya berlaku setelah user clear cache/browsing
+      // data manual. Sekarang begitu ada versi baru terdeteksi, langsung diaktifkan
+      // & halaman auto-reload sekali — otomatis, tanpa aksi manual dari user.
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            newWorker.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+    }).catch(()=>{ /* offline shell tidak wajib, abaikan jika gagal */ });
+
+    let swReloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (swReloaded) return;
+      swReloaded = true;
+      window.location.reload();
+    });
   });
 }
 

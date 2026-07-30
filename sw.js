@@ -5,7 +5,7 @@
    Fonts, CDN) TIDAK dicache agresif, cukup diteruskan ke jaringan seperti biasa
    supaya data selalu yang terbaru. */
 
-const CACHE_VERSION = 'kalender-tim-v1';
+const CACHE_VERSION = 'kalender-tim-v2';
 const APP_SHELL = [
   './index.html',
   './kalender.html',
@@ -36,6 +36,14 @@ self.addEventListener('activate', event => {
   );
 });
 
+// BUGFIX: memungkinkan halaman memaksa service worker baru langsung aktif
+// (dipicu dari kalender.html/admin.html/index.html saat update terdeteksi),
+// supaya user tidak perlu clear cache/browsing data manual untuk dapat versi
+// terbaru — cukup auto-reload sekali begitu versi baru siap.
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return; // jangan cache write/POST
@@ -43,10 +51,11 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
   const sameOrigin = url.origin === self.location.origin;
 
-  // Navigasi antar halaman HTML: network-first, fallback ke cache saat offline
+  // Navigasi antar halaman HTML: network-first (tanpa HTTP disk-cache browser,
+  // supaya selalu ambil byte terbaru dari server), fallback ke cache saat offline
   if (req.mode === 'navigate' || (sameOrigin && req.headers.get('accept') && req.headers.get('accept').includes('text/html'))) {
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-store' })
         .then(res => {
           const resClone = res.clone();
           caches.open(CACHE_VERSION).then(cache => cache.put(req, resClone));
