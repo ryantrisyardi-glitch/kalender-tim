@@ -3387,7 +3387,14 @@ function getRoutineBadgeHtml(ds) {
 /* ════════════════════════════════════════
    RENDER CALENDAR — FIX #1: up to 5 chips, auto height
    ════════════════════════════════════════ */
+/* BUGFIX race condition: renderCalendar() async (menunggu data libur) dan dipanggil
+   dari banyak listener Firestore (events, order, collapse, config, rutin). Render lama
+   yang selesai belakangan dulu menimpa kalender bulan baru (judul bulan benar, isi
+   bulan lama). Solusi: token urutan — hanya render TERBARU yang boleh menulis ke DOM,
+   dan bulan/tahun dibaca ulang dari currentDate setelah await selesai. */
+let _renderSeq = 0;
 async function renderCalendar() {
+  const mySeq = ++_renderSeq;
   const year=currentDate.getFullYear(), month=currentDate.getMonth();
   const todayStr=toStr(new Date());
   document.getElementById('jumpMonth').value = String(month);
@@ -3399,6 +3406,8 @@ async function renderCalendar() {
   document.getElementById('calHdr').innerHTML=DAYS.map((d,i)=>`<div class="dh${i===0?' sun':i===6?' sat':''}">${d}</div>`).join('');
 
   await ensureHolidays(year,month);
+  /* Ada render yang lebih baru (navigasi bulan / snapshot baru) → batalkan yang ini */
+  if (mySeq !== _renderSeq) return;
 
   const firstDay=new Date(year,month,1).getDay();
   const lastDate=new Date(year,month+1,0).getDate();
@@ -4792,8 +4801,8 @@ document.getElementById('cancelExcelRange').addEventListener('click',()=>documen
 document.getElementById('closeExcelRange').addEventListener('click',()=>document.getElementById('excelRangeOverlay').classList.remove('open'));
 document.getElementById('excelRangeOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('excelRangeOverlay'))document.getElementById('excelRangeOverlay').classList.remove('open');});
 document.getElementById('todayBtn').addEventListener('click',()=>{currentDate=new Date();renderCalendar();closeMobilePanel&&closeMobilePanel();});
-document.getElementById('prevBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();closeMobilePanel&&closeMobilePanel();});
-document.getElementById('nextBtn').addEventListener('click',()=>{currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();closeMobilePanel&&closeMobilePanel();});
+document.getElementById('prevBtn').addEventListener('click',()=>{currentDate.setDate(1);currentDate.setMonth(currentDate.getMonth()-1);renderCalendar();closeMobilePanel&&closeMobilePanel();});
+document.getElementById('nextBtn').addEventListener('click',()=>{currentDate.setDate(1);currentDate.setMonth(currentDate.getMonth()+1);renderCalendar();closeMobilePanel&&closeMobilePanel();});
 
 ['closeAdd','cancelAdd'].forEach(id=>document.getElementById(id).addEventListener('click',()=>document.getElementById('addOverlay').classList.remove('open')));
 document.getElementById('closeDetail').addEventListener('click',()=>document.getElementById('detailOverlay').classList.remove('open'));
@@ -4950,12 +4959,14 @@ document.getElementById('editTypeColorSwatch').addEventListener('click',()=>{
 /* ── JUMP NAV ── */
 document.getElementById('jumpMonth').addEventListener('change', () => {
   const m = parseInt(document.getElementById('jumpMonth').value);
+  currentDate.setDate(1);
   currentDate.setMonth(m);
   renderCalendar();
 });
 document.getElementById('jumpYear').addEventListener('change', () => {
   const y = parseInt(document.getElementById('jumpYear').value);
   if (!isNaN(y) && y >= 1900 && y <= 2200) {
+    currentDate.setDate(1);
     currentDate.setFullYear(y);
     renderCalendar();
   }
@@ -4964,6 +4975,7 @@ document.getElementById('jumpYear').addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const y = parseInt(e.target.value);
     if (!isNaN(y) && y >= 1900 && y <= 2200) {
+      currentDate.setDate(1);
       currentDate.setFullYear(y);
       renderCalendar();
     }
