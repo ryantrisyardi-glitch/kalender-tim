@@ -18,7 +18,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <!-- SheetJS for Excel export (with styling support) -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css"/>
@@ -417,6 +417,20 @@ textarea.fc{resize:vertical;height:70px}
 /* ── TOAST ── */
 .toast{position:fixed;bottom:1.75rem;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:.8rem;font-weight:600;padding:9px 18px;border-radius:100px;z-index:999;opacity:0;pointer-events:none;transition:opacity .25s;white-space:nowrap}
 .toast.show{opacity:1}
+
+/* ── LOADING OVERLAY: kalender blur + notif animasi di atas layar ── */
+.cal-grid-wrap{transition:filter .25s ease,opacity .25s ease}
+.cal-grid-wrap.is-loading{filter:blur(3px);opacity:.7;pointer-events:none;user-select:none}
+.cal-loading-bar{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:50%;transform:translate(-50%,-160%);z-index:1300;display:flex;align-items:center;gap:10px;background:var(--ink);color:#fff;font-size:.8rem;font-weight:600;padding:9px 18px 9px 14px;border-radius:100px;box-shadow:0 6px 22px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:transform .3s cubic-bezier(.2,.9,.3,1.2),opacity .25s ease;white-space:nowrap}
+.cal-loading-bar.show{transform:translate(-50%,0);opacity:1}
+.cal-loading-line{position:fixed;top:0;left:0;right:0;height:3px;z-index:1301;overflow:hidden;opacity:0;pointer-events:none;transition:opacity .25s ease}
+.cal-loading-line.show{opacity:1}
+.cal-loading-line::before{content:"";position:absolute;top:0;left:-40%;height:100%;width:40%;background:linear-gradient(90deg,transparent,#60a5fa,transparent);animation:calSlide 1.1s ease-in-out infinite}
+.cal-spinner{width:16px;height:16px;border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:calSpin .7s linear infinite;flex:none}
+@keyframes calSpin{to{transform:rotate(360deg)}}
+@keyframes calSlide{0%{left:-40%}100%{left:100%}}
+@media (prefers-reduced-motion:reduce){.cal-spinner{animation-duration:1.6s}.cal-loading-line::before{animation:none;left:0;width:100%}}
+@media print{.cal-loading-bar,.cal-loading-line{display:none!important}.cal-grid-wrap.is-loading{filter:none!important;opacity:1!important}}
 
 /* ── EDIT STATUS NOTE INLINE ── */
 .pei-note-wrap{position:relative}
@@ -1732,6 +1746,8 @@ body.read-only .readonly-badge{display:inline-flex}
   </div>
 </div>
 
+<div class="cal-loading-line" id="calLoadingLine"></div>
+<div class="cal-loading-bar" id="calLoadingBar" role="status" aria-live="polite"><span class="cal-spinner"></span><span id="calLoadingText">Memuat kalender…</span></div>
 <div class="toast" id="toast"></div>
 
 <!-- Context Menu (must be in DOM before scripts run) -->
@@ -2917,7 +2933,7 @@ async function fetchWithTimeout(url, ms = 10000) {
 
 /* Sumber 1 (Primary): libur.deno.dev — CORS terbuka langsung, data reliable */
 async function fetchFromDenodev(year) {
-  const res  = await fetchWithTimeout(`https://libur.deno.dev/api?year=${year}`);
+  const res  = await fetchWithTimeout(`https://libur.deno.dev/api?year=${year}`, 4000);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
@@ -2926,115 +2942,97 @@ async function fetchFromDenodev(year) {
   return map;
 }
 
-/* Sumber 2 (Fallback): api-hari-libur.vercel.app via CORS proxy */
+/* Sumber 2 (Fallback): api-hari-libur.vercel.app via CORS proxy.
+   PERF: semua proxy dicoba PARALEL (Promise.any) dengan timeout pendek, bukan
+   berurutan 9 dtk per proxy — yang tercepat menang. */
 async function fetchFromVercel(year) {
   const targetUrl = `https://api-hari-libur.vercel.app/api?year=${year}`;
-  let lastErr;
-  for (const proxyFn of CORS_PROXIES) {
-    try {
-      const res  = await fetchWithTimeout(proxyFn(targetUrl), 9000);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      const data = Array.isArray(json) ? json : (json.data || []);
-      if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
-      const map = parseHolidayArray(data, 'description');
-      if (Object.keys(map).length === 0) throw new Error('Parsed map kosong');
-      return map;
-    } catch(e) { lastErr = e; }
-  }
-  throw new Error(`Semua proxy gagal: ${lastErr?.message}`);
+  const attempts = CORS_PROXIES.map(async proxyFn => {
+    const res  = await fetchWithTimeout(proxyFn(targetUrl), 5000);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const data = Array.isArray(json) ? json : (json.data || []);
+    if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
+    const map = parseHolidayArray(data, 'description');
+    if (Object.keys(map).length === 0) throw new Error('Parsed map kosong');
+    return map;
+  });
+  try { return await Promise.any(attempts); }
+  catch(e) { throw new Error(`Semua proxy gagal: ${e.errors && e.errors[0] ? e.errors[0].message : e.message}`); }
 }
 
-async function fetchHolidaysForYear(year) {
-  /* In-memory cache — hanya jika ada isinya */
-  if (holidayCache[year] && Object.keys(holidayCache[year]).length > 0) return holidayCache[year];
+/* ── Cache hari libur ──────────────────────────────────────────────
+   PERF FIX (penyebab loading lama saat pindah bulan):
+   1) Hasil sukses disimpan di memori + localStorage (TTL 30 hari) → kunjungan/tab
+      berikutnya instan, tidak fetch ulang.
+   2) Kegagalan di-cache sementara (5 menit) → pindah bulan di tahun yang API-nya
+      gagal TIDAK lagi mengulang fetch (dulu bisa ~28 dtk setiap klik).
+   3) Request yang sedang berjalan dipakai bersama (dedupe lewat Promise), bukan
+      string 'fetching' yang dulu salah dibaca sebagai data. */
+const holidayInflight = {};   /* { year: Promise } */
+const holidayFailedAt = {};   /* { year: timestamp gagal terakhir } */
+const HOLIDAY_RETRY_MS = 5 * 60 * 1000;
+const HOLIDAY_LS_TTL   = 30 * 24 * 3600 * 1000;
 
-  /* Tunggu fetch yang sedang berjalan */
-  if (holidayCache[year] === 'fetching') {
-    for (let i = 0; i < 100; i++) {
-      await new Promise(r => setTimeout(r, 100));
-      if (holidayCache[year] !== 'fetching') {
-        return (holidayCache[year] && Object.keys(holidayCache[year]).length > 0)
-          ? holidayCache[year] : {};
-      }
+function readHolidayLS(year) {
+  try {
+    const raw = localStorage.getItem(`hol6_${year}`);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    if (!o || !o.map || Date.now() - o.t > HOLIDAY_LS_TTL) return null;
+    return Object.keys(o.map).length ? o.map : null;
+  } catch(e) { return null; }
+}
+function writeHolidayLS(year, map) {
+  try { localStorage.setItem(`hol6_${year}`, JSON.stringify({ t: Date.now(), map })); } catch(e) {}
+}
+/* Sinkron: data libur tahun ini bila sudah ada di memori/localStorage, selain itu null */
+function getCachedHolidays(year) {
+  const c = holidayCache[year];
+  if (c && Object.keys(c).length > 0) return c;
+  const ls = readHolidayLS(year);
+  if (ls) { holidayCache[year] = ls; return ls; }
+  return null;
+}
+function holidayRetryBlocked(year) {
+  return !!holidayFailedAt[year] && (Date.now() - holidayFailedAt[year] < HOLIDAY_RETRY_MS);
+}
+
+/* Selalu resolve (tidak pernah reject). Hasil {} berarti gagal/kosong. */
+function fetchHolidaysForYear(year) {
+  const cached = getCachedHolidays(year);
+  if (cached) return Promise.resolve(cached);
+  if (holidayInflight[year]) return holidayInflight[year];
+  if (holidayRetryBlocked(year)) return Promise.resolve({});
+
+  const p = (async () => {
+    try {
+      const map = await fetchFromDenodev(year);
+      holidayCache[year] = map; writeHolidayLS(year, map);
+      console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari (libur.deno.dev)`);
+      return map;
+    } catch(e1) {
+      console.warn(`⚠️ libur.deno.dev gagal [${year}]: ${e1.message} → coba fallback vercel...`);
+    }
+    try {
+      const map2 = await fetchFromVercel(year);
+      holidayCache[year] = map2; writeHolidayLS(year, map2);
+      console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari (api-hari-libur.vercel.app)`);
+      return map2;
+    } catch(e2) {
+      console.warn(`⚠️ Fallback vercel gagal [${year}]: ${e2.message}`);
+    }
+    holidayFailedAt[year] = Date.now();
+    if (year > new Date().getFullYear() + 1) {
+      console.info(`ℹ️ Data libur ${year} belum tersedia (wajar untuk tahun terlalu jauh ke depan).`);
+    } else {
+      console.error(`❌ Semua sumber hari libur gagal untuk ${year}. Hari libur tidak ditampilkan.`);
     }
     return {};
-  }
+  })().finally(() => { delete holidayInflight[year]; });
 
-  holidayCache[year] = 'fetching';
-
-  /* sessionStorage — hanya pakai jika ada isinya */
-  try {
-    const raw = sessionStorage.getItem(`hol_${year}`);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && Object.keys(parsed).length > 0) {
-        holidayCache[year] = parsed;
-        console.log(`📦 Libur ${year}: ${Object.keys(parsed).length} hari (sessionStorage)`);
-        return parsed;
-      } else {
-        sessionStorage.removeItem(`hol_${year}`);
-      }
-    }
-  } catch(e) {}
-
-  /* Coba Primary: libur.deno.dev */
-  try {
-    const map = await fetchFromDenodev(year);
-    holidayCache[year] = map;
-    try { sessionStorage.setItem(`hol_${year}`, JSON.stringify(map)); } catch(e) {}
-    console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari (libur.deno.dev)`);
-    return map;
-  } catch(e1) {
-    console.warn(`⚠️ libur.deno.dev gagal [${year}]: ${e1.message} → coba fallback vercel...`);
-  }
-
-  /* Coba Fallback: vercel via proxy */
-  try {
-    const map2 = await fetchFromVercel(year);
-    holidayCache[year] = map2;
-    try { sessionStorage.setItem(`hol_${year}`, JSON.stringify(map2)); } catch(e) {}
-    console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari (api-hari-libur.vercel.app)`);
-    return map2;
-  } catch(e2) {
-    console.warn(`⚠️ Fallback vercel gagal [${year}]: ${e2.message}`);
-  }
-
-  /* Kedua sumber gagal */
-  const currentYear = new Date().getFullYear();
-  if (year > currentYear + 1) {
-    console.info(`ℹ️ Data libur ${year} belum tersedia (wajar untuk tahun terlalu jauh ke depan).`);
-  } else {
-    console.error(`❌ Semua sumber hari libur gagal untuk ${year}. Hari libur tidak ditampilkan.`);
-  }
-  holidayCache[year] = {};   /* in-memory saja, tidak ke sessionStorage agar bisa retry saat reload */
-  return {};
-}
-
-
-async function ensureHolidays(year, month) {
-  const result = await fetchHolidaysForYear(year);
-  if (result && Object.keys(result).length > 0) Object.assign(holidays, result);
-
-  /* Always merge custom holidays on top of API data */
-  applyCustomHolidays();
-
-  /* Prefetch tahun sebelum — selalu ada datanya */
-  if (month === 0) {
-    fetchHolidaysForYear(year - 1).then(x => {
-      if (x && Object.keys(x).length > 0) Object.assign(holidays, x);
-      /* intentionally no renderCalendar() — would cause infinite loop */
-    });
-  }
-  /* Prefetch tahun depan — hanya jika masih dalam jangkauan wajar */
-  if (month === 11) {
-    const nextYear = year + 1;
-    if (nextYear <= new Date().getFullYear() + 1) {
-      fetchHolidaysForYear(nextYear).then(x => {
-        if (x && Object.keys(x).length > 0) Object.assign(holidays, x);
-      });
-    }
-  }
+  holidayInflight[year] = p;
+  return p;
 }
 
 /* ════════════════════════════════════════
@@ -3042,12 +3040,14 @@ async function ensureHolidays(year, month) {
    ════════════════════════════════════════ */
 function loadEvents() {
   if (useFirebase) {
+    setCalLoading('events', true);
     db.collection(EVENTS_COLL).orderBy('dateStart').onSnapshot(snap=>{
+      setCalLoading('events', false);
       events=snap.docs.map(d=>({id:d.id,...d.data()}));
       events=events.map(e=>({...e,pics:Array.isArray(e.pics)?e.pics:(e.pic?[e.pic]:[])}));
       rebuildFilters(); renderCalendar();
       if (selectedDate) renderPanel(selectedDate);
-    }, err=>{ console.error('Firestore error:', err.code, err.message); if(err.code==='permission-denied'){showToast('⚠️ Akses ditolak. Periksa Firestore Security Rules.');}else{showToast('Gagal memuat: '+err.message);} });
+    }, err=>{ setCalLoading('events', false); console.error('Firestore error:', err.code, err.message); if(err.code==='permission-denied'){showToast('⚠️ Akses ditolak. Periksa Firestore Security Rules.');}else{showToast('Gagal memuat: '+err.message);} });
   } else {
     try { events=JSON.parse(localStorage.getItem(LS_EVENTS_KEY)||'[]'); }catch(e){events=[];}
     events=events.map(e=>({...e,pics:Array.isArray(e.pics)?e.pics:(e.pic?[e.pic]:[])}));
@@ -3387,14 +3387,45 @@ function getRoutineBadgeHtml(ds) {
 /* ════════════════════════════════════════
    RENDER CALENDAR — FIX #1: up to 5 chips, auto height
    ════════════════════════════════════════ */
-/* BUGFIX race condition: renderCalendar() async (menunggu data libur) dan dipanggil
-   dari banyak listener Firestore (events, order, collapse, config, rutin). Render lama
-   yang selesai belakangan dulu menimpa kalender bulan baru (judul bulan benar, isi
-   bulan lama). Solusi: token urutan — hanya render TERBARU yang boleh menulis ke DOM,
-   dan bulan/tahun dibaca ulang dari currentDate setelah await selesai. */
-let _renderSeq = 0;
+/* ════════════════════════════════════════
+   LOADING OVERLAY — kalender diburamkan + notif animasi di layar paling atas
+   selama data sedang dimuat (event pertama kali / hari libur tahun baru).
+   Otomatis hilang saat semua "alasan loading" selesai. Ada pengaman 15 dtk
+   supaya tidak pernah macet.
+   ════════════════════════════════════════ */
+const calLoadKeys = new Set();
+const calLoadTimers = {};
+function updateCalLoadingUI() {
+  const on = calLoadKeys.size > 0;
+  const wrap = document.querySelector('.cal-grid-wrap');
+  if (wrap) wrap.classList.toggle('is-loading', on);
+  const bar = document.getElementById('calLoadingBar');
+  if (bar) {
+    bar.classList.toggle('show', on);
+    const ln = document.getElementById('calLoadingLine'); if (ln) ln.classList.toggle('show', on);
+    const txt = document.getElementById('calLoadingText');
+    if (txt) txt.textContent = calLoadKeys.has('events') ? 'Memuat event…' : 'Memuat hari libur…';
+  }
+}
+function setCalLoading(key, on) {
+  if (on) {
+    calLoadKeys.add(key);
+    clearTimeout(calLoadTimers[key]);
+    calLoadTimers[key] = setTimeout(() => setCalLoading(key, false), 15000);
+  } else {
+    calLoadKeys.delete(key);
+    clearTimeout(calLoadTimers[key]);
+    delete calLoadTimers[key];
+  }
+  updateCalLoadingUI();
+}
+
+/* PERF + BUGFIX: renderCalendar() TIDAK lagi menunggu jaringan (dulu `await` API hari
+   libur sebelum menggambar → lambat saat pindah bulan, dan render lama bisa menimpa
+   render baru). Sekarang seluruh render berjalan sinkron dari data yang sudah ada;
+   data hari libur yang belum ada diambil di background, lalu kalender digambar ulang
+   sekali begitu datanya tiba (selama itu kalender diburamkan + notif loading di atas). */
 async function renderCalendar() {
-  const mySeq = ++_renderSeq;
   const year=currentDate.getFullYear(), month=currentDate.getMonth();
   const todayStr=toStr(new Date());
   document.getElementById('jumpMonth').value = String(month);
@@ -3405,9 +3436,28 @@ async function renderCalendar() {
   const DAYS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
   document.getElementById('calHdr').innerHTML=DAYS.map((d,i)=>`<div class="dh${i===0?' sun':i===6?' sat':''}">${d}</div>`).join('');
 
-  await ensureHolidays(year,month);
-  /* Ada render yang lebih baru (navigasi bulan / snapshot baru) → batalkan yang ini */
-  if (mySeq !== _renderSeq) return;
+  /* Hari libur: pakai cache bila ada (instan); kalau belum, ambil di background */
+  const cachedHol = getCachedHolidays(year);
+  if (cachedHol) Object.assign(holidays, cachedHol);
+  applyCustomHolidays();
+  /* Loader untuk tahun lain yang sudah ditinggalkan user tidak boleh menahan blur */
+  [...calLoadKeys].forEach(k => { if (k.startsWith('hol:') && k !== 'hol:'+year) setCalLoading(k, false); });
+  if (cachedHol) {
+    setCalLoading('hol:'+year, false);
+  } else if (!holidayRetryBlocked(year)) {
+    setCalLoading('hol:'+year, true);
+    fetchHolidaysForYear(year).then(x => {
+      setCalLoading('hol:'+year, false);
+      if (x && Object.keys(x).length > 0) {
+        Object.assign(holidays, x);
+        /* Gambar ulang hanya bila user masih berada di tahun yang sama */
+        if (currentDate.getFullYear() === year) renderCalendar();
+      }
+    });
+  }
+  /* Prefetch tahun tetangga di background (tanpa loader/render ulang) */
+  if (month === 0) fetchHolidaysForYear(year-1).then(x => { if (x && Object.keys(x).length) Object.assign(holidays, x); });
+  if (month === 11 && year+1 <= new Date().getFullYear()+1) fetchHolidaysForYear(year+1).then(x => { if (x && Object.keys(x).length) Object.assign(holidays, x); });
 
   const firstDay=new Date(year,month,1).getDay();
   const lastDate=new Date(year,month+1,0).getDate();
