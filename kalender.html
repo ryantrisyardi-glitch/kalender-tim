@@ -2747,6 +2747,12 @@ function pickContrastText(hex) {
    STATE
    ════════════════════════════════════════ */
 let events=[], holidays={};
+/* BUGFIX: dipindah ke sini (dari dekat baris 5715) — boot code di bawah memanggil
+   renderCalendar() secara SINKRON (bukan lewat callback) sebelum baris lama itu
+   sempat dieksekusi, sehingga 'eventOrder' masih dalam temporal dead zone dan
+   melempar "Cannot access 'eventOrder' before initialization". */
+const ORDER_KEY = `cal_order_${WORKSPACE}`;
+let eventOrder = {};
 let routineTasks=[];
 function loadRoutineEnabled() {
   try { const v = localStorage.getItem(ROUTINE_ENABLED_KEY); return v===null ? true : v==='1'; }
@@ -2888,24 +2894,28 @@ const ColorPicker=(()=>{
 })();
 
 /* ════════════════════════════════════════
-   HOLIDAY API — CORS-safe, fully API-driven
+   HOLIDAY API
    ─────────────────────────────────────────
-   Primary:  libur.deno.dev (CORS terbuka, data lengkap & reliable)
-             → response: [{date, name}]
-   Fallback: api-hari-libur.vercel.app via CORS proxy
-             → response: {status, data:[{date, description}]}
+   Primary:  raw.githubusercontent.com/guangrei/APIHariLibur_V2 (statis, CORS
+             terbuka, tanpa cold-start, SATU FILE berisi SEMUA tahun) — diverifikasi
+             aktif dan datanya mencakup 2026–2027.
+   Fallback: api-harilibur.vercel.app?year=YYYY (akses langsung, tanpa proxy).
 
-   Cache: sessionStorage per tab.
-   {} kosong TIDAK di-cache ke sessionStorage agar bisa retry.
+   CATATAN: dua sumber lama di versi sebelumnya sudah mati/berbayar —
+   libur.deno.dev balas 404, dan corsproxy.io kini balas 401 (butuh akun
+   berbayar). Fallback vercel lama juga salah ketik domainnya
+   ("api-hari-libur" seharusnya "api-harilibur", tanpa strip kedua).
+
+   tanggalans.com dan api.kemendesa.link (disarankan user) BELUM ditambahkan:
+   saya tidak menemukan dokumentasi endpoint resminya untuk memastikan
+   formatnya dan apakah CORS-nya terbuka. Kalau ada link dokumentasi API-nya,
+   beri tahu saya dan akan saya tambahkan sebagai sumber berikutnya.
+
+   Cache: memori + localStorage (TTL 30 hari). Kegagalan di-cache 20 detik
+   supaya tidak membanjiri API saat pindah bulan berkali-kali.
    ════════════════════════════════════════ */
 
-const holidayCache = {};  /* { year: {map} | 'fetching' } */
-
-/* CORS proxy list untuk fallback vercel */
-const CORS_PROXIES = [
-  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-];
+const holidayCache = {};  /* { year: {map} } */
 
 /* Array API → { 'YYYY-MM-DD': {name, isCutiBersama} } */
 function parseHolidayArray(arr, nameField) {
@@ -2915,6 +2925,20 @@ function parseHolidayArray(arr, nameField) {
     const date = h.date;
     const name = (h[nameField] || '').trim();
     if (!date || !name) return;
+    map[date] = { name, isCutiBersama: /cuti\s*bersama/i.test(name) };
+  });
+  return map;
+}
+
+/* Object API ({ 'YYYY-MM-DD': {summary} }) → map, difilter untuk satu tahun */
+function parseHolidayObjectForYear(obj, year) {
+  const map = {};
+  if (!obj || typeof obj !== 'object') return map;
+  const prefix = String(year) + '-';
+  Object.keys(obj).forEach(date => {
+    if (!date.startsWith(prefix)) return;
+    const name = (obj[date] && obj[date].summary || '').trim();
+    if (!name) return;
     map[date] = { name, isCutiBersama: /cuti\s*bersama/i.test(name) };
   });
   return map;
@@ -2931,52 +2955,55 @@ async function fetchWithTimeout(url, ms = 10000) {
   } catch(e) { clearTimeout(timer); throw e; }
 }
 
-/* Sumber 1 (Primary): libur.deno.dev — CORS terbuka langsung, data reliable */
-async function fetchFromDenodev(year) {
-  const res  = await fetchWithTimeout(`https://libur.deno.dev/api?year=${year}`, 9000);
+/* Sumber 1 (Primary): satu file statis berisi SEMUA tahun. Fetch sekali,
+   lalu disaring per tahun di sisi klien. Hasil mentahnya sendiri di-cache
+   terpisah (fullDatasetPromise) agar navigasi ke tahun lain tidak fetch ulang. */
+let _fullHolidayDatasetPromise = null;
+function fetchFullHolidayDataset() {
+  if (_fullHolidayDatasetPromise) return _fullHolidayDatasetPromise;
+  _fullHolidayDatasetPromise = (async () => {
+    const res = await fetchWithTimeout('https://raw.githubusercontent.com/guangrei/APIHariLibur_V2/main/holidays.json', 9000);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const obj = await res.json();
+    if (!obj || typeof obj !== 'object' || Object.keys(obj).length === 0) throw new Error('Dataset kosong');
+    return obj;
+  })().catch(e => { _fullHolidayDatasetPromise = null; throw e; }); /* boleh retry lagi nanti */
+  return _fullHolidayDatasetPromise;
+}
+async function fetchFromGithubRaw(year) {
+  const obj = await fetchFullHolidayDataset();
+  const map = parseHolidayObjectForYear(obj, year);
+  if (Object.keys(map).length === 0) throw new Error(`Tahun ${year} tidak ada di dataset`);
+  return map;
+}
+
+/* Sumber 2 (Fallback): api-harilibur.vercel.app — akses langsung, API ini
+   biasanya mengizinkan CORS dari mana saja untuk endpoint publiknya. */
+async function fetchFromVercel(year) {
+  const res  = await fetchWithTimeout(`https://api-harilibur.vercel.app/api?year=${year}`, 8000);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const data = await res.json();
+  const json = await res.json();
+  const data = Array.isArray(json) ? json : (json.data || []);
   if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
-  const map = parseHolidayArray(data, 'name');
+  const map = parseHolidayArray(data, 'holiday_name');
   if (Object.keys(map).length === 0) throw new Error('Parsed map kosong');
   return map;
 }
 
-/* Sumber 2 (Fallback): api-hari-libur.vercel.app via CORS proxy.
-   PERF: semua proxy dicoba PARALEL (Promise.any) dengan timeout pendek, bukan
-   berurutan 9 dtk per proxy — yang tercepat menang. */
-async function fetchFromVercel(year) {
-  const targetUrl = `https://api-hari-libur.vercel.app/api?year=${year}`;
-  const attempts = CORS_PROXIES.map(async proxyFn => {
-    const res  = await fetchWithTimeout(proxyFn(targetUrl), 8000);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    const data = Array.isArray(json) ? json : (json.data || []);
-    if (!Array.isArray(data) || data.length === 0) throw new Error('Response kosong');
-    const map = parseHolidayArray(data, 'description');
-    if (Object.keys(map).length === 0) throw new Error('Parsed map kosong');
-    return map;
-  });
-  try { return await Promise.any(attempts); }
-  catch(e) { throw new Error(`Semua proxy gagal: ${e.errors && e.errors[0] ? e.errors[0].message : e.message}`); }
-}
-
 /* ── Cache hari libur ──────────────────────────────────────────────
-   PERF FIX (penyebab loading lama saat pindah bulan):
    1) Hasil sukses disimpan di memori + localStorage (TTL 30 hari) → kunjungan/tab
       berikutnya instan, tidak fetch ulang.
-   2) Kegagalan di-cache sementara (5 menit) → pindah bulan di tahun yang API-nya
-      gagal TIDAK lagi mengulang fetch (dulu bisa ~28 dtk setiap klik).
-   3) Request yang sedang berjalan dipakai bersama (dedupe lewat Promise), bukan
-      string 'fetching' yang dulu salah dibaca sebagai data. */
+   2) Kegagalan di-cache sementara (20 detik) → pindah bulan berkali-kali saat
+      API sedang gagal tidak mengulang fetch terus-menerus.
+   3) Request yang sedang berjalan dipakai bersama (dedupe lewat Promise). */
 const holidayInflight = {};   /* { year: Promise } */
 const holidayFailedAt = {};   /* { year: timestamp gagal terakhir } */
-const HOLIDAY_RETRY_MS = 20 * 1000; /* cukup cegah spam klik beruntun, tapi tidak membuat 'blank' lama kalau cuma lambat sesaat */
+const HOLIDAY_RETRY_MS = 20 * 1000;
 const HOLIDAY_LS_TTL   = 30 * 24 * 3600 * 1000;
 
 function readHolidayLS(year) {
   try {
-    const raw = localStorage.getItem(`hol6_${year}`);
+    const raw = localStorage.getItem(`hol7_${year}`);
     if (!raw) return null;
     const o = JSON.parse(raw);
     if (!o || !o.map || Date.now() - o.t > HOLIDAY_LS_TTL) return null;
@@ -2984,7 +3011,7 @@ function readHolidayLS(year) {
   } catch(e) { return null; }
 }
 function writeHolidayLS(year, map) {
-  try { localStorage.setItem(`hol6_${year}`, JSON.stringify({ t: Date.now(), map })); } catch(e) {}
+  try { localStorage.setItem(`hol7_${year}`, JSON.stringify({ t: Date.now(), map })); } catch(e) {}
 }
 /* Sinkron: data libur tahun ini bila sudah ada di memori/localStorage, selain itu null */
 function getCachedHolidays(year) {
@@ -3007,17 +3034,17 @@ function fetchHolidaysForYear(year) {
 
   const p = (async () => {
     try {
-      const map = await fetchFromDenodev(year);
+      const map = await fetchFromGithubRaw(year);
       holidayCache[year] = map; writeHolidayLS(year, map);
-      console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari (libur.deno.dev)`);
+      console.log(`✅ Libur ${year}: ${Object.keys(map).length} hari (GitHub APIHariLibur_V2)`);
       return map;
     } catch(e1) {
-      console.warn(`⚠️ libur.deno.dev gagal [${year}]: ${e1.message} → coba fallback vercel...`);
+      console.warn(`⚠️ Sumber utama (GitHub) gagal [${year}]: ${e1.message} → coba fallback vercel...`);
     }
     try {
       const map2 = await fetchFromVercel(year);
       holidayCache[year] = map2; writeHolidayLS(year, map2);
-      console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari (api-hari-libur.vercel.app)`);
+      console.log(`✅ Libur ${year}: ${Object.keys(map2).length} hari (api-harilibur.vercel.app)`);
       return map2;
     } catch(e2) {
       console.warn(`⚠️ Fallback vercel gagal [${year}]: ${e2.message}`);
@@ -5709,10 +5736,6 @@ const _origLoadEventsSnapshot = null; // handled via renderCalendar hook
    Menggunakan event delegation dari calBody
    agar tidak perlu re-attach setiap render
    ════════════════════════════════════════ */
-
-/* ── ORDER STORAGE ── */
-const ORDER_KEY = `cal_order_${WORKSPACE}`;
-let eventOrder = {};
 
 function loadOrder() {
   try { eventOrder = JSON.parse(localStorage.getItem(ORDER_KEY)||'{}'); } catch(e){ eventOrder={}; }
