@@ -58,8 +58,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
 .brand-title{font-size:clamp(1.1rem,1.5vw,1.55rem);font-weight:800;letter-spacing:-.035em;color:var(--ink)}
 .brand-sub{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);margin-top:2px}
 .hdr-right{display:flex;gap:clamp(4px,0.6vw,8px);align-items:center;flex-wrap:wrap;position:relative}
-.mobile-menu-btn{display:none}
-.hdr-secondary{display:contents}
 
 /* ── BUTTONS ── */
 .btn{font-family:var(--font);font-size:clamp(.72rem,.75vw,.8rem);font-weight:600;padding:clamp(6px,0.7vw,8px) clamp(10px,1.1vw,14px);border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink-md);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .14s,border-color .14s,transform .1s;white-space:nowrap}
@@ -273,18 +271,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
   .brand-title{font-size:1rem}
   .brand-sub{font-size:.6rem}
   .hdr-right{gap:4px;flex-wrap:wrap;justify-content:flex-end}
-  /* Tombol utama (Hari ini, Tambah Event, notifikasi, install, menu ·) tetap tampil;
-     semua fitur lain (Kelola Jenis, Warna PIC, Export, dst) masuk dropdown menu. */
-  .mobile-menu-btn{display:inline-flex}
-  .hdr-secondary{
-    display:none;position:absolute;top:calc(100% + 8px);right:0;
-    flex-direction:column;gap:6px;background:var(--surface);
-    border:1.5px solid var(--rule);border-radius:var(--r-lg);
-    box-shadow:0 16px 40px rgba(28,25,23,.22);padding:10px;
-    min-width:210px;max-width:calc(100vw - 24px);max-height:70vh;overflow-y:auto;z-index:5000;
-  }
-  .hdr-secondary.open{display:flex}
-  .hdr-secondary .btn{display:flex!important;width:100%;justify-content:flex-start}
   .main-row{flex-direction:column;gap:0}
   .panel-col{display:none!important} /* panel handled as bottom sheet on mobile */
   .cal-col{width:100%}
@@ -340,7 +326,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--ink);min-height:10
   .hol-label{font-size:.54rem}
   .brand-title{font-size:.92rem}
   .btn{font-size:.68rem;padding:6px 9px}
-  #addEventBtn span,.btn-label{display:none} /* icon-only on tiny screens */
+  .btn-label{display:none} /* icon-only on tiny screens */
   .filter-select{min-width:95px;font-size:.7rem}
 }
 
@@ -544,12 +530,9 @@ body.read-only .readonly-badge{display:inline-flex}
 /* Chip di kalender: event tersembunyi ditampilkan dengan italic+redup ke editor */
 .chip.is-hidden-event{opacity:.45;font-style:italic;filter:grayscale(.6)}
 /* Ikon kunci kecil di chip */
-.chip.is-hidden-event::before{content:'🔒 ';font-size:.65em}
 /* Ecard & panel item tersembunyi: hanya tampil ke editor dengan efek redup */
 .ecard.is-hidden-event{opacity:.5;border-style:dashed}
-.ecard.is-hidden-event .ecard-title::after{content:' 🔒';font-size:.7em;color:var(--ink-lt)}
 .panel-event-item.is-hidden-event{opacity:.5}
-.panel-event-item.is-hidden-event .pei-title::after{content:' 🔒';font-size:.7em;color:var(--ink-lt)}
 /* Badge "Disembunyikan" di detail modal */
 .hidden-event-badge{display:inline-flex;align-items:center;gap:5px;font-size:.7rem;font-weight:700;padding:4px 10px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1.5px solid #FDE68A;margin-top:6px}
 /* Tombol toggle visibility di detail modal footer */
@@ -966,6 +949,283 @@ body.read-only .readonly-badge{display:inline-flex}
   .routine-title{font-size:.76rem}
   .dc-routine-badge{font-size:.55rem;padding:1px 4px}
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   UI KIT TAMBAHAN — menu dropdown, dialog, date picker, multi-select,
+   seleksi event, panduan, ikon
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Header: tombol & menu dropdown (berlaku di semua ukuran layar) ── */
+.menu-wrap{position:relative}
+.btn-support{text-decoration:none;background:#FFF1F2;border-color:#FDA4AF;color:#BE123C}
+.btn-support:hover{background:#FFE4E6;border-color:#BE123C}
+.btn-admin{background:#F5F3FF;border-color:#A78BFA;color:#5B21B6;font-weight:700;text-decoration:none}
+.btn-admin:hover{background:#EDE9FE;border-color:#7C3AED}
+.btn-menu .menu-chev{font-size:13px;transition:transform .18s}
+.btn-menu[aria-expanded="true"]{background:var(--bg-dk);border-color:var(--ink-lt)}
+.btn-menu[aria-expanded="true"] .menu-chev{transform:rotate(180deg)}
+.hdr-secondary{display:none;position:absolute;top:calc(100% + 8px);right:0;width:284px;max-width:calc(100vw - 24px);max-height:min(78vh,640px);overflow-y:auto;background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);box-shadow:0 18px 48px rgba(28,25,23,.22);padding:8px;z-index:5000;flex-direction:column;gap:1px;animation:menuIn .14s ease}
+.hdr-secondary.open{display:flex}
+@keyframes menuIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.menu-sec{font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-lt);padding:9px 10px 4px}
+.menu-sec:first-child{padding-top:3px}
+.menu-sep{height:1px;background:var(--rule);margin:5px 4px}
+.menu-item{font-family:var(--font);display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:none;background:none;border-radius:var(--r-md);cursor:pointer;font-size:.8rem;font-weight:600;color:var(--ink);text-align:left;text-decoration:none;transition:background .12s}
+.menu-item:hover{background:var(--bg-dk)}
+.menu-item .mi-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.menu-item .mi-txt{flex:1;min-width:0}
+.menu-item .mi-sub{display:block;font-size:.64rem;font-weight:500;color:var(--ink-lt);margin-top:1px}
+.menu-item .mi-kbd{margin-left:auto}
+.mi-blue{background:#EFF6FF;color:#1D4ED8}
+.mi-violet{background:#F5F3FF;color:#6D28D9}
+.mi-amber{background:#FFFBEB;color:#B45309}
+.mi-green{background:#F0FDF4;color:#15803D}
+.mi-rose{background:#FFF1F2;color:#BE123C}
+.mi-slate{background:#F1F5F9;color:#475569}
+.mi-teal{background:#F0FDFA;color:#0F766E}
+.mi-orange{background:#FFF7ED;color:#C2410C}
+body.read-only .menu-item.write-only{opacity:.4;pointer-events:none}
+@media(max-width:768px){
+  .menu-wrap{position:static}
+  .hdr-right{position:relative}
+}
+
+/* ── Tombol kecil ber-ikon ── */
+.kbd{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;font-family:var(--font);font-size:.68rem;font-weight:700;color:var(--ink-md);background:var(--surface);border:1.5px solid var(--rule);border-bottom-width:2.5px;border-radius:6px;line-height:1}
+.mi-kbd .kbd{height:20px;min-width:20px;font-size:.62rem}
+
+/* ── Toast ber-ikon ── */
+.toast{display:flex;align-items:center;gap:8px;max-width:min(92vw,560px);white-space:normal;text-align:left;line-height:1.35}
+.toast i{font-size:17px;flex-shrink:0}
+.toast .t-ok{color:#4ADE80}.toast .t-warn{color:#FCD34D}.toast .t-err{color:#FCA5A5}.toast .t-del{color:#FCA5A5}.toast .t-info{color:#93C5FD}
+body.has-sel .toast{bottom:5rem}
+
+/* ── Dialog konfirmasi (pengganti confirm() bawaan browser) ── */
+.dlg-overlay{z-index:8000}
+.dlg-modal{text-align:left}
+.dlg-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px}
+.dlg-icon.danger{background:#FEE2E2;color:#B91C1C}
+.dlg-icon.warn{background:#FEF3C7;color:#B45309}
+.dlg-icon.info{background:#EFF6FF;color:#1D4ED8}
+.dlg-title{font-size:1.05rem;font-weight:800;letter-spacing:-.02em;color:var(--ink);margin-bottom:6px}
+.dlg-msg{font-size:.85rem;color:var(--ink-md);line-height:1.55;word-break:break-word}
+.dlg-msg strong{color:var(--ink)}
+.dlg-list{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px}
+.dlg-list li{font-size:.78rem;padding:5px 9px;background:var(--bg);border-radius:var(--r-sm);display:flex;align-items:center;gap:7px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-danger-solid{background:#DC2626;color:#fff;border-color:#DC2626}
+.btn-danger-solid:hover{background:#B91C1C;border-color:#B91C1C}
+
+/* ── Date picker kustom ── */
+.dp-wrap{position:relative;display:block;width:100%}
+.dp-wrap>input{display:none!important}
+.dp-btn{font-family:var(--font);width:100%;display:flex;align-items:center;gap:8px;font-size:.875rem;color:var(--ink);background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md);padding:9px 12px;cursor:pointer;text-align:left;transition:border-color .14s,background .14s;min-height:40px}
+.dp-btn:hover{border-color:var(--ink-lt)}
+.dp-btn:focus-visible,.dp-btn.active{outline:none;border-color:var(--ink-md);background:#fff}
+.dp-btn .dp-ico{font-size:16px;color:var(--ink-lt);flex-shrink:0}
+.dp-btn .dp-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dp-btn.empty .dp-label{color:var(--ink-lt)}
+.dp-btn .dp-clear{display:none;width:20px;height:20px;border-radius:50%;align-items:center;justify-content:center;color:var(--ink-lt);font-size:13px;flex-shrink:0}
+.dp-btn .dp-clear:hover{background:var(--bg-dk);color:var(--ink)}
+.dp-btn.has-clear .dp-clear{display:inline-flex}
+.dp-compact{display:inline-block;width:auto}
+.dp-compact .dp-btn{padding:6px 10px;font-size:.78rem;min-height:0;width:auto;min-width:130px}
+#dpBackdrop{display:none;position:fixed;inset:0;background:rgba(28,25,23,.35);z-index:8990}
+#dpPop{display:none;position:fixed;z-index:9000;width:292px;background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);box-shadow:0 18px 48px rgba(28,25,23,.28);padding:10px;animation:menuIn .12s ease;user-select:none}
+.dp-head{display:flex;align-items:center;gap:4px;margin-bottom:8px}
+.dp-nav{width:30px;height:30px;border-radius:8px;border:none;background:none;color:var(--ink-md);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px}
+.dp-nav:hover{background:var(--bg-dk)}
+.dp-title{flex:1;font-family:var(--font);font-size:.85rem;font-weight:800;color:var(--ink);background:none;border:none;border-radius:8px;padding:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px}
+.dp-title:hover{background:var(--bg-dk)}
+.dp-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:2px}
+.dp-dow span{text-align:center;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-lt);padding:4px 0}
+.dp-dow span:first-child{color:#DC2626}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dp-day{font-family:var(--font);height:34px;border:none;background:none;border-radius:9px;font-size:.78rem;font-weight:600;color:var(--ink);cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center}
+.dp-day:hover:not(.dp-dis){background:var(--bg-dk)}
+.dp-day.dp-oth{color:var(--ink-lt);font-weight:500}
+.dp-day.dp-sun,.dp-day.dp-hol{color:#DC2626}
+.dp-day.dp-oth.dp-sun,.dp-day.dp-oth.dp-hol{color:#FCA5A5}
+.dp-day.dp-today{box-shadow:inset 0 0 0 1.5px var(--ink-lt)}
+.dp-day.dp-inrange{background:#EFF6FF;border-radius:0;color:#1D4ED8}
+.dp-day.dp-rstart{background:#DBEAFE;color:#1D4ED8;font-weight:800;border-radius:9px 0 0 9px}
+.dp-day.dp-sel{background:var(--ink)!important;color:#fff!important;font-weight:800;border-radius:9px}
+.dp-day.dp-dis{opacity:.28;cursor:not-allowed}
+.dp-day.dp-hol::after{content:"";position:absolute;bottom:4px;width:4px;height:4px;border-radius:50%;background:#DC2626}
+.dp-day.dp-sel.dp-hol::after{background:#FCA5A5}
+.dp-months{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:4px 0}
+.dp-mon{font-family:var(--font);padding:11px 0;border:1.5px solid var(--rule);background:var(--surface);border-radius:10px;font-size:.8rem;font-weight:700;color:var(--ink);cursor:pointer}
+.dp-mon:hover{background:var(--bg-dk)}
+.dp-mon.dp-sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.dp-mon.dp-today{border-color:var(--ink-md)}
+.dp-foot{display:flex;gap:6px;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1.5px solid var(--rule)}
+.dp-foot button{font-family:var(--font);font-size:.74rem;font-weight:700;padding:6px 10px;border:none;background:none;border-radius:8px;color:var(--ink-md);cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.dp-foot button:hover{background:var(--bg-dk);color:var(--ink)}
+.dp-foot .dp-done{background:var(--ink);color:#fff}
+.dp-foot .dp-done:hover{background:#292524;color:#fff}
+.dp-hint{font-size:.66rem;color:var(--ink-lt);text-align:center;margin-top:6px}
+
+/* ── Multi-select filter ── */
+.ms{position:relative;display:inline-block}
+.ms-btn{font-family:var(--font);font-size:.79rem;font-weight:500;padding:7px 10px 7px 11px;border-radius:var(--r-md);border:1.5px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:7px;min-width:164px;transition:border-color .14s,background .14s;text-align:left}
+.ms-btn:hover{border-color:var(--ink-lt)}
+.ms.open .ms-btn,.ms.has-val .ms-btn{border-color:var(--ink-md)}
+.ms.has-val .ms-btn{background:#FAFAF9}
+.ms-ico{font-size:15px;color:var(--ink-lt);flex-shrink:0}
+.ms.has-val .ms-ico{color:var(--ink)}
+.ms-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ms-count{display:none;min-width:18px;height:18px;padding:0 5px;border-radius:100px;background:var(--ink);color:#fff;font-size:.62rem;font-weight:800;align-items:center;justify-content:center}
+.ms.has-val .ms-count{display:inline-flex}
+.ms-chev{font-size:13px;color:var(--ink-lt);transition:transform .15s;flex-shrink:0}
+.ms.open .ms-chev{transform:rotate(180deg)}
+.ms-pop{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:100%;width:max(250px,100%);max-width:min(340px,calc(100vw - 16px));background:var(--surface);border:1.5px solid var(--rule);border-radius:var(--r-lg);box-shadow:0 16px 44px rgba(28,25,23,.22);padding:8px;z-index:700;animation:menuIn .12s ease}
+.ms.open .ms-pop{display:block}
+.ms-pop.align-right{left:auto;right:0}
+.ms-search{width:100%;font-family:var(--font);font-size:.78rem;padding:7px 10px;border:1.5px solid var(--rule);border-radius:var(--r-md);background:var(--bg);outline:none;margin-bottom:6px}
+.ms-search:focus{border-color:var(--ink-md);background:#fff}
+.ms-actions{display:flex;justify-content:space-between;padding:0 2px 6px;margin-bottom:4px;border-bottom:1.5px solid var(--rule)}
+.ms-actions button{font-family:var(--font);font-size:.68rem;font-weight:700;color:var(--ink-md);background:none;border:none;cursor:pointer;padding:3px 6px;border-radius:6px;display:inline-flex;align-items:center;gap:4px}
+.ms-actions button:hover{background:var(--bg-dk);color:var(--ink)}
+.ms-list{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:1px}
+.ms-row{display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:var(--r-md);cursor:pointer;font-size:.8rem;font-weight:600;color:var(--ink)}
+.ms-row:hover{background:var(--bg-dk)}
+.ms-row input{position:absolute;opacity:0;pointer-events:none}
+.ms-check{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--ink-lt);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--surface);transition:background .1s,border-color .1s}
+.ms-check::after{content:"\ea5e";font-family:"tabler-icons";font-size:12px;color:#fff;opacity:0;line-height:1}
+.ms-row input:checked+.ms-check{background:var(--ink);border-color:var(--ink)}
+.ms-row input:checked+.ms-check::after{opacity:1}
+.ms-row input:focus-visible+.ms-check{box-shadow:0 0 0 3px rgba(28,25,23,.18)}
+.ms-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.ms-tico{font-size:15px;flex-shrink:0}
+.ms-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ms-empty{padding:12px;text-align:center;font-size:.76rem;color:var(--ink-lt)}
+@media(max-width:768px){.ms-btn{min-width:120px;font-size:.74rem}}
+
+/* ── Seleksi event (Ctrl+klik) & drag ── */
+.chip.chip-selected{position:relative;outline:2.5px solid var(--ink);outline-offset:-2.5px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.9)}
+.chip.chip-selected::after{content:"\ea5e";font-family:"tabler-icons";position:absolute;top:2px;right:3px;width:14px;height:14px;border-radius:50%;background:var(--ink);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;line-height:1}
+.chip .chip-st-ico,.chip-status-label i{font-size:1.05em;vertical-align:-.12em}
+.dc.drop-hover{box-shadow:inset 0 0 0 2.5px #3B82F6;background:rgba(59,130,246,.07)!important}
+.drag-ghost{position:fixed;top:-200px;left:-200px;background:var(--ink);color:#fff;font:700 12px var(--font);padding:7px 13px;border-radius:100px;z-index:-1;display:flex;align-items:center;gap:6px}
+#selBar{position:fixed;left:50%;bottom:1.25rem;transform:translate(-50%,24px);opacity:0;pointer-events:none;z-index:950;background:var(--ink);color:#fff;border-radius:100px;padding:6px 7px 6px 16px;display:flex;align-items:center;gap:6px;box-shadow:0 12px 36px rgba(28,25,23,.35);transition:opacity .18s,transform .18s;max-width:calc(100vw - 16px)}
+#selBar.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.selbar-count{font-size:.78rem;font-weight:700;display:flex;align-items:center;gap:7px;margin-right:6px;white-space:nowrap}
+.selbar-count i{font-size:17px;color:#93C5FD}
+.selbar-btn{font-family:var(--font);font-size:.75rem;font-weight:700;background:rgba(255,255,255,.13);border:none;color:#fff;padding:8px 13px;border-radius:100px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.selbar-btn:hover{background:rgba(255,255,255,.24)}
+.selbar-btn.danger{background:#DC2626}
+.selbar-btn.danger:hover{background:#B91C1C}
+.selbar-btn.ghost{background:none;padding:8px 10px}
+@media(max-width:560px){.selbar-btn span{display:none}.selbar-btn{padding:9px 12px}}
+@media print{#selBar,.dp-wrap .dp-btn{display:none!important}}
+
+/* ── Dialog Pindah / Salin ── */
+#mcOverlay{z-index:7000}
+.mc-summary{display:flex;flex-direction:column;gap:5px;margin-bottom:1rem}
+.mc-item{display:flex;align-items:center;gap:9px;padding:7px 10px;background:var(--bg);border-radius:var(--r-md);overflow:hidden}
+.mc-item-bar{width:4px;align-self:stretch;border-radius:100px;flex-shrink:0;min-height:26px}
+.mc-item-body{min-width:0;flex:1}
+.mc-item-title{font-size:.8rem;font-weight:700;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc-item-meta{font-size:.66rem;color:var(--ink-lt);display:flex;align-items:center;gap:4px;margin-top:1px}
+.mc-more{font-size:.72rem;font-weight:600;color:var(--ink-lt);padding:2px 10px}
+.mc-hint{font-size:.72rem;color:var(--ink-md);margin-top:6px;display:flex;align-items:center;gap:5px;min-height:18px}
+.mc-hint i{font-size:14px;color:#2563EB}
+.mc-note{font-size:.7rem;color:var(--ink-lt);display:flex;gap:6px;line-height:1.5;margin-top:4px}
+.mc-note i{font-size:14px;flex-shrink:0;margin-top:1px}
+.mc-foot{flex-wrap:wrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── Aksi di panel kanan ── */
+.pei-actions{position:absolute;right:6px;top:6px;display:flex;gap:2px;z-index:2}
+.pei-actions .pei-copy-btn{position:static;transform:none;padding:5px}
+.pei-del-btn{background:none;border:none;color:var(--ink-lt);cursor:pointer;padding:5px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;transition:background .12s,color .12s}
+.pei-del-btn:hover{background:#FEE2E2;color:#B91C1C}
+.panel-event-item .pei-body{padding-right:48px}
+.ctx-item.ctx-danger{color:#B91C1C}
+.ctx-item.ctx-danger:hover{background:#FEE2E2;color:#B91C1C}
+.ctx-item i{font-size:14px;color:var(--ink-lt);flex-shrink:0}
+.ctx-item.ctx-danger i{color:#B91C1C}
+.mctx-item.mctx-danger{color:#B91C1C}
+.mctx-item i{flex-shrink:0}
+
+/* ── Ikon jenis event ── */
+.type-ico{font-size:1.05em;vertical-align:-.15em;margin-right:3px}
+.leg .type-ico{margin:0;font-size:13px;vertical-align:0}
+.type-badge-ico{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;color:#fff;flex-shrink:0}
+.icon-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:6px}
+.icon-opt{aspect-ratio:1;border:1.5px solid var(--rule);background:var(--surface);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--ink-md);cursor:pointer;transition:background .1s,border-color .1s}
+.icon-opt:hover{background:var(--bg-dk)}
+.icon-opt.selected{background:var(--ink);border-color:var(--ink);color:#fff}
+
+/* ── Ikon umum: judul modal, label bagian, filter ── */
+.modal-title{display:flex;align-items:center;gap:9px}
+.title-ico{width:30px;height:30px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.fl i{font-size:12px;vertical-align:-1px;margin-right:3px}
+.filter-sep i{font-size:13px;vertical-align:-2px;margin-right:2px}
+.leg i.ti-point-filled{font-size:10px}
+.hol-type-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.hol-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.hol-dot.libnas{background:#DC2626}.hol-dot.cutib{background:#D97706}
+.hol-row-badge .hol-dot{display:inline-block;margin-right:4px;vertical-align:0}
+.editor-row-badge i{font-size:11px;vertical-align:-1px;margin-right:2px}
+.chip.is-hidden-event::before{content:"\ecf0";font-family:"tabler-icons";font-style:normal;font-size:.85em;margin-right:3px;vertical-align:-.1em}
+.ecard.is-hidden-event .ecard-title::after,.panel-event-item.is-hidden-event .pei-title::after{content:"\ecf0";font-family:"tabler-icons";font-style:normal;font-size:.9em;color:var(--ink-lt);margin-left:5px}
+.auth-gate-ico{width:64px;height:64px;border-radius:20px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:32px;background:#F5F5F4;color:var(--ink)}
+.auth-gate-ico.denied{background:#FEE2E2;color:#B91C1C}
+.badge-ico{font-size:1em;vertical-align:-.12em;margin-right:2px}
+
+/* ── Tugas rutin: pengulangan per tanggal ── */
+.rt-subwrap{margin-top:-.25rem;margin-bottom:.9rem;padding:10px 12px;background:var(--bg);border:1.5px solid var(--rule);border-radius:var(--r-md)}
+.rt-sub-title{font-size:.66rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-lt);margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.rt-days{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.rt-day{font-family:var(--font);height:32px;border:1.5px solid var(--rule);background:var(--surface);border-radius:8px;font-size:.76rem;font-weight:700;color:var(--ink-md);cursor:pointer;transition:background .1s,border-color .1s}
+.rt-day:hover{background:var(--bg-dk)}
+.rt-day.on{background:#1D4ED8;border-color:#1D4ED8;color:#fff}
+.rt-day.last{grid-column:span 7;height:34px;display:flex;align-items:center;justify-content:center;gap:6px}
+.rt-sub-hint{font-size:.68rem;color:var(--ink-lt);margin-top:7px;line-height:1.5}
+.rt-dates{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.rt-date-chip{display:inline-flex;align-items:center;gap:5px;background:#EFF6FF;color:#1D4ED8;border:1.5px solid #BFDBFE;border-radius:100px;padding:3px 5px 3px 10px;font-size:.72rem;font-weight:700}
+.rt-date-chip button{width:18px;height:18px;border-radius:50%;border:none;background:rgba(29,78,216,.12);color:#1D4ED8;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:11px}
+.rt-date-chip button:hover{background:rgba(29,78,216,.25)}
+.rt-dates-empty{font-size:.74rem;color:var(--ink-lt);padding:4px 2px}
+
+/* ── Panduan (Help) ── */
+#helpOverlay{z-index:6000}
+.help-modal{width:760px;max-width:100%;padding:0;display:flex;flex-direction:column;max-height:92vh;overflow:hidden}
+.help-head{padding:1.25rem 1.5rem .75rem;flex-shrink:0}
+.help-search{position:relative;margin-top:.75rem}
+.help-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-lt);font-size:16px}
+.help-search input{padding-left:36px}
+.help-tabs{display:flex;gap:4px;padding:0 1.5rem;border-bottom:1.5px solid var(--rule);flex-shrink:0}
+.help-tab{font-family:var(--font);font-size:.8rem;font-weight:700;padding:9px 14px;border:none;background:none;color:var(--ink-lt);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1.5px;display:inline-flex;align-items:center;gap:6px}
+.help-tab:hover{color:var(--ink)}
+.help-tab.active{color:var(--ink);border-bottom-color:var(--ink)}
+.help-body{padding:1rem 1.5rem 1.5rem;overflow-y:auto;flex:1;min-height:0}
+.help-group{margin-bottom:1.25rem}
+.help-group-title{font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-lt);display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.help-group-title i{font-size:15px}
+.help-row{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:var(--r-md)}
+.help-row:nth-child(even){background:var(--bg)}
+.help-keys{display:flex;align-items:center;gap:4px;flex-wrap:wrap;width:210px;flex-shrink:0}
+.help-keys .sep{font-size:.66rem;color:var(--ink-lt);font-weight:600;margin:0 2px}
+.help-keys .plus{font-size:.7rem;color:var(--ink-lt)}
+.help-desc{font-size:.82rem;color:var(--ink-md);line-height:1.45;flex:1;min-width:0}
+.help-desc strong{color:var(--ink)}
+.help-feat{display:flex;gap:12px;padding:11px 12px;border:1.5px solid var(--rule);border-radius:var(--r-lg);margin-bottom:8px}
+.help-feat-ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.help-feat-title{font-size:.86rem;font-weight:800;color:var(--ink);margin-bottom:2px}
+.help-feat-desc{font-size:.78rem;color:var(--ink-md);line-height:1.55}
+.help-feat-desc strong{color:var(--ink)}
+.help-none{text-align:center;padding:2.5rem 1rem;color:var(--ink-lt);font-size:.85rem}
+.help-none i{font-size:30px;display:block;margin-bottom:8px;opacity:.4}
+.help-foot{padding:.75rem 1.5rem;border-top:1.5px solid var(--rule);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-shrink:0;font-size:.72rem;color:var(--ink-lt)}
+@media(max-width:768px){
+  .help-modal{padding:0!important;max-height:92vh}
+  .help-head,.help-body,.help-foot{padding-left:1rem;padding-right:1rem}
+  .help-tabs{padding:0 .75rem}
+  .help-row{flex-direction:column;align-items:flex-start;gap:5px}
+  .help-keys{width:auto}
+  .help-feat{padding:10px}
+}
 </style>
 </head>
 <body>
@@ -1161,33 +1421,37 @@ body.read-only .readonly-badge{display:inline-flex}
   <div class="hdr-right">
     <span class="readonly-badge"><i class="ti ti-eye" style="font-size:12px"></i> Mode Lihat</span>
     <div id="authChip"></div>
-    <!-- Notification Bell -->
+    <!-- Notifikasi -->
     <button class="btn btn-icon" id="notifBtn" title="Notifikasi" style="position:relative;display:none">
       <i class="ti ti-bell"></i>
       <span id="notifBadge" style="position:absolute;top:4px;right:4px;width:8px;height:8px;background:#EF4444;border-radius:50%;display:none"></span>
     </button>
-    <button class="btn" id="installAppBtn" style="display:none;background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-download"></i> Install App</button>
-    <!-- Tombol Admin Dashboard — hanya untuk superadmin, selalu tampil langsung (bukan
-         di dalam dropdown) supaya superadmin bisa lompat ke admin.html kapan saja
-         walau sedang membuka kalender miliknya sendiri atau kalender orang lain. -->
-    <a class="btn" id="adminDashboardLink" href="admin.html" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6;font-weight:700" title="Buka Admin Dashboard"><i class="ti ti-shield-lock"></i> Admin</a>
-    <!-- Tombol menu mobile — membuka dropdown berisi semua fitur konfigurasi di bawah ini,
-         supaya tidak ada fitur yang "hilang" di layar kecil (sebelumnya hanya Hari ini &
-         Tambah Event yang tampil di mobile, sisanya tersembunyi tanpa cara membukanya). -->
-    <button class="btn mobile-menu-btn" id="mobileMenuBtn" title="Buka menu fitur lainnya (Kelola Jenis, Warna PIC, Export, dll)"><i class="ti ti-menu-2"></i> Menu</button>
-    <div class="hdr-secondary" id="hdrSecondary">
-      <button class="btn write-only" id="manageTypesBtn"><i class="ti ti-settings"></i> Kelola Jenis</button>
-      <button class="btn write-only" id="managePicColorsBtn"><i class="ti ti-palette"></i> Warna PIC</button>
-      <button class="btn" id="manageAccessBtn" style="display:none;background:#F5F3FF;border-color:#A78BFA;color:#5B21B6"><i class="ti ti-shield-lock"></i> Kelola Akses</button>
-      <button class="btn write-only" id="manageHolidayBtn" style="background:#FFF7ED;border-color:#FBD38D;color:#92400E"><i class="ti ti-calendar-plus"></i> Libur Custom</button>
-      <button class="btn write-only" id="manageRoutineBtn" style="background:#EFF6FF;border-color:#93C5FD;color:#1D4ED8"><i class="ti ti-repeat"></i> Tugas Rutin</button>
-      <a class="btn" href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener noreferrer" title="Dukung pengembang aplikasi ini">☕ Dukung Kami</a>
-      <button class="btn" id="feedbackBtn" style="display:none"><i class="ti ti-message-2"></i> Kritik &amp; Saran</button>
-      <button class="btn btn-green" id="exportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
-      <button class="btn" id="printBtn" title="Print Kalender" onclick="window.print()"><i class="ti ti-printer"></i> Print</button>
+    <!-- Admin Dashboard — hanya superadmin -->
+    <a class="btn btn-admin" id="adminDashboardLink" href="admin.html" style="display:none" title="Buka Admin Dashboard"><i class="ti ti-shield-lock"></i> Admin</a>
+    <!-- MENU: semua fitur lain ada di dalam dropdown ini (desktop & mobile) -->
+    <div class="menu-wrap">
+      <button class="btn btn-menu" id="mobileMenuBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="hdrSecondary" title="Buka semua menu"><i class="ti ti-menu-2"></i> Menu <i class="ti ti-chevron-down menu-chev"></i></button>
+      <div class="hdr-secondary" id="hdrSecondary" role="menu">
+        <div class="menu-sec">Kelola</div>
+        <button class="menu-item write-only" id="manageTypesBtn" role="menuitem"><span class="mi-ico mi-violet"><i class="ti ti-tags"></i></span><span class="mi-txt">Kelola Jenis<span class="mi-sub">Nama, warna &amp; ikon jenis event</span></span></button>
+        <button class="menu-item write-only" id="managePicColorsBtn" role="menuitem"><span class="mi-ico mi-rose"><i class="ti ti-palette"></i></span><span class="mi-txt">Warna PIC<span class="mi-sub">Atur warna kapsul tiap PIC</span></span></button>
+        <button class="menu-item write-only" id="manageHolidayBtn" role="menuitem"><span class="mi-ico mi-amber"><i class="ti ti-calendar-plus"></i></span><span class="mi-txt">Libur Custom<span class="mi-sub">Tambah hari libur sendiri</span></span></button>
+        <button class="menu-item write-only" id="manageRoutineBtn" role="menuitem"><span class="mi-ico mi-blue"><i class="ti ti-repeat"></i></span><span class="mi-txt">Tugas Rutin<span class="mi-sub">Harian, mingguan, bulanan, per tanggal</span></span></button>
+        <button class="menu-item" id="manageAccessBtn" role="menuitem" style="display:none"><span class="mi-ico mi-violet"><i class="ti ti-shield-lock"></i></span><span class="mi-txt">Kelola Akses<span class="mi-sub">Editor, viewer &amp; visibilitas</span></span></button>
+        <div class="menu-sep"></div>
+        <div class="menu-sec">Data</div>
+        <button class="menu-item" id="exportExcelBtn" role="menuitem"><span class="mi-ico mi-green"><i class="ti ti-file-spreadsheet"></i></span><span class="mi-txt">Export Excel</span></button>
+        <button class="menu-item" id="printBtn" role="menuitem" onclick="window.print()"><span class="mi-ico mi-slate"><i class="ti ti-printer"></i></span><span class="mi-txt">Print Kalender</span></button>
+        <div class="menu-sep"></div>
+        <div class="menu-sec">Bantuan</div>
+        <button class="menu-item" id="helpBtn" role="menuitem"><span class="mi-ico mi-teal"><i class="ti ti-help-circle"></i></span><span class="mi-txt">Panduan &amp; Shortcut</span><span class="mi-kbd"><span class="kbd">?</span></span></button>
+        <button class="menu-item" id="feedbackBtn" role="menuitem" style="display:none"><span class="mi-ico mi-orange"><i class="ti ti-message-2"></i></span><span class="mi-txt">Kritik &amp; Saran</span></button>
+        <button class="menu-item" id="installAppBtn" role="menuitem" style="display:none"><span class="mi-ico mi-blue"><i class="ti ti-download"></i></span><span class="mi-txt">Install Aplikasi<span class="mi-sub">Pasang di perangkat Anda</span></span></button>
+      </div>
     </div>
     <button class="btn" id="todayBtn"><i class="ti ti-calendar-event"></i> Hari ini</button>
     <button class="btn btn-primary write-only" id="addEventBtn"><i class="ti ti-plus"></i> Tambah Event</button>
+    <a class="btn btn-support" href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener noreferrer" title="Dukung pengembang aplikasi ini"><i class="ti ti-heart"></i> <span class="btn-label">Dukung Kami</span></a>
   </div>
 </header>
 
@@ -1221,9 +1485,9 @@ body.read-only .readonly-badge{display:inline-flex}
     <button class="btn btn-icon" id="nextBtn"><i class="ti ti-chevron-right"></i></button>
   </div>
   <div class="filter-group">
-    <span class="filter-sep">Filter</span>
-    <select class="filter-select" id="filterType"><option value="all">Semua Jenis</option></select>
-    <select class="filter-select" id="filterPIC"><option value="all">Semua PIC</option></select>
+    <span class="filter-sep"><i class="ti ti-filter"></i>Filter</span>
+    <div class="ms" id="filterType" data-all="Semua Jenis" data-noun="jenis" data-icon="ti-tags"></div>
+    <div class="ms" id="filterPIC" data-all="Semua PIC" data-noun="PIC" data-icon="ti-users"></div>
   </div>
 </div>
 
@@ -1253,7 +1517,7 @@ body.read-only .readonly-badge{display:inline-flex}
           <div id="panelHolBadge"></div>
         </div>
         <button class="btn btn-icon btn-sm write-only" id="panelAddBtn" style="display:none"><i class="ti ti-plus"></i></button>
-        <button class="btn btn-icon btn-sm write-only" id="panelCopyAllBtn" style="display:none" title="Copy Semua Event Hari Ini"><i class="ti ti-copy"></i></button>
+        <button class="btn btn-icon btn-sm write-only" id="panelCopyAllBtn" style="display:none" title="Salin semua event yang mulai hari ini ke tanggal lain"><i class="ti ti-copy"></i></button>
       </div>
       <div class="panel-body" id="panelBody">
         <div class="panel-empty"><i class="ti ti-calendar-off"></i>Belum ada tanggal dipilih</div>
@@ -1269,9 +1533,9 @@ body.read-only .readonly-badge{display:inline-flex}
   <!-- Report Controls -->
   <div class="rpt-controls">
     <div class="rpt-filter-group">
-      <span class="filter-sep">Filter</span>
-      <select class="filter-select" id="rptFilterType"><option value="all">Semua Jenis</option></select>
-      <select class="filter-select" id="rptFilterPIC"><option value="all">Semua PIC</option></select>
+      <span class="filter-sep"><i class="ti ti-filter"></i>Filter</span>
+      <div class="ms" id="rptFilterType" data-all="Semua Jenis" data-noun="jenis" data-icon="ti-tags"></div>
+      <div class="ms" id="rptFilterPIC" data-all="Semua PIC" data-noun="PIC" data-icon="ti-users"></div>
       <select class="filter-select" id="rptFilterStatus">
         <option value="all">Semua Status</option>
         <option value="achieve">Achieve</option>
@@ -1283,9 +1547,9 @@ body.read-only .readonly-badge{display:inline-flex}
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div class="rpt-range-wrap">
         <label class="filter-sep">Dari</label>
-        <input type="month" class="jump-year" id="rptFrom" style="width:140px;padding:6px 8px" />
+        <input type="text" class="jump-year" id="rptFrom" data-mode="month" />
         <label class="filter-sep">s/d</label>
-        <input type="month" class="jump-year" id="rptTo" style="width:140px;padding:6px 8px" />
+        <input type="text" class="jump-year" id="rptTo" data-mode="month" />
       </div>
       <button class="btn btn-green" id="rptExportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
       <button class="btn" id="rptPrintBtn"><i class="ti ti-printer"></i> Print PDF</button>
@@ -1304,13 +1568,15 @@ body.read-only .readonly-badge{display:inline-flex}
   <!-- Report Controls -->
   <div class="rpt-controls">
     <div class="rpt-filter-group">
-      <span class="filter-sep">Filter</span>
-      <select class="filter-select" id="rrFilterTask"><option value="all">Semua Tugas</option></select>
-      <select class="filter-select" id="rrFilterPIC"><option value="all">Semua PIC</option></select>
+      <span class="filter-sep"><i class="ti ti-filter"></i>Filter</span>
+      <div class="ms" id="rrFilterTask" data-all="Semua Tugas" data-noun="tugas" data-icon="ti-checklist"></div>
+      <div class="ms" id="rrFilterPIC" data-all="Semua PIC" data-noun="PIC" data-icon="ti-users"></div>
       <select class="filter-select" id="rrFilterRecurrence">
         <option value="all">Semua Pengulangan</option>
         <option value="daily">Harian</option>
         <option value="weekly">Mingguan</option>
+        <option value="monthly">Per tanggal (tiap bulan)</option>
+        <option value="dates">Per tanggal (pilihan manual)</option>
       </select>
       <select class="filter-select" id="rrFilterStatus">
         <option value="all">Semua Status</option>
@@ -1321,9 +1587,9 @@ body.read-only .readonly-badge{display:inline-flex}
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <div class="rpt-range-wrap">
         <label class="filter-sep">Dari</label>
-        <input type="date" class="jump-year" id="rrFrom" style="width:150px;padding:6px 8px" />
+        <input type="text" class="jump-year" id="rrFrom" />
         <label class="filter-sep">s/d</label>
-        <input type="date" class="jump-year" id="rrTo" style="width:150px;padding:6px 8px" />
+        <input type="text" class="jump-year" id="rrTo" />
       </div>
       <button class="btn btn-green" id="rrExportExcelBtn"><i class="ti ti-table-export"></i> Export Excel</button>
       <button class="btn" id="rrPrintBtn"><i class="ti ti-printer"></i> Print PDF</button>
@@ -1343,7 +1609,7 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="holidayManagerOverlay">
   <div class="modal">
     <div class="modal-head">
-      <div class="modal-title"><i class="ti ti-calendar-plus" style="color:#D97706"></i> Libur Custom</div>
+      <div class="modal-title"><span class="title-ico mi-amber"><i class="ti ti-calendar-plus"></i></span> Libur Custom</div>
       <button class="btn btn-icon" id="closeHolidayManager"><i class="ti ti-x"></i></button>
     </div>
     <div class="hol-mgr-info">
@@ -1358,8 +1624,8 @@ body.read-only .readonly-badge{display:inline-flex}
       <div style="font-size:.75rem;font-weight:700;color:var(--ink-lt);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Tambah Libur Baru</div>
       <div class="hol-add-row">
         <div class="fg" style="margin:0">
-          <label class="fl">Tanggal</label>
-          <input type="date" class="fc" id="newHolDate"/>
+          <label class="fl"><i class="ti ti-calendar"></i>Tanggal</label>
+          <input type="text" class="fc" id="newHolDate"/>
         </div>
         <div class="fg" style="margin:0">
           <label class="fl">Nama Hari Libur</label>
@@ -1368,8 +1634,8 @@ body.read-only .readonly-badge{display:inline-flex}
         <button class="btn btn-primary btn-sm" id="addHolBtn" style="height:38px"><i class="ti ti-plus"></i></button>
       </div>
       <div class="hol-type-row">
-        <button class="hol-type-btn active" id="holTypeLibnas" data-type="libnas">🔴 Libur Nasional</button>
-        <button class="hol-type-btn cutib" id="holTypeCutib" data-type="cutib">🟠 Cuti Bersama</button>
+        <button class="hol-type-btn active" id="holTypeLibnas" data-type="libnas"><span class="hol-dot libnas"></span> Libur Nasional</button>
+        <button class="hol-type-btn cutib" id="holTypeCutib" data-type="cutib"><span class="hol-dot cutib"></span> Cuti Bersama</button>
       </div>
     </div>
     <div class="modal-foot">
@@ -1383,7 +1649,7 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="routineManagerOverlay">
   <div class="modal">
     <div class="modal-head">
-      <div class="modal-title"><i class="ti ti-repeat" style="color:#1D4ED8"></i> Tugas Rutin</div>
+      <div class="modal-title"><span class="title-ico mi-blue"><i class="ti ti-repeat"></i></span> Tugas Rutin</div>
       <button class="btn btn-icon" id="closeRoutineManager"><i class="ti ti-x"></i></button>
     </div>
 
@@ -1411,19 +1677,34 @@ body.read-only .readonly-badge{display:inline-flex}
       </div>
       <div class="frow">
         <div class="fg">
-          <label class="fl">Pengulangan</label>
+          <label class="fl"><i class="ti ti-repeat"></i>Pengulangan</label>
           <select class="fc" id="rtRecurrence">
             <option value="daily">Harian (setiap hari)</option>
             <option value="weekly">Mingguan (1x seminggu)</option>
+            <option value="monthly">Per tanggal — berulang tiap bulan</option>
+            <option value="dates">Per tanggal — pilih tanggal sendiri</option>
           </select>
         </div>
         <div class="fg" id="rtWeekdayWrap" style="display:none">
-          <label class="fl">Hari</label>
+          <label class="fl"><i class="ti ti-calendar-week"></i>Hari</label>
           <select class="fc" id="rtWeekday">
             <option value="0">Minggu</option><option value="1">Senin</option><option value="2">Selasa</option>
             <option value="3">Rabu</option><option value="4">Kamis</option><option value="5">Jumat</option><option value="6">Sabtu</option>
           </select>
         </div>
+      </div>
+      <!-- Bulanan: pilih tanggal (1–31) yang berulang tiap bulan -->
+      <div class="rt-subwrap" id="rtMonthlyWrap" style="display:none">
+        <div class="rt-sub-title"><i class="ti ti-calendar-month"></i> Pilih tanggal tiap bulan</div>
+        <div class="rt-days" id="rtMonthDays"></div>
+        <div class="rt-sub-hint">Bisa pilih lebih dari satu tanggal. Tanggal yang tidak ada di bulan tersebut (mis. 31 di bulan 30 hari) dilewati — pilih <strong>Akhir bulan</strong> agar selalu muncul di hari terakhir.</div>
+      </div>
+      <!-- Tanggal pilihan: pilih tanggal kalender satu per satu -->
+      <div class="rt-subwrap" id="rtDatesWrap" style="display:none">
+        <div class="rt-sub-title"><i class="ti ti-calendar-event"></i> Pilih tanggal spesifik</div>
+        <div class="dp-host"><input type="text" id="rtDateAdd"/></div>
+        <div class="rt-dates" id="rtDatesList"></div>
+        <div class="rt-sub-hint">Klik beberapa tanggal pada kalender, lalu tekan <strong>Selesai</strong>. Hanya tanggal mulai hari ini yang bisa dipilih.</div>
       </div>
       <div class="fg" style="position:relative">
         <label class="fl">Penanggungjawab (PIC)</label>
@@ -1451,26 +1732,26 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="addOverlay">
   <div class="modal">
     <div class="modal-head">
-      <div class="modal-title" id="addModalTitle">Tambah Event</div>
+      <div class="modal-title"><span class="title-ico mi-blue"><i class="ti ti-calendar-plus"></i></span> <span id="addModalTitle">Tambah Event</span></div>
       <button class="btn btn-icon" id="closeAdd"><i class="ti ti-x"></i></button>
     </div>
     <!-- Judul with autocomplete FIX #2 -->
     <div class="fg ac-wrap">
-      <label class="fl">Jenis Event</label>
+      <label class="fl"><i class="ti ti-tag"></i>Jenis Event</label>
       <select class="fc" id="fType"></select>
     </div>
     <div class="fg ac-wrap">
-      <label class="fl">Nama / Judul</label>
+      <label class="fl"><i class="ti ti-heading"></i>Nama / Judul</label>
       <input type="text" class="fc" id="fTitle" placeholder="Contoh: Closing Akhir Bulan..." autocomplete="off"/>
       <div class="ac-list" id="titleAcList" style="display:none"></div>
     </div>
     <div class="frow">
-      <div class="fg"><label class="fl">Tanggal Mulai</label><input type="date" class="fc" id="fDateStart"/></div>
-      <div class="fg"><label class="fl">Tanggal Selesai</label><input type="date" class="fc" id="fDateEnd"/></div>
+      <div class="fg"><label class="fl"><i class="ti ti-calendar-event"></i>Tanggal Mulai</label><input type="text" class="fc" id="fDateStart"/></div>
+      <div class="fg"><label class="fl"><i class="ti ti-calendar-due"></i>Tanggal Selesai <span style="font-weight:500;text-transform:none;letter-spacing:0">(opsional)</span></label><input type="text" class="fc" id="fDateEnd"/></div>
     </div>
     <!-- PIC with autocomplete FIX #2 -->
     <div class="fg" style="position:relative">
-      <label class="fl">Penanggungjawab (PIC) <span style="color:#EF4444">*</span></label>
+      <label class="fl"><i class="ti ti-users"></i>Penanggungjawab (PIC) <span style="color:#EF4444">*</span></label>
       <div class="pic-input-wrap" id="picInputWrap">
         <div id="picTags"></div>
         <input type="text" class="pic-input-field" id="picInput" placeholder="Ketik nama lalu Enter..." autocomplete="off"/>
@@ -1479,7 +1760,7 @@ body.read-only .readonly-badge{display:inline-flex}
       <div class="pic-hint"><i class="ti ti-info-circle" style="font-size:11px;vertical-align:-1px"></i> Tekan <strong>Enter</strong> atau <strong>koma</strong> untuk tambah PIC. Bisa lebih dari satu.</div>
     </div>
     <div class="fg">
-      <label class="fl">Status</label>
+      <label class="fl"><i class="ti ti-flag"></i>Status</label>
       <select class="fc" id="fStatus">
         <option value="pending">In Process</option>
         <option value="achieve">Achieve</option>
@@ -1488,7 +1769,7 @@ body.read-only .readonly-badge{display:inline-flex}
       </select>
     </div>
     <div class="fg">
-      <label class="fl">Catatan</label>
+      <label class="fl"><i class="ti ti-notes"></i>Catatan</label>
       <textarea class="fc" id="fNote" placeholder="Keterangan tambahan..."></textarea>
     </div>
     <div class="modal-foot">
@@ -1502,7 +1783,7 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="detailOverlay">
   <div class="modal">
     <div class="modal-head">
-      <div class="modal-title">Detail Event</div>
+      <div class="modal-title"><span class="title-ico mi-slate"><i class="ti ti-info-circle"></i></span> Detail Event</div>
       <button class="btn btn-icon" id="closeDetail"><i class="ti ti-x"></i></button>
     </div>
     <div id="detailContent"></div>
@@ -1518,10 +1799,10 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="typeManagerOverlay">
   <div class="modal">
     <div class="modal-head">
-      <div class="modal-title">Kelola Jenis Event</div>
+      <div class="modal-title"><span class="title-ico mi-violet"><i class="ti ti-tags"></i></span> Kelola Jenis Event</div>
       <button class="btn btn-icon" id="closeTypeManager"><i class="ti ti-x"></i></button>
     </div>
-    <p style="font-size:.82rem;color:var(--ink-lt);margin-bottom:1rem">Klik kotak warna untuk ubah warna inline. Klik pensil untuk edit nama.</p>
+    <p style="font-size:.82rem;color:var(--ink-lt);margin-bottom:1rem">Klik kotak warna untuk ubah warna. Klik pensil untuk edit nama &amp; ikon.</p>
     <div class="type-list" id="typeList"></div>
     <div style="border-top:1.5px solid var(--rule);padding-top:1rem;margin-top:.5rem">
       <div style="font-size:.8rem;font-weight:700;color:var(--ink);margin-bottom:.6rem">Tambah Jenis Baru</div>
@@ -1541,7 +1822,7 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="picColorManagerOverlay">
   <div class="modal">
     <div class="modal-head">
-      <div class="modal-title">Kelola Warna PIC</div>
+      <div class="modal-title"><span class="title-ico mi-rose"><i class="ti ti-palette"></i></span> Kelola Warna PIC</div>
       <button class="btn btn-icon" id="closePicColorManager"><i class="ti ti-x"></i></button>
     </div>
     <p style="font-size:.82rem;color:var(--ink-lt);margin-bottom:1rem">Setiap PIC otomatis mendapat warna dari sistem. Klik kotak warna untuk mengganti warna kapsul PIC tertentu — perubahan tersimpan untuk semua orang.</p>
@@ -1554,7 +1835,7 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="editTypeOverlay">
   <div class="modal modal-sm">
     <div class="modal-head">
-      <div class="modal-title">Edit Jenis Event</div>
+      <div class="modal-title"><span class="title-ico mi-violet"><i class="ti ti-pencil"></i></span> Edit Jenis Event</div>
       <button class="btn btn-icon" id="closeEditType"><i class="ti ti-x"></i></button>
     </div>
     <div class="fg"><label class="fl">Nama Jenis</label><input type="text" class="fc" id="editTypeName"/></div>
@@ -1567,6 +1848,10 @@ body.read-only .readonly-badge{display:inline-flex}
         <span style="font-size:.78rem;color:var(--ink-lt)">Atau pilih preset:</span>
       </div>
       <div class="color-grid" id="colorPresetGrid"></div>
+    </div>
+    <div class="fg">
+      <label class="fl"><i class="ti ti-icons"></i>Ikon</label>
+      <div class="icon-grid" id="typeIconGrid"></div>
     </div>
     <div class="modal-foot">
       <button class="btn btn-danger btn-sm" id="deleteTypeBtn"><i class="ti ti-trash"></i> Hapus</button>
@@ -1599,7 +1884,7 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="feedbackOverlay">
   <div class="modal modal-wide">
     <div class="modal-head">
-      <div class="modal-title" id="feedbackModalTitle">Kritik &amp; Saran</div>
+      <div class="modal-title"><span class="title-ico mi-orange"><i class="ti ti-message-2"></i></span> <span id="feedbackModalTitle">Kritik &amp; Saran</span></div>
       <button class="btn btn-icon" id="closeFeedback"><i class="ti ti-x"></i></button>
     </div>
 
@@ -1624,7 +1909,7 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="accessManagerOverlay">
   <div class="modal" style="max-width:520px">
     <div class="modal-head">
-      <div class="modal-title"><i class="ti ti-shield-lock" style="color:#7C3AED"></i> Kelola Akses — <span id="accessWsLabel" style="color:#7C3AED;font-size:.9rem"></span></div>
+      <div class="modal-title"><span class="title-ico mi-violet"><i class="ti ti-shield-lock"></i></span> Kelola Akses — <span id="accessWsLabel" style="color:#7C3AED;font-size:.9rem"></span></div>
       <button class="btn btn-icon" id="closeAccessManager"><i class="ti ti-x"></i></button>
     </div>
 
@@ -1716,7 +2001,7 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="excelRangeOverlay">
   <div class="modal modal-sm">
     <div class="modal-head">
-      <div class="modal-title"><i class="ti ti-table-export" style="color:#15803D"></i> Export Excel</div>
+      <div class="modal-title"><span class="title-ico mi-green"><i class="ti ti-file-spreadsheet"></i></span> Export Excel</div>
       <button class="btn btn-icon" id="closeExcelRange"><i class="ti ti-x"></i></button>
     </div>
     <div class="range-modal-body">
@@ -1730,8 +2015,8 @@ body.read-only .readonly-badge{display:inline-flex}
       </div>
       <div id="excelRangeFields" style="display:none">
         <div class="range-row">
-          <div class="fg"><label class="fl">Dari Tanggal</label><input type="date" class="fc" id="excelFrom"/></div>
-          <div class="fg"><label class="fl">Sampai Tanggal</label><input type="date" class="fc" id="excelTo"/></div>
+          <div class="fg"><label class="fl">Dari Tanggal</label><input type="text" class="fc" id="excelFrom"/></div>
+          <div class="fg"><label class="fl">Sampai Tanggal</label><input type="text" class="fc" id="excelTo"/></div>
         </div>
       </div>
       <div class="range-preview" id="excelPreview">
@@ -1742,6 +2027,61 @@ body.read-only .readonly-badge{display:inline-flex}
     <div class="modal-foot">
       <button class="btn" id="cancelExcelRange">Batal</button>
       <button class="btn btn-green" id="doExportBtn"><i class="ti ti-download"></i> Download Excel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bar aksi untuk event yang dipilih (Ctrl+klik) -->
+<div id="selBar" role="toolbar" aria-label="Aksi event terpilih">
+  <span class="selbar-count"><i class="ti ti-checkbox"></i><span id="selCount">0 event dipilih</span></span>
+  <button class="selbar-btn" id="selMoveBtn" type="button"><i class="ti ti-arrows-exchange"></i><span>Pindah / Salin</span></button>
+  <button class="selbar-btn danger" id="selDelBtn" type="button"><i class="ti ti-trash"></i><span>Hapus</span></button>
+  <button class="selbar-btn ghost" id="selClearBtn" type="button" title="Batalkan pilihan (Esc)"><i class="ti ti-x"></i></button>
+</div>
+
+<!-- ══ PINDAH / SALIN EVENT ══ -->
+<div class="overlay" id="mcOverlay">
+  <div class="modal" style="width:460px">
+    <div class="modal-head">
+      <div class="modal-title"><span class="title-ico mi-blue"><i class="ti ti-arrows-exchange"></i></span> <span id="mcTitle">Pindah / Salin Event</span></div>
+      <button class="btn btn-icon" id="closeMc" type="button"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="mc-summary" id="mcSummary"></div>
+    <div class="fg" style="margin-bottom:.4rem">
+      <label class="fl"><i class="ti ti-calendar-event"></i>Tanggal tujuan</label>
+      <input type="text" class="fc" id="mcDate"/>
+      <div class="mc-hint" id="mcHint"></div>
+    </div>
+    <div class="mc-note"><i class="ti ti-info-circle"></i><span>Event yang berlangsung beberapa hari ikut bergeser, dan selisih tanggal antar event dipertahankan. Hasil <strong>salinan</strong> berstatus In Process.</span></div>
+    <div class="modal-foot mc-foot">
+      <button class="btn" id="mcCancel" type="button">Batal</button>
+      <button class="btn" id="mcCopyBtn" type="button"><i class="ti ti-copy"></i> Salin</button>
+      <button class="btn btn-primary" id="mcMoveBtn" type="button"><i class="ti ti-arrows-move"></i> Pindahkan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANDUAN & SHORTCUT ══ -->
+<div class="overlay" id="helpOverlay">
+  <div class="modal help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+    <div class="help-head">
+      <div class="modal-head" style="margin-bottom:0">
+        <div class="modal-title" id="helpTitle"><span class="title-ico mi-teal"><i class="ti ti-help-circle"></i></span> Panduan &amp; Shortcut</div>
+        <button class="btn btn-icon" id="closeHelp" type="button"><i class="ti ti-x"></i></button>
+      </div>
+      <div class="help-search">
+        <i class="ti ti-search"></i>
+        <input type="text" class="fc" id="helpSearch" placeholder="Cari shortcut atau fitur… (mis. pindah, ctrl, status)" autocomplete="off"/>
+      </div>
+    </div>
+    <div class="help-tabs" role="tablist">
+      <button class="help-tab active" data-htab="shortcut" role="tab" type="button"><i class="ti ti-keyboard"></i> Shortcut</button>
+      <button class="help-tab" data-htab="fitur" role="tab" type="button"><i class="ti ti-sparkles"></i> Fitur</button>
+    </div>
+    <div class="help-body" id="helpBody"></div>
+    <div class="help-foot">
+      <span><i class="ti ti-bulb" style="vertical-align:-2px"></i> Tekan <span class="kbd">?</span> kapan saja untuk membuka panduan ini.</span>
+      <button class="btn btn-primary btn-sm" id="closeHelpOk" type="button">Tutup</button>
     </div>
   </div>
 </div>
@@ -1786,6 +2126,12 @@ body.read-only .readonly-badge{display:inline-flex}
     <i class="ti ti-arrows-minimize" style="font-size:13px;color:var(--ink-lt)"></i>
     <span id="ctxCollapseLabel">Collapse</span>
   </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-label">Aksi Event</div>
+  <div class="ctx-item" data-act="select"><i class="ti ti-checkbox"></i><span id="ctxSelectLabel">Pilih (multi-select)</span></div>
+  <div class="ctx-item" data-act="copy"><i class="ti ti-copy"></i>Salin ke tanggal…</div>
+  <div class="ctx-item" data-act="move"><i class="ti ti-arrows-exchange"></i>Pindahkan ke tanggal…</div>
+  <div class="ctx-item ctx-danger" data-act="delete"><i class="ti ti-trash"></i>Hapus event</div>
 </div>
 
 <!-- Status + Note Modal -->
@@ -1834,11 +2180,11 @@ body.read-only .readonly-badge{display:inline-flex}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <div>
               <label class="fl" style="font-size:.63rem">Dari</label>
-              <input type="date" class="fc" id="snRangeFrom" style="font-size:.8rem;padding:6px 8px"/>
+              <input type="text" class="fc" id="snRangeFrom"/>
             </div>
             <div>
               <label class="fl" style="font-size:.63rem">Sampai</label>
-              <input type="date" class="fc" id="snRangeTo" style="font-size:.8rem;padding:6px 8px"/>
+              <input type="text" class="fc" id="snRangeTo"/>
             </div>
           </div>
           <div id="snRangeHint" style="font-size:.65rem;color:var(--ink-lt);margin-top:5px"></div>
@@ -1899,13 +2245,18 @@ body.read-only .readonly-badge{display:inline-flex}
       <i class="ti ti-circle-off" style="font-size:15px;color:#6B7280"></i> Cancel
       <span class="mctx-note-btn" data-note-status="cancel"><i class="ti ti-pencil" style="font-size:12px"></i> + Catatan</span>
     </div>
+    <div class="mctx-label">Aksi Event</div>
+    <div class="mctx-item" data-act="select"><i class="ti ti-checkbox" style="font-size:15px"></i> <span id="mctxSelectLabel">Pilih (multi-select)</span></div>
+    <div class="mctx-item" data-act="copy"><i class="ti ti-copy" style="font-size:15px"></i> Salin ke tanggal…</div>
+    <div class="mctx-item" data-act="move"><i class="ti ti-arrows-exchange" style="font-size:15px"></i> Pindahkan ke tanggal…</div>
+    <div class="mctx-item mctx-danger" data-act="delete"><i class="ti ti-trash" style="font-size:15px"></i> Hapus event</div>
   </div>
 </div>
 
 <!-- AUTH GATE OVERLAY — tampil jika workspace private & belum login/tidak punya akses -->
 <div id="authGate" style="display:none;position:fixed;inset:0;z-index:900;background:var(--bg);align-items:center;justify-content:center;padding:1.5rem">
   <div style="background:var(--surface);border:1.5px solid var(--rule);border-radius:20px;padding:2.5rem 2rem;max-width:400px;width:100%;text-align:center;box-shadow:0 12px 48px rgba(28,25,23,.12)">
-    <div style="font-size:40px;margin-bottom:12px" id="authGateIcon">🔒</div>
+    <div class="auth-gate-ico" id="authGateIcon"><i class="ti ti-lock"></i></div>
     <div style="font-size:1.1rem;font-weight:800;color:var(--ink);margin-bottom:6px" id="authGateTitle">Workspace Tertutup</div>
     <div style="font-size:.82rem;color:var(--ink-lt);margin-bottom:1.5rem;line-height:1.6" id="authGateMsg">
       Workspace ini bersifat private. Silakan masuk dengan akun Google Anda untuk melanjutkan.
@@ -1914,7 +2265,7 @@ body.read-only .readonly-badge{display:inline-flex}
       <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Masuk dengan Google
     </button>
-    <a href="index.html" style="font-size:.75rem;color:var(--ink-lt);text-decoration:none">← Kembali ke beranda</a>
+    <a href="index.html" style="font-size:.75rem;color:var(--ink-lt);text-decoration:none;display:inline-flex;align-items:center;gap:4px"><i class="ti ti-arrow-left"></i> Kembali ke beranda</a>
   </div>
 </div>
 
@@ -1922,8 +2273,8 @@ body.read-only .readonly-badge{display:inline-flex}
 <div class="overlay" id="notifOverlay">
   <div class="modal" style="max-width:460px;max-height:80vh;display:flex;flex-direction:column">
     <div class="modal-head" style="flex-shrink:0">
-      <div style="font-size:1rem;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px">
-        <i class="ti ti-bell"></i> Notifikasi
+      <div style="font-size:1rem;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:9px">
+        <span class="title-ico mi-amber"><i class="ti ti-bell"></i></span> Notifikasi
       </div>
       <div style="display:flex;gap:6px">
         <button class="btn btn-sm" id="markAllReadBtn">Tandai semua dibaca</button>
@@ -1964,7 +2315,7 @@ body.read-only .readonly-badge{display:inline-flex}
 
 <!-- Dukungan pengembang — kecil & tidak mengganggu, opsional bagi yang ingin memberi dukungan -->
 <div class="dev-support-footer">
-  <a href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener noreferrer">☕ Dukung pengembang</a>
+  <a href="https://saweria.co/ryantrisyardi" target="_blank" rel="noopener noreferrer"><i class="ti ti-heart" style="vertical-align:-2px"></i> Dukung pengembang</a>
 </div>
 
 <script>
@@ -2290,12 +2641,14 @@ function showAuthGate(mode) {
   const gate = document.getElementById('authGate');
   gate.style.display = 'flex';
   if (mode === 'login') {
-    document.getElementById('authGateIcon').textContent = '🔒';
+    document.getElementById('authGateIcon').className = 'auth-gate-ico';
+    document.getElementById('authGateIcon').innerHTML = '<i class="ti ti-lock"></i>';
     document.getElementById('authGateTitle').textContent = 'Workspace Tertutup';
     document.getElementById('authGateMsg').textContent = 'Workspace ini bersifat private. Silakan masuk dengan akun Google Anda.';
     document.getElementById('authGateLoginBtn').style.display = 'flex';
   } else if (mode === 'denied') {
-    document.getElementById('authGateIcon').textContent = '⛔';
+    document.getElementById('authGateIcon').className = 'auth-gate-ico denied';
+    document.getElementById('authGateIcon').innerHTML = '<i class="ti ti-ban"></i>';
     document.getElementById('authGateTitle').textContent = 'Akses Ditolak';
     document.getElementById('authGateMsg').innerHTML = `Akun <strong>${escHtml(currentUser?.email||'Anda')}</strong> belum memiliki akses ke workspace ini. Hubungi pemilik workspace untuk mendapat undangan.`;
     document.getElementById('authGateLoginBtn').style.display = 'none';
@@ -2359,9 +2712,9 @@ function applyAuthState(user) {
       ? `<img class="auth-avatar" src="${user.photoURL}" referrerpolicy="no-referrer"/>`
       : `<span class="auth-avatar-fallback">${initial}</span>`;
     let badgeText, badgeColor;
-    if (isSuperAdmin)    { badgeText='⚡ Superadmin'; badgeColor='#7C3AED'; }
-    else if (isOwner)    { badgeText='👑 Pemilik';    badgeColor='#D97706'; }
-    else if (canWrite)   { badgeText='✓ Editor';      badgeColor='#15803D'; }
+    if (isSuperAdmin)    { badgeText='<i class="ti ti-bolt badge-ico"></i>Superadmin'; badgeColor='#7C3AED'; }
+    else if (isOwner)    { badgeText='<i class="ti ti-crown badge-ico"></i>Pemilik';    badgeColor='#D97706'; }
+    else if (canWrite)   { badgeText='<i class="ti ti-pencil badge-ico"></i>Editor';      badgeColor='#15803D'; }
     else                 { badgeText='Lihat saja';    badgeColor='#B45309'; }
     const visLabel = wsVisibility === 'private'
       ? '<span class="vis-chip"><i class="ti ti-lock" style="font-size:9px"></i> Tertutup</span>'
@@ -2564,7 +2917,7 @@ function renderFeedbackAdminList(items){
 }
 
 async function deleteOwnFeedback(id){
-  if (!confirm('Hapus kritik/saran ini? Tindakan ini tidak bisa dibatalkan.')) return;
+  if (!await Dlg.confirm({danger:true,icon:'ti-message-off',title:'Hapus kritik/saran ini?',message:'Tindakan ini tidak bisa dibatalkan.',confirmText:'Hapus'})) return;
   try {
     await db.collection('_feedback').doc(id).delete();
     showToast('🗑️ Kritik/saran dihapus');
@@ -2594,7 +2947,7 @@ async function submitFeedbackReply(feedbackId){
 }
 async function deleteFeedbackReply(feedbackId, replyId){
   if (!isSuperAdmin) return;
-  if (!confirm('Hapus balasan ini?')) return;
+  if (!await Dlg.confirm({danger:true,icon:'ti-message-off',title:'Hapus balasan ini?',message:'Tindakan ini tidak bisa dibatalkan.',confirmText:'Hapus'})) return;
   try {
     await db.collection('_feedback').doc(feedbackId).collection('replies').doc(replyId).delete();
     showToast('🗑️ Balasan dihapus');
@@ -2610,41 +2963,445 @@ document.getElementById('closeFeedbackOk').addEventListener('click', closeFeedba
 document.getElementById('feedbackSubmitBtn').addEventListener('click', submitFeedback);
 document.getElementById('feedbackOverlay').addEventListener('click', e=>{ if (e.target.id === 'feedbackOverlay') closeFeedbackModal(); });
 
-/* ── MOBILE DROPDOWN MENU (·) ──
-   Menampilkan semua fitur konfigurasi (Kelola Jenis, Warna PIC, Export, Kritik
-   & Saran, dst) di layar kecil lewat dropdown, karena di header mobile hanya
-   cukup ruang untuk 2-3 tombol utama. Ini menyamakan fitur mobile dengan desktop
-   — sebelumnya tombol-tombol ini disembunyikan tanpa ada cara lain membukanya. */
-(function(){
-  const btn = document.getElementById('mobileMenuBtn');
-  const menu = document.getElementById('hdrSecondary');
-  if (!btn || !menu) return;
-  function setOpen(open){
-    menu.classList.toggle('open', open);
-    // Jaminan tambahan lewat inline style, supaya tidak bergantung 100% pada
-    // urutan/spesifisitas CSS eksternal (mis. jika ada cache CSS lama di hosting).
-    menu.style.display = open ? 'flex' : 'none';
-  }
-  btn.addEventListener('click', e=>{
-    e.preventDefault();
-    e.stopPropagation();
-    setOpen(!menu.classList.contains('open'));
-  });
-  menu.querySelectorAll('.btn').forEach(b=>b.addEventListener('click', ()=>setOpen(false)));
-  document.addEventListener('click', e=>{
-    if (menu.classList.contains('open') && !menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-      setOpen(false);
-    }
-  });
-  document.addEventListener('keydown', e=>{ if (e.key === 'Escape') setOpen(false); });
-})();
-
-
 /* ── BRAND TITLE shows workspace ── */
 if (WORKSPACE !== 'default') {
   document.getElementById('brandTitle').textContent = `Kalender ${WORKSPACE}`;
   document.title = `Kalender ${WORKSPACE}`;
 }
+
+/* ════════════════════════════════════════
+   UI KIT — pengganti dialog bawaan browser
+   (konfirmasi, date picker, filter multi-select, toast ber-ikon)
+   Semua komponen di bawah ini berupa pop up di dalam halaman, bukan
+   confirm()/prompt()/<input type="date"> bawaan browser.
+   ════════════════════════════════════════ */
+const byId = id => document.getElementById(id);
+function diffDays(a, b) { return Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 86400000); }
+function fmtDateLong(s) {
+  if (!s) return '';
+  const D = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const M = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+  const [y, m, d] = s.split('-').map(Number);
+  return `${D[new Date(y, m - 1, d).getDay()]}, ${d} ${M[m - 1]} ${y}`;
+}
+
+/* Ikon status & jenis event (Tabler Icons — bukan emoji) */
+const STATUS_ICON = { achieve: 'ti-circle-check', not_achieve: 'ti-circle-x', pending: 'ti-refresh', cancel: 'ti-circle-off' };
+const STATUS_NAME = { achieve: 'Achieve', not_achieve: 'Not Achieve', pending: 'In Process', cancel: 'Cancel' };
+function statusIconHtml(st, extraCls) { return st && STATUS_ICON[st] ? `<i class="ti ${STATUS_ICON[st]}${extraCls ? ' ' + extraCls : ''}"></i>` : ''; }
+const DEFAULT_TYPE_ICONS = { deadline: 'ti-flag', cuti: 'ti-beach', stock_opname: 'ti-packages', cash_opname: 'ti-cash', lainnya: 'ti-star' };
+const TYPE_ICON_CHOICES = ['ti-flag', 'ti-beach', 'ti-packages', 'ti-cash', 'ti-star', 'ti-tag', 'ti-briefcase', 'ti-clipboard-list',
+  'ti-report-money', 'ti-receipt', 'ti-building-bank', 'ti-chart-bar', 'ti-truck', 'ti-shopping-cart', 'ti-users-group', 'ti-presentation',
+  'ti-phone', 'ti-mail', 'ti-certificate', 'ti-stethoscope', 'ti-car', 'ti-bulb', 'ti-rocket', 'ti-target'];
+function typeIcon(t) {
+  const c = t && t.icon;
+  if (c && /^ti-[a-z0-9-]+$/.test(c)) return c;
+  return (t && DEFAULT_TYPE_ICONS[t.id]) || 'ti-tag';
+}
+function typeIconHtml(t, extraCls) { return `<i class="ti ${typeIcon(t)} type-ico${extraCls ? ' ' + extraCls : ''}"></i>`; }
+
+/* ── Toast ber-ikon ──
+   Awalan emoji pada pesan (✅ ⚠️ ❌ …) otomatis diganti ikon Tabler. */
+const TOAST_MAP = [
+  ['✅', 'ti-circle-check', 'ok'], ['⚠️', 'ti-alert-triangle', 'warn'], ['⚠', 'ti-alert-triangle', 'warn'],
+  ['❌', 'ti-circle-x', 'err'], ['🗑️', 'ti-trash', 'del'], ['🗑', 'ti-trash', 'del'],
+  ['🔒', 'ti-eye-off', 'info'], ['👁️', 'ti-eye', 'info'], ['👁', 'ti-eye', 'info'], ['👋', 'ti-logout', 'info']
+];
+let _toastTimer = null;
+function showToast(msg, dur = 2800) {
+  const t = byId('toast');
+  msg = String(msg == null ? '' : msg);
+  let ico = 'ti-info-circle', kind = 'info';
+  for (const [em, ic, k] of TOAST_MAP) { if (msg.startsWith(em)) { ico = ic; kind = k; msg = msg.slice(em.length); break; } }
+  msg = msg.replace(/^[\s\uFE0F\u200D]+/, '');
+  t.innerHTML = `<i class="ti ${ico} t-${kind}"></i><span></span>`;
+  t.lastChild.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+/* ── Dialog konfirmasi (pengganti confirm()) ──
+   const ok = await Dlg.confirm({title, message(html), confirmText, danger, icon}) */
+const Dlg = (() => {
+  let ov = null, resolver = null, onKey = null;
+  function build() {
+    if (ov) return;
+    ov = document.createElement('div');
+    ov.className = 'overlay dlg-overlay';
+    ov.id = 'dlgOverlay';
+    ov.innerHTML = `<div class="modal modal-sm dlg-modal" role="alertdialog" aria-modal="true" aria-labelledby="dlgTitle" aria-describedby="dlgMsg">
+      <div class="dlg-icon" id="dlgIcon"></div>
+      <div class="dlg-title" id="dlgTitle"></div>
+      <div class="dlg-msg" id="dlgMsg"></div>
+      <div class="modal-foot"><button class="btn" id="dlgCancel" type="button"></button><button class="btn" id="dlgOk" type="button"></button></div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('mousedown', e => { if (e.target === ov) finish(false); });
+    byId('dlgCancel').addEventListener('click', () => finish(false));
+    byId('dlgOk').addEventListener('click', () => finish(true));
+  }
+  function finish(val) {
+    if (!ov) return;
+    ov.classList.remove('open');
+    if (onKey) { document.removeEventListener('keydown', onKey, true); onKey = null; }
+    const r = resolver; resolver = null;
+    if (r) r(val);
+  }
+  function confirmDlg(opts) {
+    build();
+    if (resolver) finish(false);
+    const o = Object.assign({ title: 'Konfirmasi', message: '', confirmText: 'Ya', cancelText: 'Batal', danger: false, icon: '' }, opts || {});
+    const tone = o.danger ? 'danger' : (o.tone || 'info');
+    const ic = byId('dlgIcon');
+    ic.className = 'dlg-icon ' + tone;
+    ic.innerHTML = `<i class="ti ${o.icon || (o.danger ? 'ti-alert-triangle' : 'ti-help-circle')}"></i>`;
+    byId('dlgTitle').textContent = o.title;
+    byId('dlgMsg').innerHTML = o.message;
+    byId('dlgCancel').textContent = o.cancelText;
+    const ok = byId('dlgOk');
+    ok.textContent = o.confirmText;
+    ok.className = 'btn ' + (o.danger ? 'btn-danger-solid' : 'btn-primary');
+    return new Promise(res => {
+      resolver = res;
+      ov.classList.add('open');
+      onKey = e => { if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false); } };
+      document.addEventListener('keydown', onKey, true);
+      // Aksi berbahaya: fokus awal di "Batal" agar Enter tidak menghapus tanpa sengaja
+      setTimeout(() => (o.danger ? byId('dlgCancel') : ok).focus(), 30);
+    });
+  }
+  return { confirm: confirmDlg, isOpen: () => !!(ov && ov.classList.contains('open')) };
+})();
+
+/* ── Date picker kustom ──
+   Mengubah <input> menjadi tombol + kalender pop up. Nilai tetap tersimpan di
+   input.value (format YYYY-MM-DD, atau YYYY-MM untuk mode bulan), jadi kode lain
+   tidak perlu berubah. Kalender dibuka pada bulan dari getViewDate() jika
+   belum ada nilai — mis. "Tanggal Selesai" langsung membuka bulan tanggal mulai. */
+const DP = (() => {
+  const MON = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  const MON_S = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+  const DOW_S = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  let pop = null, backdrop = null, cur = null;
+  const pad = n => String(n).padStart(2, '0');
+  const todayIso = () => toStr(new Date());
+
+  function fmt(v, mode) {
+    if (!v) return '';
+    if (mode === 'month') { const [y, m] = v.split('-'); return `${MON_S[+m - 1]} ${y}`; }
+    const [y, m, d] = v.split('-').map(Number);
+    return `${DOW_S[new Date(y, m - 1, d).getDay()]}, ${d} ${MON_S[m - 1]} ${y}`;
+  }
+  function fire(input) { input.dispatchEvent(new Event('change', { bubbles: true })); }
+
+  function ensure() {
+    if (pop) return;
+    backdrop = document.createElement('div'); backdrop.id = 'dpBackdrop';
+    pop = document.createElement('div'); pop.id = 'dpPop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Pilih tanggal');
+    document.body.appendChild(backdrop); document.body.appendChild(pop);
+    backdrop.addEventListener('mousedown', () => close());
+    pop.addEventListener('click', onPopClick);
+    document.addEventListener('mousedown', e => {
+      if (!cur) return;
+      if (pop.contains(e.target) || cur.btn.contains(e.target)) return;
+      close();
+    }, true);
+    window.addEventListener('resize', () => { if (cur) place(); });
+    window.addEventListener('scroll', e => { if (cur && window.innerWidth > 768 && !pop.contains(e.target)) close(); }, true);
+  }
+
+  function minOf(c) { return c.opts.getMin ? (c.opts.getMin() || '') : (c.input.getAttribute('min') || ''); }
+  function maxOf(c) { return c.opts.getMax ? (c.opts.getMax() || '') : (c.input.getAttribute('max') || ''); }
+
+  function attach(input, opts) {
+    opts = opts || {};
+    if (!input || input._dp) return input;
+    const mode = opts.mode || input.dataset.mode || 'date';
+    const wrap = document.createElement('div');
+    wrap.className = 'dp-wrap' + (opts.compact ? ' dp-compact' : '');
+    const btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'dp-btn empty';
+    btn.innerHTML = `<i class="ti ${mode === 'month' ? 'ti-calendar-month' : 'ti-calendar-event'} dp-ico"></i><span class="dp-label"></span><span class="dp-clear" role="button" aria-label="Hapus tanggal"><i class="ti ti-x"></i></span>`;
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(btn); wrap.appendChild(input);
+    try { input.type = 'hidden'; } catch (e) { /* abaikan */ }
+
+    const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    const label = btn.querySelector('.dp-label');
+    function refresh() {
+      const v = desc.get.call(input);
+      label.textContent = v ? fmt(v, mode) : (opts.placeholder || (mode === 'month' ? 'Pilih bulan' : 'Pilih tanggal'));
+      btn.classList.toggle('empty', !v);
+      btn.classList.toggle('has-clear', !!(opts.clearable && v));
+    }
+    // Setiap kode lain yang mengisi input.value = '...' otomatis memperbarui tampilan tombol
+    Object.defineProperty(input, 'value', {
+      configurable: true,
+      get() { return desc.get.call(input); },
+      set(v) { desc.set.call(input, v == null ? '' : v); refresh(); }
+    });
+    const api = { input, btn, opts, mode, refresh };
+    input._dp = api;
+    btn.addEventListener('click', e => {
+      if (e.target.closest('.dp-clear') && btn.classList.contains('has-clear')) {
+        e.stopPropagation(); input.value = ''; fire(input); return;
+      }
+      if (cur && cur.input === input) { close(); return; }
+      open(api);
+    });
+    refresh();
+    return input;
+  }
+
+  function open(api) {
+    ensure(); close();
+    cur = Object.assign({}, api, { sub: 'days' });
+    const v = api.input.value;
+    let base = v || (api.opts.getViewDate ? api.opts.getViewDate() : '') || '';
+    if (!base) base = api.mode === 'month' ? todayIso().slice(0, 7) : todayIso();
+    const p = base.split('-');
+    cur.y = +p[0]; cur.m = (+p[1] || 1) - 1;
+    api.btn.classList.add('active');
+    render();
+    pop.style.display = 'block';
+    if (window.innerWidth <= 768) backdrop.style.display = 'block';
+    place();
+  }
+  function close() {
+    if (!cur) return;
+    cur.btn.classList.remove('active');
+    cur = null;
+    if (pop) { pop.style.display = 'none'; backdrop.style.display = 'none'; }
+  }
+  function place() {
+    if (!cur) return;
+    const r = cur.btn.getBoundingClientRect();
+    const pw = pop.offsetWidth, ph = pop.offsetHeight, vw = window.innerWidth, vh = window.innerHeight;
+    let left, top;
+    if (vw <= 768) { left = (vw - pw) / 2; top = Math.max(8, (vh - ph) / 2); }
+    else {
+      left = Math.max(8, Math.min(r.left, vw - pw - 8));
+      top = r.bottom + 6;
+      if (top + ph > vh - 8) top = Math.max(8, r.top - ph - 6);
+    }
+    pop.style.left = left + 'px'; pop.style.top = top + 'px';
+  }
+
+  function render() {
+    const o = cur.opts, v = cur.input.value, min = minOf(cur), max = maxOf(cur), today = todayIso();
+    const monthMode = cur.mode === 'month';
+    if (monthMode || cur.sub === 'months') {
+      const selY = v ? +v.slice(0, 4) : null, selM = v ? +v.slice(5, 7) - 1 : null;
+      let h = `<div class="dp-head"><button type="button" class="dp-nav" data-a="py" aria-label="Tahun sebelumnya"><i class="ti ti-chevron-left"></i></button><div class="dp-title" style="cursor:default">${cur.y}</div><button type="button" class="dp-nav" data-a="ny" aria-label="Tahun berikutnya"><i class="ti ti-chevron-right"></i></button></div><div class="dp-months">`;
+      for (let i = 0; i < 12; i++) {
+        const cls = ['dp-mon'];
+        if (monthMode && selY === cur.y && selM === i) cls.push('dp-sel');
+        if (+today.slice(0, 4) === cur.y && +today.slice(5, 7) - 1 === i) cls.push('dp-today');
+        h += `<button type="button" class="${cls.join(' ')}" data-a="pm" data-m="${i}">${MON_S[i]}</button>`;
+      }
+      h += `</div><div class="dp-foot"><button type="button" data-a="today"><i class="ti ti-calendar-event"></i> ${monthMode ? 'Bulan ini' : 'Hari ini'}</button>${monthMode ? '' : '<button type="button" data-a="back"><i class="ti ti-arrow-back-up"></i> Kembali</button>'}<button type="button" data-a="close">Tutup</button></div>`;
+      pop.innerHTML = h;
+      return;
+    }
+    const first = new Date(cur.y, cur.m, 1).getDay();
+    const multi = !!(o.multi && o.isSelected);
+    let h = `<div class="dp-head"><button type="button" class="dp-nav" data-a="pm1" aria-label="Bulan sebelumnya"><i class="ti ti-chevron-left"></i></button><button type="button" class="dp-title" data-a="months">${MON[cur.m]} ${cur.y} <i class="ti ti-chevron-down" style="font-size:13px"></i></button><button type="button" class="dp-nav" data-a="nm1" aria-label="Bulan berikutnya"><i class="ti ti-chevron-right"></i></button></div>`;
+    h += '<div class="dp-dow">' + DOW_S.map(d => `<span>${d}</span>`).join('') + '</div><div class="dp-grid">';
+    const hols = (typeof holidays !== 'undefined') ? holidays : {};
+    for (let i = 0; i < 42; i++) {
+      const dt = new Date(cur.y, cur.m, 1 - first + i), ds = toStr(dt);
+      const cls = ['dp-day'];
+      if (dt.getMonth() !== cur.m) cls.push('dp-oth');
+      if (dt.getDay() === 0) cls.push('dp-sun');
+      const hol = hols[ds];
+      if (hol) cls.push('dp-hol');
+      if (ds === today) cls.push('dp-today');
+      const isSel = multi ? o.isSelected(ds) : ds === v;
+      if (isSel) cls.push('dp-sel');
+      else if (min && o.markMin) {
+        if (ds === min) cls.push('dp-rstart');
+        else if (v && ds > min && ds < v) cls.push('dp-inrange');
+      }
+      const dis = (min && ds < min) || (max && ds > max);
+      if (dis) cls.push('dp-dis');
+      h += `<button type="button" class="${cls.join(' ')}" data-a="day" data-d="${ds}"${dis ? ' disabled' : ''}${hol ? ` title="${escHtml(hol.name)}"` : ''}>${dt.getDate()}</button>`;
+    }
+    h += '</div>';
+    const hint = o.getHint ? o.getHint() : '';
+    if (hint) h += `<div class="dp-hint">${escHtml(hint)}</div>`;
+    h += `<div class="dp-foot"><button type="button" data-a="today"><i class="ti ti-calendar-event"></i> Hari ini</button>${(o.clearable && v) ? '<button type="button" data-a="clear"><i class="ti ti-eraser"></i> Hapus</button>' : ''}${multi ? '<button type="button" class="dp-done" data-a="done"><i class="ti ti-check"></i> Selesai</button>' : '<button type="button" data-a="close">Tutup</button>'}</div>`;
+    pop.innerHTML = h;
+  }
+
+  function pick(v) {
+    const inp = cur.input, o = cur.opts;
+    inp.value = v; fire(inp);
+    if (o.onPick) o.onPick(v);
+    close();
+  }
+  function onPopClick(e) {
+    const b = e.target.closest('[data-a]');
+    if (!b || !cur || b.disabled) return;
+    const a = b.dataset.a;
+    if (a === 'pm1') { cur.m--; if (cur.m < 0) { cur.m = 11; cur.y--; } render(); }
+    else if (a === 'nm1') { cur.m++; if (cur.m > 11) { cur.m = 0; cur.y++; } render(); }
+    else if (a === 'py') { cur.y--; render(); }
+    else if (a === 'ny') { cur.y++; render(); }
+    else if (a === 'months') { cur.sub = 'months'; render(); }
+    else if (a === 'back') { cur.sub = 'days'; render(); }
+    else if (a === 'pm') {
+      const m = +b.dataset.m;
+      if (cur.mode === 'month') pick(`${cur.y}-${pad(m + 1)}`);
+      else { cur.m = m; cur.sub = 'days'; render(); }
+    }
+    else if (a === 'day') {
+      const d = b.dataset.d;
+      if (cur.opts.multi) { if (cur.opts.onToggle) cur.opts.onToggle(d); render(); }
+      else pick(d);
+    }
+    else if (a === 'today') {
+      if (cur.mode === 'month') { pick(todayIso().slice(0, 7)); return; }
+      const t = todayIso(), min = minOf(cur), max = maxOf(cur);
+      if ((min && t < min) || (max && t > max)) { showToast('⚠️ Hari ini di luar rentang yang diperbolehkan'); return; }
+      if (cur.opts.multi) { if (cur.opts.onToggle) cur.opts.onToggle(t); render(); }
+      else pick(t);
+    }
+    else if (a === 'clear') { cur.input.value = ''; fire(cur.input); close(); }
+    else if (a === 'done') { const cb = cur.opts.onDone; close(); if (cb) cb(); }
+    else if (a === 'close') close();
+  }
+  return { attach, close, isOpen: () => !!cur, fmt };
+})();
+
+/* ── Filter multi-select (checkbox) ──
+   Kosong = tidak memfilter (tampilkan semua). Memancarkan event 'change' pada elemen induk. */
+class MultiSelect {
+  constructor(el) {
+    this.el = el; this.options = []; this.sel = new Set(); this.q = '';
+    this.noun = el.dataset.noun || 'item';
+    this.allLabel = el.dataset.all || 'Semua';
+    this.icon = el.dataset.icon || 'ti-filter';
+    el.innerHTML = `<button type="button" class="ms-btn" aria-haspopup="listbox" aria-expanded="false"><i class="ti ${this.icon} ms-ico"></i><span class="ms-label"></span><span class="ms-count"></span><i class="ti ti-chevron-down ms-chev"></i></button><div class="ms-pop" role="listbox" aria-multiselectable="true"></div>`;
+    this.btn = el.querySelector('.ms-btn');
+    this.pop = el.querySelector('.ms-pop');
+    this.btn.addEventListener('click', () => this.toggle());
+    this.pop.addEventListener('change', e => {
+      e.stopPropagation();
+      const cb = e.target;
+      if (cb.matches && cb.matches('input[type=checkbox]')) {
+        if (cb.checked) this.sel.add(cb.value); else this.sel.delete(cb.value);
+        this.update(); this.emit();
+      }
+    });
+    this.pop.addEventListener('input', e => {
+      if (e.target.classList.contains('ms-search')) { this.q = e.target.value.trim().toLowerCase(); this.renderList(); }
+    });
+    this.pop.addEventListener('click', e => {
+      const a = e.target.closest('[data-ms]');
+      if (!a) return;
+      if (a.dataset.ms === 'all') this.options.filter(o => this.match(o)).forEach(o => this.sel.add(String(o.value)));
+      else this.sel.clear();
+      this.renderList(); this.update(); this.emit();
+    });
+    this.update();
+    MultiSelect.all.push(this);
+  }
+  get values() { return this.options.filter(o => this.sel.has(String(o.value))).map(o => String(o.value)); }
+  match(o) { return !this.q || String(o.label).toLowerCase().includes(this.q); }
+  setOptions(list) {
+    this.options = list.map(o => Object.assign({}, o, { value: String(o.value) }));
+    const valid = new Set(this.options.map(o => o.value));
+    [...this.sel].forEach(v => { if (!valid.has(v)) this.sel.delete(v); });
+    this.q = '';
+    this.buildPop(); this.update();
+  }
+  buildPop() {
+    const many = this.options.length > 7;
+    this.pop.innerHTML = (many ? '<input type="text" class="ms-search" placeholder="Cari…" autocomplete="off"/>' : '') +
+      `<div class="ms-actions"><button type="button" data-ms="all"><i class="ti ti-checks"></i> Pilih semua</button><button type="button" data-ms="none"><i class="ti ti-filter-off"></i> Reset</button></div><div class="ms-list"></div>`;
+    this.renderList();
+  }
+  renderList() {
+    const list = this.pop.querySelector('.ms-list');
+    if (!list) return;
+    const rows = this.options.filter(o => this.match(o));
+    if (!rows.length) { list.innerHTML = `<div class="ms-empty">${this.options.length ? 'Tidak ada hasil' : 'Belum ada data'}</div>`; return; }
+    list.innerHTML = rows.map(o => {
+      let lead = '';
+      if (o.icon && o.color) lead = `<i class="ti ${/^ti-[a-z0-9-]+$/.test(o.icon) ? o.icon : 'ti-tag'} ms-tico" style="color:${escHtml(o.color)}"></i>`;
+      else if (o.color) lead = `<span class="ms-dot" style="background:${escHtml(o.color)}"></span>`;
+      return `<label class="ms-row"><input type="checkbox" value="${escHtml(o.value)}"${this.sel.has(o.value) ? ' checked' : ''}/><span class="ms-check"></span>${lead}<span class="ms-text">${escHtml(o.label)}</span></label>`;
+    }).join('');
+  }
+  update() {
+    const n = this.sel.size, vals = this.values;
+    let text = this.allLabel;
+    if (n === 1) { const o = this.options.find(x => x.value === vals[0]); text = o ? o.label : vals[0]; }
+    else if (n > 1) text = `${n} ${this.noun} dipilih`;
+    this.btn.querySelector('.ms-label').textContent = text;
+    this.btn.querySelector('.ms-count').textContent = n;
+    this.el.classList.toggle('has-val', n > 0);
+  }
+  emit() { this.el.dispatchEvent(new CustomEvent('change')); }
+  toggle() { this.el.classList.contains('open') ? this.close() : this.open(); }
+  open() {
+    MultiSelect.closeAll();
+    this.el.classList.add('open');
+    this.btn.setAttribute('aria-expanded', 'true');
+    this.pop.classList.remove('align-right');
+    const r = this.pop.getBoundingClientRect();
+    if (r.right > window.innerWidth - 8) this.pop.classList.add('align-right');
+    const s = this.pop.querySelector('.ms-search');
+    if (s && window.innerWidth > 768) s.focus();
+  }
+  close() { this.el.classList.remove('open'); this.btn.setAttribute('aria-expanded', 'false'); }
+  static closeAll() {
+    let any = false;
+    MultiSelect.all.forEach(m => { if (m.el.classList.contains('open')) { m.close(); any = true; } });
+    return any;
+  }
+}
+MultiSelect.all = [];
+document.addEventListener('mousedown', e => {
+  MultiSelect.all.forEach(m => { if (m.el.classList.contains('open') && !m.el.contains(e.target)) m.close(); });
+});
+const MS = {};
+['filterType', 'filterPIC', 'rptFilterType', 'rptFilterPIC', 'rrFilterTask', 'rrFilterPIC'].forEach(id => { MS[id] = new MultiSelect(byId(id)); });
+
+/* ── Pasang date picker ke semua kolom tanggal ── */
+DP.attach(byId('fDateStart'), {});
+DP.attach(byId('fDateEnd'), {
+  clearable: true, placeholder: 'Tanpa tanggal selesai', markMin: true,
+  getMin: () => byId('fDateStart').value,
+  getViewDate: () => byId('fDateStart').value,   // kalender terbuka di bulan tanggal mulai, bukan bulan sekarang
+  getHint: () => byId('fDateStart').value ? 'Mulai ' + fmtDateLong(byId('fDateStart').value) : ''
+});
+byId('fDateStart').addEventListener('change', () => {
+  const ns = byId('fDateStart').value, ne = byId('fDateEnd').value;
+  if (ns && ne && ne < ns) { byId('fDateEnd').value = ''; showToast('Tanggal selesai dikosongkan karena lebih awal dari tanggal mulai'); }
+});
+DP.attach(byId('snRangeFrom'), {});
+DP.attach(byId('snRangeTo'), {
+  markMin: true,
+  getMin: () => { const a = byId('snRangeTo').getAttribute('min') || '', b = byId('snRangeFrom').value; return (b && b > a) ? b : a; },
+  getViewDate: () => byId('snRangeFrom').value
+});
+DP.attach(byId('newHolDate'), {});
+DP.attach(byId('excelFrom'), {});
+DP.attach(byId('excelTo'), { markMin: true, getMin: () => byId('excelFrom').value, getViewDate: () => byId('excelFrom').value });
+DP.attach(byId('rrFrom'), { compact: true });
+DP.attach(byId('rrTo'), { compact: true, markMin: true, getMin: () => byId('rrFrom').value, getViewDate: () => byId('rrFrom').value });
+DP.attach(byId('rptFrom'), { compact: true, mode: 'month' });
+DP.attach(byId('rptTo'), { compact: true, mode: 'month' });
+DP.attach(byId('mcDate'), {
+  placeholder: 'Pilih tanggal tujuan',
+  getViewDate: () => (typeof mcState !== 'undefined' && mcState) ? mcState.anchorDate : ''
+});
+
+/* Seleksi event (Ctrl+klik) — state dibuat di sini agar sudah ada saat render pertama */
+const selectedIds = new Set();
+
 
 /* ════════════════════════════════════════
    EVENT TYPES
@@ -2760,9 +3517,9 @@ function loadRoutineEnabled() {
 }
 let routineEnabled = loadRoutineEnabled();
 let editingRoutineId = null; // null = mode tambah baru di Routine Manager
-let currentDate=new Date(), filterType='all', filterPIC='all';
+let currentDate=new Date(), filterType=[], filterPIC=[];
 let editingId=null, viewingId=null, selectedDate=null;
-let currentPICs=[], editingTypeId=null, currentRoutinePICs=[];
+let currentPICs=[], editingTypeId=null, currentRoutinePICs=[], editingTypeIcon='ti-tag';
 const PRESET_COLORS=['#EF4444','#F97316','#F59E0B','#EAB308','#84CC16','#22C55E','#10B981','#14B8A6','#06B6D4','#3B82F6','#6366F1','#8B5CF6','#A855F7','#EC4899','#F43F5E','#64748B'];
 
 /* ════════════════════════════════════════
@@ -3103,67 +3860,14 @@ async function deleteEvent(id) {
   }
 }
 
-async function copySingleEvent(id) {
-  const ev = events.find(e => e.id === id);
-  if (!ev) return;
-  const target = prompt('Masukkan tanggal target (YYYY-MM-DD):', toStr(new Date()));
-  if (!target) return;
-  if (!target.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    showToast('⚠️ Format tanggal salah (YYYY-MM-DD)');
-    return;
-  }
-  const { id: _, status: _s, statusNote: _sn, ...data } = ev;
-  data.dateStart = target;
-  if (data.dateEnd) {
-    const start = new Date(ev.dateStart + 'T00:00:00'), end = new Date(ev.dateEnd + 'T00:00:00');
-    const diff = end.getTime() - start.getTime();
-    const newS = new Date(target + 'T00:00:00'), newE = new Date(newS.getTime() + diff);
-    data.dateEnd = toStr(newE);
-  }
-  const prevId = editingId; editingId = null;
-  await saveEvent(data); editingId = prevId;
-  showToast(`✅ Event dicopy ke ${fmtDate(target)}`);
-  renderCalendar(); if (selectedDate) renderPanel(selectedDate);
-}
-
-async function copyAllEvents(sourceDate) {
-  const dayEvs = events.filter(e => e.dateStart === sourceDate);
-  if (!dayEvs.length) { showToast('⚠️ Tidak ada event untuk dicopy'); return; }
-  const target = prompt('Masukkan tanggal target (YYYY-MM-DD):', toStr(new Date()));
-  if (!target) return;
-  if (!target.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    showToast('⚠️ Format tanggal salah (YYYY-MM-DD)');
-    return;
-  }
-  for (const ev of dayEvs) {
-    const { id: _, status: _s, statusNote: _sn, ...data } = ev;
-    data.dateStart = target;
-    if (data.dateEnd) {
-      const start = new Date(ev.dateStart + 'T00:00:00'), end = new Date(ev.dateEnd + 'T00:00:00');
-      const diff = end.getTime() - start.getTime();
-      const newS = new Date(target + 'T00:00:00'), newE = new Date(newS.getTime() + diff);
-      data.dateEnd = toStr(newE);
-    }
-    const prevId = editingId; editingId = null;
-    await saveEvent(data); editingId = prevId;
-  }
-  showToast(`✅ ${dayEvs.length} event dicopy ke ${fmtDate(target)}`);
-  renderCalendar(); if (selectedDate) renderPanel(selectedDate);
-}
-
 /* ════════════════════════════════════════
    FILTERS / LEGEND
    ════════════════════════════════════════ */
 function rebuildFilters() {
-  const tSel=document.getElementById('filterType'), tCur=tSel.value;
-  tSel.innerHTML='<option value="all">Semua Jenis</option>'+eventTypes.map(t=>`<option value="${t.id}">${escHtml(t.label)}</option>`).join('');
-  if (eventTypes.find(t=>t.id===tCur)) tSel.value=tCur;
-
-  const pSel=document.getElementById('filterPIC'), pCur=pSel.value;
-  const allPICs=getAllPICsCombined();
-  pSel.innerHTML='<option value="all">Semua PIC</option>'+allPICs.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
-  if (allPICs.includes(pCur)) pSel.value=pCur;
-
+  MS.filterType.setOptions(eventTypes.map(t=>({value:t.id,label:t.label,color:t.chip,icon:typeIcon(t)})));
+  filterType=MS.filterType.values;
+  MS.filterPIC.setOptions(getAllPICsCombined().map(p=>({value:p,label:p,color:getPicColor(p)})));
+  filterPIC=MS.filterPIC.values;
   renderLegend(); rebuildTypeSelect();
 }
 function rebuildTypeSelect() {
@@ -3173,7 +3877,7 @@ function rebuildTypeSelect() {
 }
 function renderLegend() {
   document.getElementById('legendBar').innerHTML=eventTypes.map(t=>
-    `<div class="leg"><div class="leg-dot" style="background:${t.chip}"></div>${escHtml(t.label)}</div>`
+    `<div class="leg"><i class="ti ${typeIcon(t)} type-ico" style="color:${t.chip}"></i>${escHtml(t.label)}</div>`
   ).join('')+`<div class="leg-sep"></div>
    <div class="leg"><div class="leg-dot" style="background:var(--libnas-bg);border:1.5px solid var(--libnas-side)"></div> Libur Nasional</div>
    <div class="leg"><div class="leg-dot" style="background:var(--cutib-bg);border:1.5px solid var(--cutib-side)"></div> Cuti Bersama</div>
@@ -3190,12 +3894,11 @@ function fmtDate(s){if(!s)return'';const[y,m,d]=s.split('-');return`${d}/${m}/${
 const MMM_ID=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
 function fmtDateReport(s){if(!s)return'';const[y,m,d]=s.split('-');return`${d}-${MMM_ID[parseInt(m,10)-1]}-${y}`;}
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function showToast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
 function getEventsForDate(ds){
   return events.filter(e=>{
     if (!canWrite && e.hidden) return false;  // hidden events invisible to view-only users
-    if (filterType!=='all'&&e.type!==filterType) return false;
-    if (filterPIC!=='all'&&!(e.pics||[]).includes(filterPIC)) return false;
+    if (filterType.length&&!filterType.includes(e.type)) return false;
+    if (filterPIC.length&&!(e.pics||[]).some(p=>filterPIC.includes(p))) return false;
     if (e.dateEnd&&e.dateStart<=ds&&e.dateEnd>=ds) return true;
     return e.dateStart===ds;
   });
@@ -3237,11 +3940,13 @@ function loadRoutineTasks() {
 function saveRoutineLocal(){ localStorage.setItem(LS_ROUTINE_KEY, JSON.stringify(routineTasks)); }
 
 /* Tambah template tugas rutin baru — mulai berlaku HARI INI */
-async function createRoutineTask({title, recurrence, weeklyDay, pics}) {
+async function createRoutineTask({title, recurrence, weeklyDay, monthlyDays, dates, pics}) {
   const data = {
     title: title.trim(),
     recurrence,
     weeklyDay: recurrence==='weekly' ? weeklyDay : null,
+    monthlyDays: recurrence==='monthly' ? [...(monthlyDays||[])] : [],
+    dates: recurrence==='dates' ? [...(dates||[])].filter(d=>d>=todayStr()).sort() : [],
     pics: Array.isArray(pics) ? pics.filter(Boolean) : [],
     startDate: todayStr(),
     endDate: null,
@@ -3262,11 +3967,11 @@ async function createRoutineTask({title, recurrence, weeklyDay, pics}) {
    - Jika template baru dibuat HARI INI (belum pernah berlaku historis): edit langsung di tempat.
    - Jika sudah berlaku sejak sebelum hari ini: tutup versi lama per kemarin,
      buat versi baru mulai hari ini (tanggal lalu tetap memakai versi lama). */
-async function updateRoutineTask(id, {title, recurrence, weeklyDay, pics}) {
+async function updateRoutineTask(id, {title, recurrence, weeklyDay, monthlyDays, dates, pics}) {
   const task=routineTasks.find(t=>t.id===id);
   if (!task) return;
   const tdy=todayStr();
-  const patch={ title:title.trim(), recurrence, weeklyDay: recurrence==='weekly'?weeklyDay:null, pics: Array.isArray(pics) ? pics.filter(Boolean) : [] };
+  const patch={ title:title.trim(), recurrence, weeklyDay: recurrence==='weekly'?weeklyDay:null, monthlyDays: recurrence==='monthly'?[...(monthlyDays||[])]:[], dates: recurrence==='dates'?[...(dates||[])].filter(d=>d>=tdy).sort():[], pics: Array.isArray(pics) ? pics.filter(Boolean) : [] };
   if (task.startDate===tdy) {
     if (useFirebase) await db.collection(ROUTINE_COLL).doc(id).update(patch);
     else {
@@ -3373,10 +4078,8 @@ function getRoutineTasksForDate(ds) {
   const dow=new Date(ds+'T00:00:00').getDay();
   return routineTasks
     .filter(t=>{
-      if (t.startDate && t.startDate>ds) return false; // belum berlaku saat itu (no backdate)
-      if (t.endDate && t.endDate<ds) return false;      // sudah ditutup/diganti sebelum tanggal ini
-      if (t.recurrence==='weekly' && t.weeklyDay!==dow) return false;
-      if (filterPIC!=='all' && !(t.pics||[]).includes(filterPIC)) return false; // ikut filter PIC global
+      if (!routineOccursOn(t, ds)) return false;
+      if (filterPIC.length && !(t.pics||[]).some(p=>filterPIC.includes(p))) return false; // ikut filter PIC global
       return true;
     })
     .sort((a,b)=>(a.order||0)-(b.order||0))
@@ -3390,6 +4093,8 @@ function getRoutineTasksForDate(ds) {
         hasOverride: !!(ov && ov.title),
         recurrence:t.recurrence,
         weeklyDay:t.weeklyDay,
+        monthlyDays:t.monthlyDays||[],
+        dates:t.dates||[],
         pics:t.pics||[],
         done: !!(t.completions && t.completions[ds])
       };
@@ -3522,7 +4227,7 @@ async function renderCalendar() {
       const t=getTypeById(e.type);
       // Gunakan status efektif untuk tanggal ini (per-date status override)
       const effectiveStatus = getEffectiveStatus(e, ds);
-      const checkIcon=effectiveStatus==='achieve'?'✓ ':effectiveStatus==='not_achieve'?'✗ ':effectiveStatus==='cancel'?'⊗ ':'';
+      const checkIcon=(effectiveStatus&&effectiveStatus!=='pending')?statusIconHtml(effectiveStatus,'chip-st-ico')+' ':'';
       const hiddenCls=e.hidden?' is-hidden-event':'';
       const pics=e.pics||[];
       // Setiap PIC tampil sebagai capsule terpisah
@@ -3531,9 +4236,7 @@ async function renderCalendar() {
         : `<span class="pic-pill" style="color:${t.chip}">—</span>`;
       const picLabel=`<span class="chip-pic-label"><i class="ti ti-user chip-pic-icon"></i>${picPillsHtml}</span>`;
       // Status label untuk collapsed state
-      const SM_STATUS={achieve:'✓ Achieve',not_achieve:'✗ Not Achieve',pending:'⟳ In Process',cancel:'⊗ Cancel'};
-      const statusText=effectiveStatus?SM_STATUS[effectiveStatus]:'';
-      const statusLabel=statusText?`<span class="chip-status-label">${escHtml(statusText)}</span>`:'';
+      const statusLabel=(effectiveStatus&&STATUS_NAME[effectiveStatus])?`<span class="chip-status-label">${statusIconHtml(effectiveStatus)}${escHtml(STATUS_NAME[effectiveStatus])}</span>`:'';
       if(!c.cur){
         // Chip other-month: warna sama tapi opacity sangat rendah & italic, tidak clickable
         const isCollapsedOther=(chipCollapseState[e.id]===true)?'collapsed':'';
@@ -3542,7 +4245,7 @@ async function renderCalendar() {
       const isCollapsed=(chipCollapseState[e.id]===true)?'collapsed':'';
       // chip-full-label hanya judul (tanpa PIC, karena PIC sudah tampil di pic-label)
       const titleOnly = `${checkIcon}${escHtml(e.title)}`;
-      return `<span class="chip ${isCollapsed}${hiddenCls}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${statusLabel}${picLabel}<span class="chip-full-label">${titleOnly}</span></span>`;
+      return `<span class="chip ${isCollapsed}${hiddenCls}${selectedIds.has(e.id)?' chip-selected':''}" style="background:${t.chip}" data-id="${e.id}" draggable="true">${statusLabel}${picLabel}<span class="chip-full-label">${titleOnly}</span></span>`;
     }).join('');
     if(c.cur&&evsSorted.length>MAX) chipsHtml+=`<span class="chip-more">+${evsSorted.length-MAX} lainnya</span>`;
 
@@ -3569,7 +4272,10 @@ async function renderCalendar() {
   });
   document.querySelectorAll('.chip[data-id]').forEach(el=>{
     el.addEventListener('click',ev=>{
-      ev.stopPropagation();openDetail(el.dataset.id);
+      ev.stopPropagation();
+      // Ctrl/⌘+klik = pilih banyak event; selama ada yang terpilih, klik biasa ikut menambah pilihan
+      if(canWrite&&(ev.ctrlKey||ev.metaKey||selectedIds.size)){toggleSelect(el.dataset.id);return;}
+      openDetail(el.dataset.id);
     });
     el.addEventListener('contextmenu',ev=>{
       ev.preventDefault(); ev.stopPropagation();
@@ -3584,6 +4290,7 @@ async function renderCalendar() {
     });
   });
 
+  pruneSelection(); updateSelectionUI();
   renderEventList(year,month);
 
   // Refresh report view jika sedang aktif
@@ -3688,7 +4395,7 @@ function renderPanel(ds) {
   let routineSectionHtml='';
   if (routineList.length) {
     const itemsHtml=routineList.map(t=>{
-      const metaText=t.recurrence==='daily'?'Harian':`Mingguan · ${DNAMES2[t.weeklyDay]}`;
+      const metaText=routineLabel(t);
       const overrideBadge=t.hasOverride?`<span class="routine-override-badge" title="Diubah manual untuk tanggal ini"><i class="ti ti-pencil"></i></span>`:'';
       const editBtn=canWrite?`<button class="routine-edit-btn" data-redit="${t.id}" title="Ubah manual untuk tanggal ini"><i class="ti ti-pencil"></i></button>`:'';
       const picsHtml=(t.pics&&t.pics.length)?`<div class="routine-pics">${t.pics.map(p=>{const pc=getPicColor(p);return `<span class="pic-badge" style="background:${pc};color:${pickContrastText(pc)};border-color:${pc}">${escHtml(p)}</span>`;}).join('')}</div>`:'';
@@ -3716,10 +4423,10 @@ function renderPanel(ds) {
     const effStatus = getEffectiveStatus(e, ds);
     const effStatusNote = getEffectiveStatusNote(e, ds);
     const hasDateOverride = e.dateStatuses && e.dateStatuses[ds] && e.dateStatuses[ds].status;
-    const spIcon=effStatus==='achieve'?'✓':effStatus==='not_achieve'?'✗':'';
+    const spIcon=effStatus?statusIconHtml(effStatus):'';
     const spColor=effStatus==='achieve'?'var(--s-achieve-tx)':effStatus==='not_achieve'?'var(--s-not-tx)':effStatus==='cancel'?'var(--s-cancel-tx)':'var(--s-pending-tx)';
     const spBg=effStatus==='achieve'?'var(--s-achieve-bg)':effStatus==='not_achieve'?'var(--s-not-bg)':effStatus==='cancel'?'var(--s-cancel-bg)':'var(--s-pending-bg)';
-    const partialBadge=hasDateOverride?`<span style="font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:100px;background:#EDE9FE;color:#5B21B6;margin-left:3px" title="Status parsial untuk tanggal ini">📅 parsial</span>`:'';
+    const partialBadge=hasDateOverride?`<span style="font-size:.58rem;font-weight:700;padding:1px 5px;border-radius:100px;background:#EDE9FE;color:#5B21B6;margin-left:3px" title="Status parsial untuk tanggal ini"><i class="ti ti-calendar-event" style="font-size:10px;vertical-align:-1px"></i> parsial</span>`:'';
     const sp=effStatus?`<span class="pei-status" style="background:${spBg};color:${spColor}">${spIcon} ${SM[effStatus]}</span>${partialBadge}`:'';
     const noteHtml=e.note?`<div class="pei-note"><i class="ti ti-notes" style="font-size:10px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
     const statusNoteContent=effStatusNote?escHtml(effStatusNote.split('\n').pop()):'';
@@ -3727,19 +4434,22 @@ function renderPanel(ds) {
     const statusNoteHtml=effStatusNote
       ?`<div class="pei-note-wrap" data-note-id="${e.id}"><div class="pei-note" style="background:#EDE9FE;border-left-color:#7C3AED;color:#3B1C8C;margin-top:3px"><i class="ti ti-message-circle" style="font-size:10px;vertical-align:-1px;color:#7C3AED"></i> ${statusNoteContent}${editBtnHtml}</div></div>`
       :(canWrite?`<div class="pei-note-wrap" data-note-id="${e.id}"><button class="pei-note-edit-btn" style="opacity:1;pointer-events:auto;position:static;transform:none;margin-top:3px;display:inline-flex" onclick="event.stopPropagation();startEditStatusNote('${e.id}','${ds}')" title="Tambah catatan"><i class="ti ti-plus" style="font-size:10px"></i> + Catatan Tambahan</button></div>`:'');
-    const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;margin-left:4px">🔒 Tersembunyi</span>`:'';
+    const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.63rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;margin-left:4px"><i class="ti ti-eye-off" style="font-size:11px;vertical-align:-1px"></i> Tersembunyi</span>`:'';
     const hiddenCls=e.hidden?' is-hidden-event':'';
     return `<div class="panel-event-item${hiddenCls}" data-id="${e.id}">
       <div class="pei-bar" style="background:${t.chip}"></div>
       <div class="pei-body">
-        <div class="pei-type" style="color:${t.chip}">${escHtml(t.label)}${hiddenBadge}</div>
+        <div class="pei-type" style="color:${t.chip}">${typeIconHtml(t)}${escHtml(t.label)}${hiddenBadge}</div>
         <div class="pei-title">${escHtml(e.title)}</div>
         ${pics.length?`<div class="pei-pics">${pics.map(p=>{const pc=getPicColor(p);return `<span class="pic-badge" style="background:${pc};color:${pickContrastText(pc)};border-color:${pc}">${escHtml(p)}</span>`;}).join('')}</div>`:''}
         <div class="pei-meta"><span><i class="ti ti-calendar" style="font-size:12px;vertical-align:-1px"></i> ${dl}</span>${sp}</div>
         ${noteHtml}
         ${statusNoteHtml}
       </div>
-      <button class="pei-copy-btn write-only" onclick="event.stopPropagation(); copySingleEvent('${e.id}')" title="Copy Event"><i class="ti ti-copy"></i></button>
+      <div class="pei-actions write-only">
+        <button class="pei-copy-btn" onclick="event.stopPropagation(); copySingleEvent('${e.id}')" title="Salin / pindahkan ke tanggal lain"><i class="ti ti-copy"></i></button>
+        <button class="pei-del-btn" onclick="event.stopPropagation(); requestDeleteEvents(['${e.id}'])" title="Hapus event"><i class="ti ti-trash"></i></button>
+      </div>
     </div>`;
   }).join('') : '';
 
@@ -3831,8 +4541,8 @@ function renderEventList(year,month) {
   const filtered=events
     .filter(e=>{
       if (!canWrite && e.hidden) return false;  // hidden from view-only users
-      if(filterType!=='all'&&e.type!==filterType) return false;
-      if(filterPIC!=='all'&&!(e.pics||[]).includes(filterPIC)) return false;
+      if(filterType.length&&!filterType.includes(e.type)) return false;
+      if(filterPIC.length&&!(e.pics||[]).some(p=>filterPIC.includes(p))) return false;
       return e.dateStart.startsWith(mStr)||(e.dateEnd&&e.dateEnd.startsWith(mStr));
     })
     .sort((a,b)=>a.dateStart.localeCompare(b.dateStart));
@@ -3849,12 +4559,12 @@ function renderEventList(year,month) {
     const titleDisp=pics.length?`${escHtml(e.title)} · ${escHtml(pics[0])}${extra}`:escHtml(e.title);
     /* FIX #3 */
     const noteHtml=e.note?`<div class="ecard-note"><i class="ti ti-notes" style="font-size:11px;vertical-align:-1px"></i> ${escHtml(e.note)}</div>`:'';
-    const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A">🔒 Tersembunyi dari publik</span>`:'';
+    const hiddenBadge=e.hidden&&canWrite?`<span style="font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:100px;background:#FEF3C7;color:#92400E;border:1px solid #FDE68A"><i class="ti ti-eye-off" style="font-size:11px;vertical-align:-1px"></i> Tersembunyi dari publik</span>`:'';
     const hiddenCls=e.hidden?' is-hidden-event':'';
     return `<div class="ecard${hiddenCls}" data-id="${e.id}">
       <div class="ecard-bar" style="background:${t.chip}"></div>
       <div class="ecard-body">
-        <div class="ecard-type" style="color:${t.chip}">${escHtml(t.label)}</div>
+        <div class="ecard-type" style="color:${t.chip}">${typeIconHtml(t)}${escHtml(t.label)}</div>
         <div class="ecard-title">${titleDisp}</div>
         <div class="ecard-meta">
           <span class="spill"><i class="ti ti-calendar"></i>${dl}</span>
@@ -4057,7 +4767,7 @@ function openDetail(id) {
 
   document.getElementById('detailContent').innerHTML=`
     <div class="det-banner" style="background:${lt}">
-      <div class="det-type" style="color:${t.chip}">${escHtml(t.label)}</div>
+      <div class="det-type" style="color:${t.chip}">${typeIconHtml(t)}${escHtml(t.label)}</div>
       <div class="det-title" style="color:${t.chip}">${escHtml(ev.title)}</div>
     </div>
     ${hiddenBadgeHtml}
@@ -4093,8 +4803,9 @@ function renderTypeList(){
   const list=document.getElementById('typeList');
   list.innerHTML=eventTypes.map(t=>`
     <div class="type-row" data-id="${t.id}">
-      <div class="type-swatch cp-trigger" style="background:${t.chip}" data-id="${t.id}"></div>
+      <span class="type-badge-ico" style="background:${t.chip}"><i class="ti ${typeIcon(t)}"></i></span>
       <div class="type-row-name">${escHtml(t.label)}</div>
+      <div class="type-swatch cp-trigger" style="background:${t.chip}" data-id="${t.id}" title="Ubah warna"></div>
       <button class="type-edit-btn" data-id="${t.id}"><i class="ti ti-pencil"></i></button>
     </div>`).join('');
 
@@ -4130,6 +4841,10 @@ function openEditType(id){
     document.getElementById('editTypeColor').value=el.dataset.color;
     document.getElementById('editTypeColorSwatch').style.background=el.dataset.color;
   }));
+  editingTypeIcon=typeIcon(type);
+  const ig=document.getElementById('typeIconGrid');
+  ig.innerHTML=TYPE_ICON_CHOICES.map(c=>`<button type="button" class="icon-opt${c===editingTypeIcon?' selected':''}" data-ic="${c}"><i class="ti ${c}"></i></button>`).join('');
+  ig.onclick=e=>{const b=e.target.closest('.icon-opt');if(!b)return;editingTypeIcon=b.dataset.ic;ig.querySelectorAll('.icon-opt').forEach(x=>x.classList.toggle('selected',x===b));};
   document.getElementById('editTypeOverlay').classList.add('open');
 }
 
@@ -4209,8 +4924,8 @@ function openAccessManager() {
   setVisCards(wsVisibility);
   document.getElementById('visChangeNote').style.display = 'none';
   document.getElementById('saveVisibilityBtn').style.display = 'none';
-  document.getElementById('visStatusMsg').textContent =
-    wsVisibility === 'private' ? '🔒 Saat ini: Tim Tertutup' : '🌐 Saat ini: Semi Publik';
+  document.getElementById('visStatusMsg').innerHTML =
+    wsVisibility === 'private' ? '<i class="ti ti-lock"></i> Saat ini: Tim Tertutup' : '<i class="ti ti-world"></i> Saat ini: Semi Publik';
   loadAccessMembers();
   switchMemberTab('editors');
   document.getElementById('accessManagerOverlay').classList.add('open');
@@ -4283,8 +4998,8 @@ document.getElementById('saveVisibilityBtn').addEventListener('click', async () 
     }
     document.getElementById('visChangeNote').style.display = 'none';
     document.getElementById('saveVisibilityBtn').style.display = 'none';
-    document.getElementById('visStatusMsg').textContent =
-      pendingVis === 'private' ? '✅ Disimpan: Tim Tertutup' : '✅ Disimpan: Semi Publik';
+    document.getElementById('visStatusMsg').innerHTML =
+      pendingVis === 'private' ? '<i class="ti ti-circle-check" style="color:#15803D"></i> Disimpan: Tim Tertutup' : '<i class="ti ti-circle-check" style="color:#15803D"></i> Disimpan: Semi Publik';
     applyAuthState(user);
     showToast('✅ Visibilitas berhasil disimpan');
   } catch(e) { showToast('❌ Gagal: ' + e.message); }
@@ -4303,9 +5018,9 @@ function renderEditorList() {
   if (!list) return;
   const regular = wsEditors.filter(e => e !== SUPERADMIN_EMAIL && e !== wsOwnerId);
   let html = '<div style="display:flex;flex-direction:column;gap:6px">';
-  html += `<div class="editor-row"><div class="editor-row-email">${escHtml(SUPERADMIN_EMAIL)}</div><span class="editor-row-badge editor-row-super">⚡ Superadmin</span></div>`;
+  html += `<div class="editor-row"><div class="editor-row-email">${escHtml(SUPERADMIN_EMAIL)}</div><span class="editor-row-badge editor-row-super"><i class="ti ti-bolt"></i>Superadmin</span></div>`;
   if (wsOwnerId && wsOwnerId !== SUPERADMIN_EMAIL) {
-    html += `<div class="editor-row"><div class="editor-row-email">${escHtml(wsOwnerId)}</div><span class="editor-row-badge" style="background:#FEF3C7;color:#92400E">👑 Pemilik</span></div>`;
+    html += `<div class="editor-row"><div class="editor-row-email">${escHtml(wsOwnerId)}</div><span class="editor-row-badge" style="background:#FEF3C7;color:#92400E"><i class="ti ti-crown"></i>Pemilik</span></div>`;
   }
   if (!regular.length) {
     html += `<div style="color:var(--ink-lt);font-size:.8rem;padding:6px 2px">Belum ada editor lain.</div>`;
@@ -4313,7 +5028,7 @@ function renderEditorList() {
     html += regular.map(email => `
       <div class="editor-row">
         <div class="editor-row-email">${escHtml(email)}</div>
-        <span class="editor-row-badge">✏️ Editor</span>
+        <span class="editor-row-badge"><i class="ti ti-pencil"></i>Editor</span>
         <button class="editor-remove" data-email="${escHtml(email)}" data-role="editor"><i class="ti ti-trash"></i></button>
       </div>`).join('');
   }
@@ -4333,7 +5048,7 @@ function renderViewerList() {
     wsViewers.map(email => `
       <div class="editor-row">
         <div class="editor-row-email">${escHtml(email)}</div>
-        <span class="editor-row-badge editor-row-viewer">👁 Viewer</span>
+        <span class="editor-row-badge editor-row-viewer"><i class="ti ti-eye"></i>Viewer</span>
         <button class="editor-remove" data-email="${escHtml(email)}" data-role="viewer"><i class="ti ti-trash"></i></button>
       </div>`).join('') + '</div>';
   attachRemoveListeners(wrap);
@@ -4343,7 +5058,7 @@ function attachRemoveListeners(container) {
   container.querySelectorAll('.editor-remove').forEach(btn => {
     btn.addEventListener('click', async () => {
       const { email, role } = btn.dataset;
-      if (!confirm(`Hapus akses ${role} untuk ${email}?`)) return;
+      if (!await Dlg.confirm({danger:true,icon:'ti-user-minus',title:'Hapus akses?',message:`Akses <strong>${escHtml(role)}</strong> untuk <strong>${escHtml(email)}</strong> akan dihapus.`,confirmText:'Hapus akses'})) return;
       try {
         const newEditors = role === 'editor' ? wsEditors.filter(e => e !== email) : wsEditors;
         const newViewers = role === 'viewer' ? wsViewers.filter(e => e !== email) : wsViewers;
@@ -4446,7 +5161,7 @@ function renderHolCustomList() {
     const d = new Date(date + 'T00:00:00');
     const dateLabel = d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
     const badgeCls  = hol.isCutiBersama ? 'hol-badge-cutib' : 'hol-badge-libnas';
-    const badgeTxt  = hol.isCutiBersama ? '🟠 Cuti Bersama' : '🔴 Libur Nasional';
+    const badgeTxt  = hol.isCutiBersama ? '<span class="hol-dot cutib"></span>Cuti Bersama' : '<span class="hol-dot libnas"></span>Libur Nasional';
     return `<div class="hol-row">
       <div class="hol-row-date">${dateLabel}</div>
       <div class="hol-row-name">${escHtml(hol.name)}</div>
@@ -4501,8 +5216,8 @@ document.getElementById('newHolName').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('addHolBtn').click();
 });
 
-document.getElementById('clearAllHolBtn').addEventListener('click', () => {
-  if (!confirm('Hapus semua libur custom?')) return;
+document.getElementById('clearAllHolBtn').addEventListener('click', async () => {
+  if (!await Dlg.confirm({danger:true,icon:'ti-calendar-off',title:'Hapus semua libur custom?',message:'Semua hari libur yang Anda tambahkan sendiri akan dihapus dari browser ini.',confirmText:'Hapus semua'})) return;
   const custom = loadCustomHolidays();
   // Remove from live cache
   Object.keys(custom).forEach(d => delete holidays[d]);
@@ -4538,7 +5253,7 @@ function renderRoutineMgrList(){
     <div class="routine-mgr-item" data-rid="${t.id}">
       <div class="routine-mgr-info">
         <div class="routine-mgr-title">${escHtml(t.title)}</div>
-        <div class="routine-mgr-meta">${t.recurrence==='daily'?'Setiap hari':'Setiap '+DNAMES[t.weeklyDay]}</div>
+        <div class="routine-mgr-meta">${escHtml(routineLabel(t,true))}</div>
         ${picsHtml}
       </div>
       <div class="routine-mgr-actions">
@@ -4555,6 +5270,7 @@ function resetRoutineForm(){
   document.getElementById('rtRecurrence').value = 'daily';
   document.getElementById('rtWeekday').value = String(new Date().getDay());
   document.getElementById('rtWeekdayWrap').style.display = 'none';
+  rtMonthDays = new Set(); rtDates = []; syncRtRecurrenceUI();
   currentRoutinePICs = [];
   document.getElementById('rtPicInput').value = '';
   document.getElementById('rtPicAcList').style.display = 'none';
@@ -4570,7 +5286,9 @@ function startEditRoutineTemplate(id){
   editingRoutineId = id;
   document.getElementById('rtTitle').value = t.title;
   document.getElementById('rtRecurrence').value = t.recurrence;
-  document.getElementById('rtWeekdayWrap').style.display = t.recurrence==='weekly' ? 'block' : 'none';
+  rtMonthDays = new Set(t.monthlyDays||[]);
+  rtDates = (t.dates||[]).filter(d=>d>=todayStr());
+  syncRtRecurrenceUI();
   if (t.recurrence==='weekly') document.getElementById('rtWeekday').value = String(t.weeklyDay);
   currentRoutinePICs = [...(t.pics||[])];
   renderRtPicTags();
@@ -4581,7 +5299,7 @@ function startEditRoutineTemplate(id){
 }
 async function confirmDeleteRoutineTemplate(id){
   if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return; }
-  if (!confirm('Hapus tugas rutin ini? Tugas pada tanggal sebelumnya tetap tersimpan, hanya tidak akan muncul lagi mulai hari ini.')) return;
+  if (!await Dlg.confirm({danger:true,icon:'ti-repeat-off',title:'Hapus tugas rutin ini?',message:'Tugas pada tanggal sebelumnya <strong>tetap tersimpan</strong>, hanya tidak akan muncul lagi mulai hari ini.',confirmText:'Hapus'})) return;
   try {
     await removeRoutineTask(id);
     if (editingRoutineId===id) resetRoutineForm();
@@ -4589,9 +5307,7 @@ async function confirmDeleteRoutineTemplate(id){
     showToast('🗑️ Tugas rutin dihapus (mulai hari ini)');
   } catch(e){ showToast('❌ '+e.message); }
 }
-document.getElementById('rtRecurrence').addEventListener('change', e=>{
-  document.getElementById('rtWeekdayWrap').style.display = e.target.value==='weekly' ? 'block' : 'none';
-});
+document.getElementById('rtRecurrence').addEventListener('change', syncRtRecurrenceUI);
 document.getElementById('rtSaveBtn').addEventListener('click', async ()=>{
   if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses untuk mengedit'); return; }
   const title = document.getElementById('rtTitle').value.trim();
@@ -4599,15 +5315,19 @@ document.getElementById('rtSaveBtn').addEventListener('click', async ()=>{
   if (document.getElementById('rtPicInput').value.trim()) addRtPICfromInput();
   const recurrence = document.getElementById('rtRecurrence').value;
   const weeklyDay = parseInt(document.getElementById('rtWeekday').value, 10);
+  const monthlyDays = [...rtMonthDays];
+  const dates = [...rtDates];
+  if (recurrence==='monthly' && !monthlyDays.length) { showToast('⚠️ Pilih minimal 1 tanggal bulanan'); return; }
+  if (recurrence==='dates' && !dates.length) { showToast('⚠️ Pilih minimal 1 tanggal'); return; }
   const pics = [...currentRoutinePICs];
   const btn = document.getElementById('rtSaveBtn');
   btn.disabled = true;
   try {
     if (editingRoutineId) {
-      await updateRoutineTask(editingRoutineId, {title, recurrence, weeklyDay, pics});
+      await updateRoutineTask(editingRoutineId, {title, recurrence, weeklyDay, monthlyDays, dates, pics});
       showToast('✅ Tugas rutin diperbarui (mulai hari ini)');
     } else {
-      await createRoutineTask({title, recurrence, weeklyDay, pics});
+      await createRoutineTask({title, recurrence, weeklyDay, monthlyDays, dates, pics});
       showToast('✅ Tugas rutin ditambahkan');
     }
     resetRoutineForm();
@@ -4895,8 +5615,8 @@ document.getElementById('cancelEditType').addEventListener('click',()=>document.
   el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});
 });
 
-document.getElementById('filterType').addEventListener('change',e=>{filterType=e.target.value;renderCalendar();});
-document.getElementById('filterPIC').addEventListener('change',e=>{filterPIC=e.target.value;renderCalendar();});
+MS.filterType.el.addEventListener('change',()=>{filterType=MS.filterType.values;renderCalendar();if(selectedDate)renderPanel(selectedDate);});
+MS.filterPIC.el.addEventListener('change',()=>{filterPIC=MS.filterPIC.values;renderCalendar();if(selectedDate)renderPanel(selectedDate);});
 
 document.getElementById('saveBtn').addEventListener('click',async()=>{
   if(!canWrite){showToast('⚠️ Anda tidak memiliki akses untuk mengedit');return;}
@@ -4935,9 +5655,8 @@ document.addEventListener('keydown', e => {
 
 document.getElementById('deleteBtn').addEventListener('click',async()=>{
   if(!canWrite){showToast('⚠️ Anda tidak memiliki akses');return;}
-  if(!confirm('Hapus event ini?')) return;
-  try{await deleteEvent(viewingId);document.getElementById('detailOverlay').classList.remove('open');showToast('🗑️ Event dihapus');}
-  catch(e){showToast('❌ '+e.message);}
+  const okDel=await requestDeleteEvents([viewingId]);
+  if(okDel) document.getElementById('detailOverlay').classList.remove('open');
 });
 
 document.getElementById('toggleVisBtn').addEventListener('click', async () => {
@@ -4985,14 +5704,14 @@ document.getElementById('saveEditType').addEventListener('click',()=>{
   const color=document.getElementById('editTypeColor').value;
   if(!name){showToast('⚠️ Nama jenis tidak boleh kosong');return;}
   const type=eventTypes.find(t=>t.id===editingTypeId);
-  if(type){type.label=name;type.chip=color;type.lt=hexToLight(color);saveTypes();rebuildFilters();renderCalendar();renderTypeList();}
+  if(type){type.label=name;type.chip=color;type.lt=hexToLight(color);type.icon=editingTypeIcon;saveTypes();rebuildFilters();renderCalendar();renderTypeList();}
   document.getElementById('editTypeOverlay').classList.remove('open');
   showToast('✅ Jenis event diupdate');
 });
 
-document.getElementById('deleteTypeBtn').addEventListener('click',()=>{
+document.getElementById('deleteTypeBtn').addEventListener('click',async()=>{
   if(eventTypes.length<=1){showToast('⚠️ Minimal harus ada 1 jenis event');return;}
-  if(!confirm('Hapus jenis event ini?')) return;
+  if(!await Dlg.confirm({danger:true,icon:'ti-tag-off',title:'Hapus jenis event ini?',message:'Jenis ini akan dihapus dari daftar. Event lama yang memakainya akan tampil dengan jenis lain.',confirmText:'Hapus'})) return;
   eventTypes=eventTypes.filter(t=>t.id!==editingTypeId);
   saveTypes();rebuildFilters();renderCalendar();renderTypeList();
   document.getElementById('editTypeOverlay').classList.remove('open');
@@ -5003,7 +5722,7 @@ document.getElementById('addTypeBtn').addEventListener('click',()=>{
   const name=document.getElementById('newTypeName').value.trim();
   const color=document.getElementById('newTypeColor').value;
   if(!name){showToast('⚠️ Nama jenis tidak boleh kosong');return;}
-  eventTypes.push({id:'custom_'+Date.now(),label:name,chip:color,lt:hexToLight(color)});
+  eventTypes.push({id:'custom_'+Date.now(),label:name,chip:color,lt:hexToLight(color),icon:'ti-tag'});
   saveTypes();rebuildFilters();renderCalendar();renderTypeList();
   document.getElementById('newTypeName').value='';
   document.getElementById('newTypeColor').value='#6366F1';
@@ -5108,7 +5827,7 @@ initRoutineReportRange();
 /* ════════════════════════════════════════
    TAB SWITCHING
    ════════════════════════════════════════ */
-let activeTab = 'calendar';
+var activeTab = 'calendar';
 
 function switchTab(tab) {
   activeTab = tab;
@@ -5160,28 +5879,16 @@ function initReportRange() {
 }
 
 function rebuildReportFilters() {
-  // Type filter
-  const tSel = document.getElementById('rptFilterType');
-  const tCur = tSel.value;
-  tSel.innerHTML = '<option value="all">Semua Jenis</option>' +
-    eventTypes.map(t=>`<option value="${t.id}">${escHtml(t.label)}</option>`).join('');
-  if (eventTypes.find(t=>t.id===tCur)) tSel.value = tCur;
-
-  // PIC filter
-  const pSel = document.getElementById('rptFilterPIC');
-  const pCur = pSel.value;
+  MS.rptFilterType.setOptions(eventTypes.map(t=>({value:t.id,label:t.label,color:t.chip,icon:typeIcon(t)})));
   const allPICs = [...new Set(events.flatMap(e=>e.pics||[]).filter(Boolean))].sort();
-  pSel.innerHTML = '<option value="all">Semua PIC</option>' +
-    allPICs.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
-  if (allPICs.includes(pCur)) pSel.value = pCur;
-
+  MS.rptFilterPIC.setOptions(allPICs.map(p=>({value:p,label:p,color:getPicColor(p)})));
   // Init range if empty
   if (!document.getElementById('rptFrom').value) initReportRange();
 }
 
 function getReportFiltered() {
-  const rType   = document.getElementById('rptFilterType').value;
-  const rPIC    = document.getElementById('rptFilterPIC').value;
+  const rType   = MS.rptFilterType.values;
+  const rPIC    = MS.rptFilterPIC.values;
   const rStatus = document.getElementById('rptFilterStatus').value;
   const rFrom   = document.getElementById('rptFrom').value;  // "YYYY-MM"
   const rTo     = document.getElementById('rptTo').value;    // "YYYY-MM"
@@ -5193,8 +5900,8 @@ function getReportFiltered() {
   return events
     .filter(e => {
       if (!canWrite && e.hidden) return false;  // hidden from view-only users
-      if (rType   !== 'all' && e.type !== rType) return false;
-      if (rPIC    !== 'all' && !(e.pics||[]).includes(rPIC)) return false;
+      if (rType.length && !rType.includes(e.type)) return false;
+      if (rPIC.length && !(e.pics||[]).some(p=>rPIC.includes(p))) return false;
       if (rStatus !== 'all' && e.status !== rStatus) return false;
       // Overlap: event is visible if its range overlaps the selected range
       const es = e.dateStart, ee = e.dateEnd || e.dateStart;
@@ -5211,13 +5918,13 @@ function renderReport() {
   // Update print title
   const rFrom = document.getElementById('rptFrom').value;
   const rTo   = document.getElementById('rptTo').value;
-  const rPIC  = document.getElementById('rptFilterPIC').value;
+  const rPIC  = MS.rptFilterPIC.values;
   const MONTHS_ID=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
   const fmtMonth = s => { if(!s) return ''; const [y,m]=s.split('-'); return `${MONTHS_ID[parseInt(m)-1]} ${y}`; };
   const rangeLabel = rFrom===rTo ? fmtMonth(rFrom) : `${fmtMonth(rFrom)} – ${fmtMonth(rTo)}`;
-  const picLabel   = rPIC !== 'all' ? ` · ${rPIC}` : '';
+  const picLabel   = rPIC.length ? ` · ${rPIC.join(', ')}` : '';
   document.getElementById('rptPrintTitle').innerHTML =
-    `<h2>Timeline Kegiatan${picLabel ? ' — '+escHtml(rPIC) : ''}${WORKSPACE!=='default'?' ('+escHtml(WORKSPACE)+')':''}</h2><p>${rangeLabel}</p>`;
+    `<h2>Timeline Kegiatan${picLabel ? ' — '+escHtml(rPIC.join(', ')) : ''}${WORKSPACE!=='default'?' ('+escHtml(WORKSPACE)+')':''}</h2><p>${rangeLabel}</p>`;
 
   if (!filtered.length) {
     wrap.innerHTML = `<div class="rpt-empty"><i class="ti ti-calendar-off"></i>Tidak ada event pada periode yang dipilih.</div>`;
@@ -5502,27 +6209,17 @@ function initRoutineReportRange() {
 
 function rebuildRoutineReportFilters() {
   // Task filter — semua judul tugas rutin unik (termasuk yang sudah tidak aktif, agar histori tetap kelihatan)
-  const taskSel = document.getElementById('rrFilterTask');
-  const taskCur = taskSel.value;
   const allTaskTitles = [...new Set(routineTasks.map(t=>t.title).filter(Boolean))].sort();
-  taskSel.innerHTML = '<option value="all">Semua Tugas</option>' + allTaskTitles.map(t=>`<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('');
-  if (allTaskTitles.includes(taskCur)) taskSel.value = taskCur;
-
-  // PIC filter
-  const picSel = document.getElementById('rrFilterPIC');
-  const picCur = picSel.value;
-  const allPICs = getAllRoutinePICs();
-  picSel.innerHTML = '<option value="all">Semua PIC</option>' + allPICs.map(p=>`<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
-  if (allPICs.includes(picCur)) picSel.value = picCur;
-
+  MS.rrFilterTask.setOptions(allTaskTitles.map(t=>({value:t,label:t})));
+  MS.rrFilterPIC.setOptions(getAllRoutinePICs().map(p=>({value:p,label:p,color:getPicColor(p)})));
   if (!document.getElementById('rrFrom').value) initRoutineReportRange();
 }
 
 /* Hasilkan daftar baris laporan: 1 baris = 1 tugas pada 1 tanggal tertentu dalam rentang,
    TIDAK terikat pada filterPIC global kalender — laporan ini punya filter sendiri. */
 function getRoutineReportFiltered() {
-  const rTask   = document.getElementById('rrFilterTask').value;
-  const rPIC    = document.getElementById('rrFilterPIC').value;
+  const rTask   = MS.rrFilterTask.values;
+  const rPIC    = MS.rrFilterPIC.values;
   const rRec    = document.getElementById('rrFilterRecurrence').value;
   const rStatus = document.getElementById('rrFilterStatus').value;
   const rFrom   = document.getElementById('rrFrom').value;
@@ -5532,14 +6229,11 @@ function getRoutineReportFiltered() {
   const rows = [];
   let cur = rFrom, guard = 0;
   while (cur <= rTo && guard < 3660) {
-    const dow = new Date(cur+'T00:00:00').getDay();
     routineTasks.forEach(t => {
-      if (t.startDate && t.startDate>cur) return;
-      if (t.endDate && t.endDate<cur) return;
-      if (t.recurrence==='weekly' && t.weeklyDay!==dow) return;
-      if (rRec !== 'all' && t.recurrence !== rRec) return;
-      if (rTask !== 'all' && t.title !== rTask) return;
-      if (rPIC  !== 'all' && !(t.pics||[]).includes(rPIC)) return;
+      if (!routineOccursOn(t, cur)) return;
+      if (rRec !== 'all' && (t.recurrence||'daily') !== rRec) return;
+      if (rTask.length && !rTask.includes(t.title)) return;
+      if (rPIC.length && !(t.pics||[]).some(p=>rPIC.includes(p))) return;
       const done = !!(t.completions && t.completions[cur]);
       if (rStatus === 'done' && !done) return;
       if (rStatus === 'pending' && done) return;
@@ -5549,6 +6243,8 @@ function getRoutineReportFiltered() {
         title: (ov && ov.title) ? ov.title : t.title,
         recurrence: t.recurrence,
         weeklyDay: t.weeklyDay,
+        monthlyDays: t.monthlyDays || [],
+        dates: t.dates || [],
         pics: t.pics || [],
         done
       });
@@ -5565,11 +6261,11 @@ function renderRoutineReport() {
 
   const rFrom = document.getElementById('rrFrom').value;
   const rTo   = document.getElementById('rrTo').value;
-  const rPIC  = document.getElementById('rrFilterPIC').value;
+  const rPIC  = MS.rrFilterPIC.values;
   const rangeLabel = rFrom && rTo ? `${fmtDate(rFrom)} – ${fmtDate(rTo)}` : '';
-  const picLabel = rPIC !== 'all' ? ` · ${rPIC}` : '';
+  const picLabel = rPIC.length ? ` · ${rPIC.join(', ')}` : '';
   document.getElementById('rrPrintTitle').innerHTML =
-    `<h2>Laporan Tugas Rutin${picLabel ? ' — '+escHtml(rPIC) : ''}${WORKSPACE!=='default'?' ('+escHtml(WORKSPACE)+')':''}</h2><p>${rangeLabel}</p>`;
+    `<h2>Laporan Tugas Rutin${picLabel ? ' — '+escHtml(rPIC.join(', ')) : ''}${WORKSPACE!=='default'?' ('+escHtml(WORKSPACE)+')':''}</h2><p>${rangeLabel}</p>`;
 
   if (!routineEnabled) {
     sumBar.innerHTML = '';
@@ -5630,9 +6326,9 @@ function renderRoutineReport() {
     </tr></thead><tbody>`;
 
   const buildRow = r => {
-    const meta = r.recurrence==='daily' ? 'Harian' : `Mingguan · ${DNAMES[r.weeklyDay]}`;
+    const meta = routineLabel(r);
     const statusBadge = r.done
-      ? `<span class="rpt-status" style="background:var(--s-achieve-bg);color:var(--s-achieve-tx)">✓ Selesai</span>`
+      ? `<span class="rpt-status" style="background:var(--s-achieve-bg);color:var(--s-achieve-tx)"><i class="ti ti-check"></i> Selesai</span>`
       : `<span class="rpt-status" style="background:var(--s-pending-bg);color:var(--s-pending-tx)">In Process</span>`;
     return `<tr class="rpt-row">
       <td class="rpt-date" style="white-space:nowrap;width:1%">${fmtDateReport(r.date)}</td>
@@ -5695,7 +6391,7 @@ document.getElementById('rrExportExcelBtn').addEventListener('click', () => {
   const rows = [...filtered].sort((a,b)=>a.date.localeCompare(b.date)).map(r => [
     fmtDate(r.date),
     r.title,
-    r.recurrence==='daily' ? 'Harian' : `Mingguan (${DNAMES[r.weeklyDay]})`,
+    routineLabel(r),
     (r.pics||[]).join(', '),
     r.done ? 'Selesai' : 'Belum Selesai'
   ]);
@@ -5770,81 +6466,514 @@ function sortedEventsForDate(ds, evs) {
   return sorted;
 }
 
-/* ── DRAG STATE ── */
-let dragSrcId = null;
+/* ════════════════════════════════════════
+   PINDAH / SALIN / HAPUS EVENT (pop up, tanpa prompt/confirm bawaan)
+   ════════════════════════════════════════ */
+let mcState = null;
+function eventsOnDateRaw(ds) {
+  return events.filter(e => (e.dateEnd && e.dateStart <= ds && e.dateEnd >= ds) || e.dateStart === ds);
+}
+function anchorForIds(ids) {
+  const ds = ids.map(id => (events.find(e => e.id === id) || {}).dateStart).filter(Boolean).sort();
+  return ds[0] || todayStr();
+}
 
-/* ── EVENT DELEGATION: semua drag & contextmenu dari satu listener di document ── */
+function openMoveCopy({ ids, anchorDate, targetDate, insertRef, preferred }) {
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return; }
+  const evs = ids.map(id => events.find(e => e.id === id)).filter(Boolean);
+  if (!evs.length) return;
+  mcState = { ids: evs.map(e => e.id), anchorDate: anchorDate || evs[0].dateStart, insertRef: insertRef || null };
+  byId('mcTitle').textContent = evs.length > 1 ? `Pindah / Salin ${evs.length} Event` : 'Pindah / Salin Event';
+  const SHOW = 4;
+  byId('mcSummary').innerHTML = evs.slice(0, SHOW).map(e => {
+    const t = getTypeById(e.type);
+    const dl = e.dateEnd && e.dateEnd !== e.dateStart ? `${fmtDate(e.dateStart)} – ${fmtDate(e.dateEnd)}` : fmtDate(e.dateStart);
+    return `<div class="mc-item"><div class="mc-item-bar" style="background:${escHtml(t.chip)}"></div><div class="mc-item-body"><div class="mc-item-title">${escHtml(e.title)}</div><div class="mc-item-meta"><i class="ti ti-calendar"></i>${dl}</div></div></div>`;
+  }).join('') + (evs.length > SHOW ? `<div class="mc-more">+ ${evs.length - SHOW} event lainnya</div>` : '');
+  byId('mcDate').value = targetDate || '';
+  byId('mcMoveBtn').className = 'btn' + (preferred === 'copy' ? '' : ' btn-primary');
+  byId('mcCopyBtn').className = 'btn' + (preferred === 'copy' ? ' btn-primary' : '');
+  updateMcHint();
+  byId('mcOverlay').classList.add('open');
+}
+function closeMoveCopy() { byId('mcOverlay').classList.remove('open'); mcState = null; DP.close(); }
+function updateMcHint() {
+  if (!mcState) return;
+  const t = byId('mcDate').value, hint = byId('mcHint');
+  const ok = !!t;
+  byId('mcMoveBtn').disabled = !ok; byId('mcCopyBtn').disabled = !ok;
+  if (!ok) { hint.innerHTML = '<i class="ti ti-pointer"></i> Pilih tanggal tujuan terlebih dahulu'; return; }
+  const d = diffDays(mcState.anchorDate, t);
+  hint.innerHTML = `<i class="ti ti-arrow-right"></i> ${escHtml(fmtDateLong(t))}` + (d === 0 ? ' · sama dengan tanggal asal' : ` · ${d > 0 ? '+' : ''}${d} hari dari tanggal asal`);
+}
+
+async function applyMoveCopy({ ids, anchorDate, targetDate, mode, insertRef }) {
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return false; }
+  const src = ids.map(id => events.find(e => e.id === id)).filter(Boolean);
+  if (!src.length || !targetDate) return false;
+  const shift = diffDays(anchorDate, targetDate);
+  if (mode === 'move' && shift === 0) { showToast('Tanggal tujuan sama dengan tanggal asal'); return false; }
+  const shiftKeys = obj => { const o = {}; Object.keys(obj).forEach(k => { o[addDaysStr(k, shift)] = obj[k]; }); return o; };
+  const ops = [], newIds = [];
+  src.forEach(ev => {
+    const ns = addDaysStr(ev.dateStart, shift);
+    const ne = ev.dateEnd ? addDaysStr(ev.dateEnd, shift) : '';
+    if (mode === 'move') {
+      const patch = { dateStart: ns, dateEnd: ne };
+      if (ev.dateStatuses) patch.dateStatuses = shiftKeys(ev.dateStatuses);
+      ops.push({ type: 'update', id: ev.id, data: patch }); newIds.push(ev.id);
+    } else {
+      const { id: _i, createdAt: _c, status: _s, statusNote: _sn, dateStatuses: _ds, ...rest } = ev;
+      const nid = useFirebase ? db.collection(EVENTS_COLL).doc().id : 'loc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      ops.push({ type: 'add', id: nid, data: { ...rest, dateStart: ns, dateEnd: ne, status: 'pending' } }); newIds.push(nid);
+    }
+  });
+  // Urutan di tanggal tujuan (dihitung sebelum data berubah)
+  let newOrder = null;
+  if (insertRef) {
+    const base = sortedEventsForDate(targetDate, eventsOnDateRaw(targetDate)).map(e => e.id).filter(id => !newIds.includes(id));
+    let idx = base.length;
+    if (insertRef.refId) { const i = base.indexOf(insertRef.refId); if (i >= 0) idx = insertRef.after ? i + 1 : i; }
+    base.splice(idx, 0, ...newIds);
+    newOrder = base;
+  }
+  try {
+    if (useFirebase) {
+      const batch = db.batch();
+      ops.forEach(o => {
+        const ref = db.collection(EVENTS_COLL).doc(o.id);
+        if (o.type === 'update') batch.update(ref, o.data);
+        else batch.set(ref, { ...o.data, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      });
+      await batch.commit();
+    } else {
+      ops.forEach(o => {
+        if (o.type === 'update') events = events.map(e => e.id === o.id ? { ...e, ...o.data } : e);
+        else events.push({ id: o.id, ...o.data });
+      });
+      localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
+    }
+    if (newOrder) { eventOrder[targetDate] = newOrder; saveOrder(); }
+  } catch (e) { showToast('❌ ' + e.message); return false; }
+  clearSelection();
+  if (!useFirebase) { rebuildFilters(); }
+  renderCalendar(); if (selectedDate) renderPanel(selectedDate);
+  showToast(`✅ ${src.length} event ${mode === 'move' ? 'dipindahkan' : 'disalin'} ke ${fmtDate(targetDate)}`);
+  return true;
+}
+async function runMcAction(mode) {
+  if (!mcState) return;
+  const st = mcState, t = byId('mcDate').value;
+  if (!t) return;
+  byId('mcMoveBtn').disabled = true; byId('mcCopyBtn').disabled = true;
+  const ok = await applyMoveCopy({ ids: st.ids, anchorDate: st.anchorDate, targetDate: t, mode, insertRef: st.insertRef });
+  if (ok) closeMoveCopy(); else updateMcHint();
+}
+byId('mcMoveBtn').addEventListener('click', () => runMcAction('move'));
+byId('mcCopyBtn').addEventListener('click', () => runMcAction('copy'));
+byId('mcCancel').addEventListener('click', closeMoveCopy);
+byId('closeMc').addEventListener('click', closeMoveCopy);
+byId('mcOverlay').addEventListener('mousedown', e => { if (e.target === byId('mcOverlay')) closeMoveCopy(); });
+byId('mcDate').addEventListener('change', updateMcHint);
+
+function copySingleEvent(id) {
+  const ev = events.find(e => e.id === id);
+  if (!ev) return;
+  openMoveCopy({ ids: [id], anchorDate: ev.dateStart, targetDate: '', preferred: 'copy' });
+}
+function copyAllEvents(sourceDate) {
+  const dayEvs = events.filter(e => e.dateStart === sourceDate && (canWrite || !e.hidden));
+  if (!dayEvs.length) { showToast('⚠️ Tidak ada event untuk disalin'); return; }
+  openMoveCopy({ ids: dayEvs.map(e => e.id), anchorDate: sourceDate, targetDate: '', preferred: 'copy' });
+}
+
+async function deleteEventsBatch(ids) {
+  if (useFirebase) {
+    const batch = db.batch();
+    ids.forEach(id => batch.delete(db.collection(EVENTS_COLL).doc(id)));
+    await batch.commit();
+  } else {
+    events = events.filter(e => !ids.includes(e.id));
+    localStorage.setItem(LS_EVENTS_KEY, JSON.stringify(events));
+    rebuildFilters(); renderCalendar();
+    if (selectedDate) renderPanel(selectedDate);
+  }
+}
+/* Hapus 1 atau banyak event dengan dialog konfirmasi. Mengembalikan true bila terhapus. */
+async function requestDeleteEvents(ids) {
+  if (!canWrite) { showToast('⚠️ Anda tidak memiliki akses'); return false; }
+  const evs = ids.map(id => events.find(e => e.id === id)).filter(Boolean);
+  if (!evs.length) return false;
+  const one = evs.length === 1;
+  const list = one ? '' : '<ul class="dlg-list">' + evs.slice(0, 5).map(e => `<li><i class="ti ti-calendar-event"></i>${escHtml(e.title)}</li>`).join('') + (evs.length > 5 ? `<li>+ ${evs.length - 5} event lainnya</li>` : '') + '</ul>';
+  const ok = await Dlg.confirm({
+    danger: true, icon: 'ti-trash', confirmText: 'Hapus',
+    title: one ? 'Hapus event ini?' : `Hapus ${evs.length} event?`,
+    message: (one ? `<strong>${escHtml(evs[0].title)}</strong> akan dihapus permanen.` : 'Event berikut akan dihapus permanen.') + ' Tindakan ini tidak bisa dibatalkan.' + list
+  });
+  if (!ok) return false;
+  try {
+    await deleteEventsBatch(evs.map(e => e.id));
+    evs.forEach(e => selectedIds.delete(e.id));
+    updateSelectionUI();
+    showToast(`🗑️ ${one ? 'Event dihapus' : evs.length + ' event dihapus'}`);
+    return true;
+  } catch (e) { showToast('❌ ' + e.message); return false; }
+}
+
+/* ════════════════════════════════════════
+   SELEKSI MULTI-EVENT (Ctrl/⌘ + klik)
+   ════════════════════════════════════════ */
+function updateSelectionUI() {
+  document.querySelectorAll('.chip[data-id]').forEach(ch => ch.classList.toggle('chip-selected', selectedIds.has(ch.dataset.id)));
+  const n = selectedIds.size;
+  byId('selBar').classList.toggle('show', n > 0);
+  document.body.classList.toggle('has-sel', n > 0);
+  byId('selCount').textContent = `${n} event dipilih`;
+}
+function toggleSelect(id) {
+  if (!canWrite) return;
+  if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+  updateSelectionUI();
+}
+function clearSelection() { if (!selectedIds.size) return; selectedIds.clear(); updateSelectionUI(); }
+function pruneSelection() { [...selectedIds].forEach(id => { if (!events.some(e => e.id === id)) selectedIds.delete(id); }); }
+byId('selClearBtn').addEventListener('click', clearSelection);
+byId('selMoveBtn').addEventListener('click', () => {
+  const ids = [...selectedIds]; if (!ids.length) return;
+  openMoveCopy({ ids, anchorDate: anchorForIds(ids), targetDate: '', preferred: 'move' });
+});
+byId('selDelBtn').addEventListener('click', () => requestDeleteEvents([...selectedIds]));
+
+/* Aksi dari menu klik-kanan / long-press (desktop & HP) */
+function runEventAction(act, id) {
+  const ev = events.find(e => e.id === id);
+  if (!ev || !canWrite) return;
+  const ids = (selectedIds.has(id) && selectedIds.size > 1) ? [...selectedIds] : [id];
+  if (act === 'select') toggleSelect(id);
+  else if (act === 'copy' || act === 'move') openMoveCopy({ ids, anchorDate: anchorForIds(ids), targetDate: '', preferred: act });
+  else if (act === 'delete') requestDeleteEvents(ids);
+}
+
+/* ════════════════════════════════════════
+   DRAG & DROP — urutkan (tanggal sama) atau pindah/salin (lintas tanggal)
+   Dukung multi-event: seret salah satu chip yang terpilih untuk membawa semuanya.
+   ════════════════════════════════════════ */
+let dragIds = [], dragAnchorDate = null, dragLastCell = null, dragLastChip = null, dragLastCls = null;
+function clearDragMarks() {
+  if (dragLastCell) dragLastCell.classList.remove('drop-hover');
+  if (dragLastChip) dragLastChip.classList.remove('drag-over-above', 'drag-over-below');
+  dragLastCell = dragLastChip = dragLastCls = null;
+}
 document.addEventListener('dragstart', e => {
   if (!canWrite) return;
-  const chip = e.target.closest('.chip[data-id][draggable]');
+  const chip = e.target.closest && e.target.closest('.chip[data-id][draggable]');
   if (!chip) return;
-  dragSrcId = chip.dataset.id;
-  // Harus set data agar drop event terpicu di browser
+  const id = chip.dataset.id;
+  dragIds = selectedIds.has(id) ? [...selectedIds] : [id];
+  dragAnchorDate = chip.closest('.dc')?.dataset.date || null;
   e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', dragSrcId);
-  // Visual delay agar browser sempat ambil snapshot
-  setTimeout(() => chip.classList.add('dragging'), 0);
+  e.dataTransfer.setData('text/plain', dragIds.join(','));
+  if (dragIds.length > 1) {
+    const g = document.createElement('div');
+    g.className = 'drag-ghost';
+    g.innerHTML = `<i class="ti ti-stack-2"></i> ${dragIds.length} event`;
+    document.body.appendChild(g);
+    e.dataTransfer.setDragImage(g, 14, 14);
+    setTimeout(() => g.remove(), 0);
+  }
+  setTimeout(() => document.querySelectorAll('.chip[data-id]').forEach(c => { if (dragIds.includes(c.dataset.id)) c.classList.add('dragging'); }), 0);
 });
-
-document.addEventListener('dragend', e => {
-  const chip = e.target.closest('.chip[data-id]');
-  if (chip) chip.classList.remove('dragging');
-  document.querySelectorAll('.drag-over-above,.drag-over-below,.drag-target')
-    .forEach(el => el.classList.remove('drag-over-above','drag-over-below','drag-target'));
-  dragSrcId = null;
+document.addEventListener('dragend', () => {
+  document.querySelectorAll('.chip.dragging').forEach(c => c.classList.remove('dragging'));
+  clearDragMarks(); dragIds = []; dragAnchorDate = null;
 });
-
 document.addEventListener('dragover', e => {
-  if (!dragSrcId) return;
+  if (!dragIds.length) return;
+  const cell = e.target.closest && e.target.closest('.dc');
+  if (!cell) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
   const chip = e.target.closest('.chip[data-id]');
-  const area = e.target.closest('.dc-events');
-  if (chip && chip.dataset.id !== dragSrcId) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    const rect = chip.getBoundingClientRect();
-    const isAbove = e.clientY < rect.top + rect.height / 2;
-    // Clear siblings first
-    chip.closest('.dc-events')?.querySelectorAll('.chip').forEach(c => {
-      c.classList.remove('drag-over-above','drag-over-below');
-    });
-    chip.classList.add(isAbove ? 'drag-over-above' : 'drag-over-below');
-  } else if (area) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    area.classList.add('drag-target');
+  let marker = null, cls = null;
+  if (chip && !dragIds.includes(chip.dataset.id)) {
+    const r = chip.getBoundingClientRect();
+    cls = e.clientY < r.top + r.height / 2 ? 'drag-over-above' : 'drag-over-below';
+    marker = chip;
+  }
+  if (dragLastCell !== cell) { if (dragLastCell) dragLastCell.classList.remove('drop-hover'); cell.classList.add('drop-hover'); dragLastCell = cell; }
+  if (dragLastChip !== marker || dragLastCls !== cls) {
+    if (dragLastChip) dragLastChip.classList.remove('drag-over-above', 'drag-over-below');
+    if (marker) marker.classList.add(cls);
+    dragLastChip = marker; dragLastCls = cls;
   }
 });
-
-document.addEventListener('dragleave', e => {
+function reorderInCell(ds, ids, insertRef) {
+  const order = sortedEventsForDate(ds, getEventsForDate(ds)).map(e => e.id);
+  const moving = order.filter(id => ids.includes(id));
+  if (!moving.length) return;
+  const rest = order.filter(id => !ids.includes(id));
+  let idx = rest.length;
+  if (insertRef) { const i = rest.indexOf(insertRef.refId); if (i >= 0) idx = insertRef.after ? i + 1 : i; }
+  rest.splice(idx, 0, ...moving);
+  eventOrder[ds] = rest; saveOrder();
+  renderCalendar(); if (selectedDate) renderPanel(selectedDate);
+}
+document.addEventListener('drop', e => {
+  if (!dragIds.length) return;
+  const cell = e.target.closest && e.target.closest('.dc');
+  if (!cell) return;
+  e.preventDefault();
+  const targetDate = cell.dataset.date;
   const chip = e.target.closest('.chip[data-id]');
-  if (chip) chip.classList.remove('drag-over-above','drag-over-below');
+  let insertRef = null;
+  if (chip && !dragIds.includes(chip.dataset.id)) {
+    const r = chip.getBoundingClientRect();
+    insertRef = { refId: chip.dataset.id, after: e.clientY >= r.top + r.height / 2 };
+  }
+  const ids = [...dragIds], anchor = dragAnchorDate;
+  clearDragMarks();
+  document.querySelectorAll('.chip.dragging').forEach(c => c.classList.remove('dragging'));
+  dragIds = [];
+  if (!targetDate || !anchor) return;
+  if (targetDate === anchor) { reorderInCell(targetDate, ids, insertRef); return; }
+  // Lintas tanggal → tanya: pindahkan atau salin?
+  openMoveCopy({ ids, anchorDate: anchor, targetDate, insertRef, preferred: 'move' });
 });
 
-document.addEventListener('drop', e => {
-  if (!dragSrcId) return;
-  const chip = e.target.closest('.chip[data-id]');
-  if (!chip || chip.dataset.id === dragSrcId) return;
-  e.preventDefault();
+/* ── Salin / tempel (Ctrl+C / Ctrl+V) ── */
+let evClipboard = [];
+async function pasteEvents() {
+  const ids = evClipboard.filter(id => events.some(e => e.id === id));
+  if (!ids.length) { showToast('⚠️ Tidak ada event yang disalin'); return; }
+  if (!selectedDate) { showToast('⚠️ Klik tanggal tujuan dulu, lalu tekan Ctrl+V'); return; }
+  await applyMoveCopy({ ids, anchorDate: anchorForIds(ids), targetDate: selectedDate, mode: 'copy' });
+}
 
-  const dateStr = chip.closest('.dc')?.dataset.date;
-  if (!dateStr) return;
+/* ════════════════════════════════════════
+   MENU DROPDOWN HEADER (desktop & mobile)
+   ════════════════════════════════════════ */
+(function () {
+  const btn = byId('mobileMenuBtn'), menu = byId('hdrSecondary');
+  if (!btn || !menu) return;
+  window.setHdrMenu = function (open) {
+    menu.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  };
+  btn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); setHdrMenu(!menu.classList.contains('open')); });
+  menu.addEventListener('click', e => { if (e.target.closest('.menu-item')) setHdrMenu(false); });
+  document.addEventListener('click', e => {
+    if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) setHdrMenu(false);
+  });
+})();
 
-  // Baca urutan chip saat ini dari DOM
-  const container = chip.closest('.dc-events');
-  if (!container) return;
-  let ids = [...container.querySelectorAll('.chip[data-id]')].map(ch => ch.dataset.id);
+/* ════════════════════════════════════════
+   PANDUAN & SHORTCUT
+   ════════════════════════════════════════ */
+const HELP_SHORTCUTS = [
+  { group: 'Navigasi', icon: 'ti-compass', color: '#2563EB', items: [
+    { keys: ['←', '→'], desc: 'Pindah ke <strong>bulan sebelumnya / berikutnya</strong>' },
+    { keys: ['T'], desc: 'Lompat ke <strong>hari ini</strong>' },
+    { keys: ['?'], desc: 'Buka panduan ini' },
+    { keys: ['Esc'], desc: 'Tutup pop up, menu, atau <strong>batalkan pilihan</strong> event' }
+  ] },
+  { group: 'Event', icon: 'ti-calendar-event', color: '#7C3AED', items: [
+    { keys: ['N'], desc: '<strong>Tambah event</strong> baru (di tanggal yang sedang dipilih)' },
+    { keys: ['Ctrl+S'], desc: '<strong>Simpan</strong> saat form tambah/edit event terbuka' },
+    { keys: ['Klik kanan'], desc: 'Pada event: ubah status, pilih, salin, pindah, hapus. Di HP: <strong>tekan lama</strong> pada event' },
+    { keys: ['Klik tanggal'], desc: 'Angka tanggal: tambah event di hari itu. Area sel: lihat event di panel kanan' },
+    { keys: ['Hover 1 detik'], desc: 'Menampilkan ringkasan event (tooltip)' }
+  ] },
+  { group: 'Pilih & atur banyak event', icon: 'ti-checkbox', color: '#15803D', items: [
+    { keys: ['Ctrl+Klik'], desc: '<strong>Pilih / batal pilih</strong> beberapa event (⌘ + klik di Mac). Selama ada yang terpilih, klik biasa juga menambah pilihan' },
+    { keys: ['Ctrl+C'], desc: '<strong>Salin</strong> event yang terpilih' },
+    { keys: ['Ctrl+V'], desc: '<strong>Tempel</strong> ke tanggal yang sedang dipilih (klik sel tanggal dulu)' },
+    { keys: ['Delete'], desc: '<strong>Hapus</strong> event yang terpilih (dengan konfirmasi)' },
+    { keys: ['Drag'], desc: 'Seret event: di tanggal yang sama = <strong>ubah urutan</strong>; ke tanggal lain = muncul pilihan <strong>Pindahkan / Salin</strong>. Seret salah satu event terpilih untuk membawa semuanya' }
+  ] }
+];
+const HELP_FEATURES = [
+  { icon: 'ti-calendar-month', tone: 'mi-blue', title: 'Kalender & panel tanggal', desc: 'Klik sebuah tanggal untuk melihat semua event, tugas rutin, dan hari libur hari itu di <strong>panel kanan</strong> (di HP berupa panel yang naik dari bawah). Gunakan pilihan bulan/tahun di atas kalender untuk lompat cepat.' },
+  { icon: 'ti-plus', tone: 'mi-violet', title: 'Tambah & edit event', desc: 'Isi jenis, judul, tanggal, PIC, status, dan catatan. Judul dan PIC punya <strong>autocomplete</strong>. Saat memilih <strong>Tanggal Selesai</strong>, kalender langsung terbuka di bulan tanggal mulai.' },
+  { icon: 'ti-flag', tone: 'mi-amber', title: 'Status event', desc: 'Klik kanan event lalu pilih status (In Process, Achieve, Not Achieve, Cancel). Ikon pensil di sampingnya menambah <strong>catatan status</strong>. Untuk event multi-hari, status bisa diatur per tanggal atau rentang tertentu.' },
+  { icon: 'ti-arrows-exchange', tone: 'mi-teal', title: 'Pindah & salin event', desc: 'Seret event ke tanggal lain, lalu pilih <strong>Pindahkan</strong> atau <strong>Salin</strong> di pop up. Bisa juga lewat tombol salin di panel kanan, menu klik-kanan, atau bar <strong>Pindah / Salin</strong> yang muncul saat ada event terpilih.' },
+  { icon: 'ti-checkbox', tone: 'mi-green', title: 'Multi-select', desc: '<strong>Ctrl + klik</strong> beberapa event, lalu seret, salin dengan Ctrl+C / Ctrl+V, atau hapus bersamaan lewat bar di bagian bawah layar.' },
+  { icon: 'ti-trash', tone: 'mi-rose', title: 'Hapus event', desc: 'Tombol tempat sampah ada di <strong>detail event</strong>, di <strong>panel kanan</strong>, di menu klik-kanan, dan di bar multi-select. Selalu ada konfirmasi sebelum terhapus.' },
+  { icon: 'ti-filter', tone: 'mi-slate', title: 'Filter multi-pilihan', desc: 'Filter <strong>Jenis</strong> dan <strong>PIC</strong> bisa memilih lebih dari satu (centang beberapa). Kosong berarti tampilkan semua. Tombol <em>Reset</em> menghapus pilihan.' },
+  { icon: 'ti-repeat', tone: 'mi-blue', title: 'Tugas rutin', desc: 'Menu → Tugas Rutin. Pengulangan: <strong>Harian</strong>, <strong>Mingguan</strong> (pilih hari), atau <strong>Per tanggal</strong> — berulang tiap bulan di tanggal 1–31/akhir bulan, atau pilih tanggal kalender sendiri. Centang tugas di panel kanan sebagai selesai; judulnya bisa diubah untuk satu tanggal saja.' },
+  { icon: 'ti-calendar-plus', tone: 'mi-amber', title: 'Libur custom', desc: 'Tambahkan hari libur nasional atau cuti bersama yang belum ada di data bawaan. Tersimpan di browser Anda.' },
+  { icon: 'ti-tags', tone: 'mi-violet', title: 'Jenis event & warna PIC', desc: 'Atur nama, warna, dan <strong>ikon</strong> tiap jenis event, serta warna kapsul tiap PIC. Perubahan dibagikan ke semua anggota tim.' },
+  { icon: 'ti-list-details', tone: 'mi-teal', title: 'Laporan & ekspor', desc: 'Tab <strong>Timeline Report</strong> dan <strong>Report Tugas Rutin</strong> menampilkan tabel per periode (bisa difilter, dicetak ke PDF, atau diekspor ke Excel). Menu → Export Excel mengekspor kalender, Print mencetak tampilan bulan.' },
+  { icon: 'ti-eye-off', tone: 'mi-slate', title: 'Sembunyikan event', desc: 'Di detail event, tombol <strong>Sembunyikan</strong> membuat event hanya terlihat oleh editor, tidak oleh pengguna Mode Lihat.' },
+  { icon: 'ti-shield-lock', tone: 'mi-violet', title: 'Akses, notifikasi & saran', desc: 'Pemilik/superadmin mengatur editor &amp; viewer lewat <strong>Kelola Akses</strong>. Ikon lonceng menampilkan notifikasi, dan <strong>Kritik &amp; Saran</strong> mengirim masukan langsung ke pengembang.' }
+];
+let helpTab = 'shortcut';
+function renderHelp() {
+  const q = (byId('helpSearch').value || '').trim().toLowerCase();
+  const plain = h => String(h).replace(/<[^>]+>/g, ' ').toLowerCase();
+  let html = '';
+  if (helpTab === 'shortcut') {
+    HELP_SHORTCUTS.forEach(g => {
+      const rows = g.items.filter(it => !q || plain(it.desc).includes(q) || it.keys.join(' ').toLowerCase().includes(q) || g.group.toLowerCase().includes(q));
+      if (!rows.length) return;
+      html += `<div class="help-group"><div class="help-group-title"><i class="ti ${g.icon}" style="color:${g.color}"></i>${escHtml(g.group)}</div>` +
+        rows.map(it => `<div class="help-row"><div class="help-keys">${it.keys.map((k, i) =>
+          (i ? '<span class="sep">atau</span>' : '') + k.split('+').map((p, j) => (j ? '<span class="plus">+</span>' : '') + `<span class="kbd">${escHtml(p)}</span>`).join('')
+        ).join('')}</div><div class="help-desc">${it.desc}</div></div>`).join('') + '</div>';
+    });
+  } else {
+    HELP_FEATURES.filter(f => !q || plain(f.desc).includes(q) || f.title.toLowerCase().includes(q)).forEach(f => {
+      html += `<div class="help-feat"><div class="help-feat-ico ${f.tone}"><i class="ti ${f.icon}"></i></div><div><div class="help-feat-title">${escHtml(f.title)}</div><div class="help-feat-desc">${f.desc}</div></div></div>`;
+    });
+  }
+  byId('helpBody').innerHTML = html || '<div class="help-none"><i class="ti ti-search-off"></i>Tidak ada hasil untuk pencarian tersebut.</div>';
+}
+function openHelp(tab) {
+  if (tab) helpTab = tab;
+  document.querySelectorAll('.help-tab').forEach(t => t.classList.toggle('active', t.dataset.htab === helpTab));
+  byId('helpSearch').value = '';
+  renderHelp();
+  byId('helpOverlay').classList.add('open');
+  byId('helpBody').scrollTop = 0;
+}
+function closeHelp() { byId('helpOverlay').classList.remove('open'); }
+document.querySelectorAll('.help-tab').forEach(t => t.addEventListener('click', () => { helpTab = t.dataset.htab; document.querySelectorAll('.help-tab').forEach(x => x.classList.toggle('active', x === t)); renderHelp(); }));
+byId('helpSearch').addEventListener('input', renderHelp);
+byId('helpBtn').addEventListener('click', () => openHelp());
+byId('closeHelp').addEventListener('click', closeHelp);
+byId('closeHelpOk').addEventListener('click', closeHelp);
+byId('helpOverlay').addEventListener('mousedown', e => { if (e.target === byId('helpOverlay')) closeHelp(); });
 
-  // Hapus src, sisipkan di posisi baru
-  ids = ids.filter(id => id !== dragSrcId);
-  const targetIdx = ids.indexOf(chip.dataset.id);
-  const rect = chip.getBoundingClientRect();
-  const insertAfter = e.clientY >= rect.top + rect.height / 2;
-  ids.splice(insertAfter ? targetIdx + 1 : targetIdx, 0, dragSrcId);
+/* ════════════════════════════════════════
+   SHORTCUT KEYBOARD GLOBAL
+   ════════════════════════════════════════ */
+function anyOverlayOpen() {
+  return !!document.querySelector('.overlay.open') || byId('mobilePanelSheet').classList.contains('open') || byId('mobileCtxSheet').classList.contains('open');
+}
+document.addEventListener('keydown', e => {
+  if (Dlg.isOpen()) return;                       // dialog konfirmasi menangani Esc sendiri
+  const tag = (e.target.tagName || '').toLowerCase();
+  const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
+  const mod = e.ctrlKey || e.metaKey;
 
-  eventOrder[dateStr] = ids;
-  saveOrder();
-  renderCalendar();
-  if (selectedDate) renderPanel(selectedDate);
+  if (e.key === 'Escape') {
+    if (DP.isOpen()) { DP.close(); return; }
+    if (MultiSelect.closeAll()) return;
+    if (byId('hdrSecondary').classList.contains('open')) { setHdrMenu(false); return; }
+    const ovs = [...document.querySelectorAll('.overlay.open')];
+    if (ovs.length) {
+      const top = ovs[ovs.length - 1];
+      const c = top.querySelector('[id^="close"]');
+      if (c) c.click(); else top.classList.remove('open');
+      return;
+    }
+    clearSelection();
+    return;
+  }
+  if (typing) return;
+  if (mod && !e.altKey) {
+    const k = e.key.toLowerCase();
+    if (k === 'c' && selectedIds.size && !(window.getSelection && String(window.getSelection()))) {
+      e.preventDefault(); evClipboard = [...selectedIds];
+      showToast(`✅ ${evClipboard.length} event disalin. Klik tanggal tujuan lalu tekan Ctrl+V`, 3600);
+    } else if (k === 'v' && evClipboard.length && canWrite && !anyOverlayOpen()) {
+      e.preventDefault(); pasteEvents();
+    }
+    return;
+  }
+  if (e.altKey) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selectedIds.size && canWrite && !anyOverlayOpen()) { e.preventDefault(); requestDeleteEvents([...selectedIds]); }
+    return;
+  }
+  if (anyOverlayOpen()) return;
+  if (e.key === '?') { e.preventDefault(); openHelp(); }
+  else if (e.key === 'n' || e.key === 'N') { if (canWrite) { e.preventDefault(); openAdd(selectedDate || undefined); } }
+  else if (e.key === 't' || e.key === 'T') { if (typeof activeTab === 'undefined' || activeTab === 'calendar') byId('todayBtn').click(); }
+  else if (e.key === 'ArrowLeft') { if (activeTab === 'calendar') { e.preventDefault(); byId('prevBtn').click(); } }
+  else if (e.key === 'ArrowRight') { if (activeTab === 'calendar') { e.preventDefault(); byId('nextBtn').click(); } }
+});
+
+/* Aksi event dari menu klik-kanan (desktop) */
+byId('ctxMenu').addEventListener('click', e => {
+  const it = e.target.closest('.ctx-item[data-act]');
+  if (!it) return;
+  const id = ctxTargetId;
+  closeCtxMenu();
+  if (id) runEventAction(it.dataset.act, id);
+});
+
+/* ════════════════════════════════════════
+   TUGAS RUTIN — pengulangan per tanggal
+   recurrence: daily | weekly | monthly (tanggal 1–31 / akhir bulan) | dates (tanggal pilihan)
+   ════════════════════════════════════════ */
+const RT_DNAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+function routineOccursOn(t, ds) {
+  if (t.startDate && t.startDate > ds) return false;   // belum berlaku saat itu (no backdate)
+  if (t.endDate && t.endDate < ds) return false;       // sudah ditutup/diganti
+  const rec = t.recurrence || 'daily';
+  if (rec === 'weekly') return t.weeklyDay === new Date(ds + 'T00:00:00').getDay();
+  if (rec === 'monthly') {
+    const d = new Date(ds + 'T00:00:00'), dom = d.getDate();
+    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    const md = t.monthlyDays || [];
+    return md.includes(dom) || (md.includes(0) && dom === last);
+  }
+  if (rec === 'dates') return (t.dates || []).includes(ds);
+  return true;
+}
+function routineLabel(t, long) {
+  const rec = t.recurrence || 'daily';
+  if (rec === 'weekly') return long ? 'Setiap ' + RT_DNAMES[t.weeklyDay] : 'Mingguan · ' + RT_DNAMES[t.weeklyDay];
+  if (rec === 'monthly') {
+    const md = t.monthlyDays || [];
+    const txt = md.filter(d => d > 0).sort((a, b) => a - b).concat(md.includes(0) ? ['akhir bulan'] : []).join(', ');
+    return (long ? 'Setiap bulan, tgl ' : 'Per tanggal · tgl ') + txt;
+  }
+  if (rec === 'dates') {
+    const ds = (t.dates || []).slice().sort();
+    const M = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+    const f = s => { const [, m, d] = s.split('-').map(Number); return d + ' ' + M[m - 1]; };
+    if (!long) return `Per tanggal · ${ds.length} tgl`;
+    return 'Tanggal: ' + ds.slice(0, 4).map(f).join(', ') + (ds.length > 4 ? ` +${ds.length - 4} lagi` : '');
+  }
+  return long ? 'Setiap hari' : 'Harian';
+}
+let rtMonthDays = new Set(), rtDates = [];
+function renderRtMonthDays() {
+  let h = '';
+  for (let d = 1; d <= 31; d++) h += `<button type="button" class="rt-day${rtMonthDays.has(d) ? ' on' : ''}" data-d="${d}">${d}</button>`;
+  h += `<button type="button" class="rt-day last${rtMonthDays.has(0) ? ' on' : ''}" data-d="0"><i class="ti ti-calendar-due"></i> Akhir bulan</button>`;
+  byId('rtMonthDays').innerHTML = h;
+}
+function renderRtDates() {
+  const l = byId('rtDatesList');
+  if (!rtDates.length) { l.innerHTML = '<div class="rt-dates-empty">Belum ada tanggal dipilih.</div>'; return; }
+  l.innerHTML = rtDates.slice().sort().map(d => `<span class="rt-date-chip">${escHtml(fmtDateLong(d))}<button type="button" data-rd="${d}" aria-label="Hapus tanggal"><i class="ti ti-x"></i></button></span>`).join('');
+}
+function syncRtRecurrenceUI() {
+  const r = byId('rtRecurrence').value;
+  byId('rtWeekdayWrap').style.display = r === 'weekly' ? 'block' : 'none';
+  byId('rtMonthlyWrap').style.display = r === 'monthly' ? 'block' : 'none';
+  byId('rtDatesWrap').style.display = r === 'dates' ? 'block' : 'none';
+  if (r === 'monthly') renderRtMonthDays();
+  if (r === 'dates') renderRtDates();
+}
+byId('rtMonthDays').addEventListener('click', e => {
+  const b = e.target.closest('.rt-day'); if (!b) return;
+  const d = +b.dataset.d;
+  if (rtMonthDays.has(d)) rtMonthDays.delete(d); else rtMonthDays.add(d);
+  b.classList.toggle('on', rtMonthDays.has(d));
+});
+byId('rtDatesList').addEventListener('click', e => {
+  const b = e.target.closest('[data-rd]'); if (!b) return;
+  rtDates = rtDates.filter(d => d !== b.dataset.rd); renderRtDates();
+});
+DP.attach(byId('rtDateAdd'), {
+  multi: true, placeholder: 'Klik untuk memilih tanggal…',
+  getMin: () => todayStr(),
+  isSelected: d => rtDates.includes(d),
+  onToggle: d => { rtDates = rtDates.includes(d) ? rtDates.filter(x => x !== d) : rtDates.concat(d); renderRtDates(); }
 });
 
 /* ── CONTEXT MENU ── */
@@ -5873,6 +7002,7 @@ function openCtxMenu(x, y, eventId, dateStr) {
     icon && (icon.style.fontSize = '13px');
     icon && (icon.style.color = 'var(--ink-lt)');
   }
+  const sl=document.getElementById('ctxSelectLabel'); if(sl) sl.textContent=selectedIds.has(eventId)?'Batal pilih':'Pilih (multi-select)';
   ctxMenu.style.left = x + 'px';
   ctxMenu.style.top  = y + 'px';
   ctxMenu.classList.add('open');
@@ -5989,7 +7119,7 @@ function openStatusNoteModal(eventId, newStatus, dateStr) {
     cancel:      {bg:'var(--s-cancel-bg)',  tx:'var(--s-cancel-tx)'},
   };
   const sc = statusColors[newStatus] || statusColors.pending;
-  const statusIcons = {achieve:'✓', not_achieve:'✗', cancel:'✕', pending:'⟳'};
+  const statusIcons = {achieve:'<i class="ti ti-circle-check"></i>', not_achieve:'<i class="ti ti-circle-x"></i>', cancel:'<i class="ti ti-circle-off"></i>', pending:'<i class="ti ti-refresh"></i>'};
 
   // Event banner
   document.getElementById('snEventBar').style.background = t.chip;
@@ -6190,6 +7320,7 @@ function openMobileCtxSheet(eventId, dateStr) {
     item.classList.toggle('active-status', item.dataset.status === effectiveMobile);
   });
 
+  const msl=document.getElementById('mctxSelectLabel'); if(msl) msl.textContent=selectedIds.has(eventId)?'Batal pilih':'Pilih (multi-select)';
   mobileCtxSheet.classList.add('open');
 }
 
@@ -6215,8 +7346,12 @@ mobileCtxSheet.addEventListener('click', async e => {
     return;
   }
 
+  // Aksi event (pilih / salin / pindah / hapus)
+  const actEl = e.target.closest('.mctx-item[data-act]');
+  if (actEl) { const aid = mobileCtxTargetId; closeMobileCtxSheet(); if (aid) runEventAction(actEl.dataset.act, aid); return; }
+
   // Klik status langsung → update parsial hari itu saja (tanpa modal)
-  const item = e.target.closest('.mctx-item');
+  const item = e.target.closest('.mctx-item[data-status]');
   if (!item || !mobileCtxTargetId) return;
   const newStatus = item.dataset.status;
   const ev = events.find(e => e.id === mobileCtxTargetId);

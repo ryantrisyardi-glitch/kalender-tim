@@ -5,7 +5,7 @@
    Fonts, CDN) TIDAK dicache agresif, cukup diteruskan ke jaringan seperti biasa
    supaya data selalu yang terbaru. */
 
-const CACHE_VERSION = 'kalender-tim-v2';
+const CACHE_VERSION = 'kalender-tim-v4';
 const APP_SHELL = [
   './index.html',
   './kalender.html',
